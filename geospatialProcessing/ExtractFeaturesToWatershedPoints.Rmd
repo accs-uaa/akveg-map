@@ -1,0 +1,91 @@
+---
+title: "Extract Features to Points"
+author: "Timm Nawrocki"
+date: "April 9, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r header}
+# -*- coding: utf-8 -*-
+# ---------------------------------------------------------------------------
+# Extract Features to Points
+# Author: Timm Nawrocki, Alaska Center for Conservation Science
+# Created on: 2019-04-09
+# Usage: Code chunks must be executed sequentially in R Studio or R Studio Server installation. Created using R Studio version 1.2.1335 and R 3.5.3.
+# Description: "Extract Features to Points" creates a csv table of features for all points in a regular grid point matrix for each input subwatershed.
+# ---------------------------------------------------------------------------
+```
+
+## 1. Introduction
+
+This script extracts features to regular grid point matrix by watershed. The resulting csv files represent spatial variation in tabular form for prediction.
+
+## 2. Import data and variables
+
+This script must be executed on the outputs of the ArcGIS Pro script tool "Prepare Watershed Units". Features must be pre-processed using the ArcGIS script tools "Format Environmental Predictors" and "Format Spectral Predictor". Extraction of features to regular grid point matrix stored as csv requires the sp, raster, rgdal, and stringr libraries.
+
+```{r inputs}
+# Set root directory
+drive = 'F:/'
+region = 'aleknagik' # Change between nuyakuk and aleknagik
+root_directory = paste(drive, '/ACCS_Work/Projects/VegetationEcology/BristolBay_Vegetation/Project_GIS', sep='')
+# Define input folders
+watersheds_folder = paste(root_directory, '/Data_Output/prediction_grids/', region, sep='')
+environmental_folder = paste(root_directory, '/Data_Input/predictor_env/partial', sep='')
+spectral_folder = paste(root_directory, '/Data_Input/predictor_img/mosaic_partial', sep='')
+# Define output folder
+output_folder = paste(root_directory, '/Data_Output/prediction_tables', sep='')
+```
+
+```{r libraries}
+# Install required libraries if they are not already installed.
+Required_Packages <- c('sp', 'raster', 'rgdal', 'stringr')
+New_Packages <- Required_Packages[!(Required_Packages %in% installed.packages()[,"Package"])]
+if (length(New_Packages) > 0) {
+  install.packages(New_Packages)
+}
+# Import required libraries for geospatial processing: sp, raster, rgdal, and stringr.
+library(sp)
+library(raster)
+library(rgdal)
+library(stringr)
+```
+
+```{r prepare_inputs}
+# Generate a list of all watersheds in the watersheds directory
+watersheds_list = list.files(watersheds_folder, pattern='shp$', full.names=TRUE)
+watersheds_length = length(watersheds_list)
+# Generate a stack of all predictor variables
+predictors_env = list.files(environmental_folder, pattern='tif$', full.names=TRUE)
+predictors_img = list.files(spectral_folder, pattern='tif$', full.names=TRUE)
+predictors_all = c(predictors_env, predictors_img)
+predictor_stack = stack(predictors_all)
+```
+
+## 3. Define functions
+
+```{r functions}
+# Define a function to read a watershed dataframe, extract data, and export to csv
+extractPredictorData = function(inWatershed, inStack, outTable) {
+  watershed_data = readOGR(dsn=inWatershed)
+  watershed_data@data <- data.frame(watershed_data@data, extract(inStack, watershed_data))
+  write.csv(watershed_data@data, file=outTable)
+}
+```
+
+## 4. Conduct extractions
+
+```{r extractions}
+# Extract predictor data to each watershed in the watersheds directory
+count = 1
+for (watershed in watersheds_list) {
+  print(paste('Extracting predictor data to watershed ', count, ' of ', watersheds_length, '...', sep=''))
+  count = count + 1
+  output_table = paste(output_folder, '/', sub(pattern = "(.*)\\..*$", replacement = "\\1", basename(watershed)), '.csv', sep='')
+  extractPredictorData(watershed, predictor_stack, output_table)
+}
+```
