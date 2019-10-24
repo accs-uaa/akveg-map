@@ -221,7 +221,7 @@ def create_composite_dem(**kwargs):
     arcpy.MosaicToNewRaster_management(projected_tile_list,
                                        mosaic_location,
                                        mosaic_name,
-                                       tile_projection,
+                                       composite_projection,
                                        '16_BIT_SIGNED',
                                        cell_size,
                                        '1',

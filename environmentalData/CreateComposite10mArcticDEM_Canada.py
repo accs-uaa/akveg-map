@@ -14,8 +14,8 @@ from beringianGeospatialProcessing import arcpy_geoprocessing
 from beringianGeospatialProcessing import create_composite_dem
 
 # Set root directory
-drive = 'K:/'
-root_directory = os.path.join(drive, 'ACCS_Work/Data/elevation/ArcticDEM_10m')
+drive = 'D:/'
+root_directory = os.path.join(drive, 'ACCS_Work/Data/elevation/ArcticDEM_Canada_10m')
 
 # Set arcpy working environment
 arcpy.env.workspace = os.path.join(drive, 'ACCS_Work/Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/BeringiaVegetation.gdb')
@@ -26,7 +26,7 @@ projected_folder = os.path.join(root_directory, 'tiles_projected')
 snap_raster = os.path.join(drive, 'ACCS_Work/Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/areaOfInterest_Initial.tif')
 
 # Define output raster
-arctic10m_composite = os.path.join(root_directory, 'Alaska_ArcticDEM_Elevation_10m_AKALB_20191019.tif')
+arctic10m_composite = os.path.join(root_directory, 'Canada_ArcticDEM_Elevation_10m_AKALB_20191019.tif')
 
 # Define input and output arrays
 create_dem_inputs = [snap_raster]
