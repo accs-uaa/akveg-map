@@ -1,21 +1,29 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Download Arctic DEM 10 m Tiles
+# Download Arctic DEM 10 m Canada Tiles
 # Author: Timm Nawrocki
-# Created on: 2019-10-15
-# Usage: Must be executed in Python 3.7
-# Description: "Download Arctic DEM 10 m Tiles" contacts a server to download a series of files specified in a csv table. The full url to the resources must be specified in the table. The table can be generated from the Arctic DEM tile index shapefile.
+# Last Updated: 2019-10-29
+# Usage: Can be executed in an Anaconda Python 3.7 distribution or an ArcGIS Pro Python 3.6 distribution.
+# Description: "Download Arctic DEM 10 m Canada Tiles" contacts a server to download a series of files specified in a csv table. The full url to the resources must be specified in the table. The table can be generated from the Arctic DEM tile index shapefile.
 # ---------------------------------------------------------------------------
 
 # Import packages
-from beringianGeospatialProcessing import downloadFromCSV
+from package_GeospatialProcessing import downloadFromCSV
+import os
 
-# Define input file
-input_table = 'K:/ACCS_Work/Data/elevation/ArcticDEM_10m/ArcticDEM10m_20191015.csv'
+# Define base folder structure
+drive = 'K:/'
+root_folder = 'ACCS_Work'
+
+# Define data folder
+data_folder = os.path.join(drive, root_folder, 'Data/topography/ArcticDEM_10m_Canada')
+
+# Define input csv table
+input_table = os.path.join(data_folder, 'ArcticDEM_Canada_10m_20191029.csv')
 url_column = 'downloadURL'
 
 # Set target directory for downloads
-directory = 'K:/ACCS_Work/Data/topography/ArcticDEM_10m/tiles'
+directory = os.path.join(data_folder, 'tiles')
 
 # Download files
 downloadFromCSV(input_table, url_column, directory)
