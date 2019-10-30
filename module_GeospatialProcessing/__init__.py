@@ -99,18 +99,20 @@ def create_composite_dem(**kwargs):
     """
     Description: creates a DEM from individual DEM tiles
     Inputs: 'tile_folder' -- a folder containing the raster tiles
+            'projected_folder' -- a folder in which to store the projected tiles
             'cell_size' -- a cell size for the output DEM
             'input_projection' -- the machine number for the input projection
             'output_projection' -- the machine number for the output projection
             'geographic_transformation -- the string representation of the appropriate geographic transformation (blank if none required)
             'input_array' -- an array containing the snap raster
-            'output_array' -- the output should be an array with a full feature class and a clipped feature class
+            'output_array' -- an array containing the output raster
     """
 
     # Import packages
     import arcpy
     from arcpy.sa import Int
     from arcpy.sa import Raster
+    from arcpy.sa import SetNull
     import datetime
     import os
     import time
@@ -179,7 +181,10 @@ def create_composite_dem(**kwargs):
                                            geographic_transformation)
             # Round to integer and store as 16 bit signed raster
             integer_raster = Int(Raster(reprojected_raster) + 0.5)
-            arcpy.CopyRaster_management(integer_raster, output_raster, '', '', '-32768', 'NONE', 'NONE', '16_BIT_SIGNED','NONE', 'NONE', 'TIFF', 'NONE')
+            # Set values less than -50 to null
+            corrected_raster = SetNull(integer_raster, integer_raster, 'VALUE < -50')
+            # Convert corrected raster to 16 bit signed
+            arcpy.CopyRaster_management(corrected_raster, output_raster, '', '', '-32768', 'NONE', 'NONE', '16_BIT_SIGNED','NONE', 'NONE', 'TIFF', 'NONE')
             # Delete intermediate raster
             arcpy.Delete_management(reprojected_raster)
             # End timing
@@ -237,4 +242,155 @@ def create_composite_dem(**kwargs):
 
     # Delete intermediate dataset
     out_process = 'Successful creating composite DEM.'
+    return out_process
+
+# Define function to reproject raster and store integer result
+def reproject_integer(**kwargs):
+    """
+    Description: creates a DEM from individual DEM tiles
+    Inputs: 'cell_size' -- a cell size for the output DEM
+            'input_projection' -- the machine number for the input projection
+            'output_projection' -- the machine number for the output projection
+            'geographic_transformation -- the string representation of the appropriate geographic transformation (blank if none required)
+            'input_array' -- an array containing the input raster and the snap raster
+            'output_array' -- the output should be an array with a full feature class and a clipped feature class
+    """
+
+    # Import packages
+    import arcpy
+    from arcpy.sa import Int
+    from arcpy.sa import Raster
+    import datetime
+    import os
+    import time
+
+    # Set overwrite option
+    arcpy.env.overwriteOutput = True
+
+    # Parse key word argument inputs
+    cell_size = kwargs['cell_size']
+    input_projection = kwargs['input_projection']
+    output_projection = kwargs['output_projection']
+    geographic_transformation = kwargs['geographic_transformation']
+    input_raster = kwargs['input_array'][0]
+    snap_raster = kwargs['input_array'][1]
+    output_raster = kwargs['output_array'][0]
+
+    # Define the initial projection
+    initial_projection = arcpy.SpatialReference(input_projection)
+    # Define the target projection
+    composite_projection = arcpy.SpatialReference(output_projection)
+    # Set snap raster
+    arcpy.env.snapRaster = snap_raster
+
+    # Start timing function
+    iteration_start = time.time()
+    print(f'Reprojecting input raster...')
+    # Define intermediate and output raster
+    reprojected_raster = os.path.splitext(input_raster)[0] + '_reprojected.tif'
+    # Define initial projection
+    arcpy.DefineProjection_management(input_raster, initial_projection)
+    # Reproject raster
+    arcpy.ProjectRaster_management(input_raster,
+                                    reprojected_raster,
+                                    composite_projection,
+                                    'BILINEAR',
+                                    cell_size,
+                                    geographic_transformation)
+    # End timing
+    iteration_end = time.time()
+    iteration_elapsed = int(iteration_end - iteration_start)
+    iteration_success_time = datetime.datetime.now()
+    # Report success for iteration
+    print(f'Finished reprojecting input raster...')
+    print(f'Projection completed at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
+    print('----------')
+
+    # Start timing function
+    iteration_start = time.time()
+    print(f'Converting raster to 16 bit integer...')
+    # Round to integer and store as 16 bit signed raster
+    integer_raster = Int(Raster(reprojected_raster) + 0.5)
+    arcpy.CopyRaster_management(integer_raster, output_raster, '', '', '-32768', 'NONE', 'NONE', '16_BIT_SIGNED',
+                                'NONE', 'NONE', 'TIFF', 'NONE')
+    # Delete intermediate raster
+    arcpy.Delete_management(reprojected_raster)
+    # End timing
+    iteration_end = time.time()
+    iteration_elapsed = int(iteration_end - iteration_start)
+    iteration_success_time = datetime.datetime.now()
+    # Report success for iteration
+    print(f'Finished converting to 16 bit integer...')
+    print(
+        f'Conversion completed at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
+    print('----------')
+
+    # Delete intermediate dataset
+    out_process = 'Successful reprojecting and converting raster.'
+    return out_process
+
+
+# Iterate through each major grid
+def create_buffered_tiles(**kwargs):
+    """
+    Description: creates a DEM from individual DEM tiles
+    Inputs: 'tile_name' -- a field name in the grid index that stores the tile name
+            'distance' -- a string representing a number and units for buffer distance
+            'input_array' -- an array containing the input grid index and a clip area
+            'output_geodatabase' -- an empty geodatabase to store the output tiles
+    """
+
+    # Import packages
+    import arcpy
+    import datetime
+    import os
+    import time
+
+    # Parse key word argument inputs
+    tile_name = kwargs['tile_name']
+    distance = kwargs['distance']
+    grid_index = kwargs['input_array'][0]
+    clip_area = kwargs['input_array'][1]
+    output_geodatabase = kwargs['output_geodatabase']
+
+    # Print initial status
+    print(f'Extracting grid tiles from {os.path.split(grid_index)[1]}...')
+
+    # Define fields for search cursor
+    fields = ['SHAPE@', tile_name]
+    # Initiate search cursor on grid index with defined fields
+    with arcpy.da.SearchCursor(grid_index, fields) as cursor:
+        # Iterate through each feature in the feature class
+        for row in cursor:
+            # Define an output and temporary feature class
+            output_grid = os.path.join(output_geodatabase, 'Grid_' + row[1])
+            temporary_grid = os.path.join(output_geodatabase, 'Grid_' + row[1] + '_Buffer')
+            print(f'\tProcessing grid tile {os.path.split(output_grid)[1]}...')
+            # If tile does not exist, then create tile
+            if arcpy.Exists(output_grid) == 0:
+                # Start timing function
+                iteration_start = time.time()
+                # Define feature
+                feature = row[0]
+                # Buffer feature by user specified distance
+                arcpy.Buffer_analysis(feature, temporary_grid, distance, 'FULL', 'ROUND', 'NONE', '', 'PLANAR')
+                # Clip buffered feature to clip area
+                arcpy.Clip_analysis(temporary_grid, clip_area, output_grid)
+                # If temporary feature class exists, then delete it
+                if arcpy.Exists(temporary_grid) == 1:
+                    arcpy.Delete_management(temporary_grid)
+                # End timing
+                iteration_end = time.time()
+                iteration_elapsed = int(iteration_end - iteration_start)
+                iteration_success_time = datetime.datetime.now()
+                # Report success
+                print(
+                    f'\tOutput grid {os.path.split(output_grid)[1]} completed at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
+                print('\t----------')
+            else:
+                print(f'\tOutput grid {os.path.split(output_grid)[1]} already exists...')
+                print('\t----------')
+
+    # Return final status
+    out_process = 'Completed creation of grid tiles.'
     return out_process

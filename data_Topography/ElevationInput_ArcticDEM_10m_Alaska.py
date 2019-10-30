@@ -14,8 +14,8 @@ from beringianGeospatialProcessing import arcpy_geoprocessing
 from beringianGeospatialProcessing import create_composite_dem
 
 # Set root directory
-drive = 'D:/'
-root_directory = os.path.join(drive, 'ACCS_Work/Data/elevation/ArcticDEM_Alaska_10m')
+drive = 'K:/'
+root_directory = os.path.join(drive, 'ACCS_Work/Data/topography/ArcticDEM_Alaska_10m')
 
 # Set arcpy working environment
 arcpy.env.workspace = os.path.join(drive, 'ACCS_Work/Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/BeringiaVegetation.gdb')
