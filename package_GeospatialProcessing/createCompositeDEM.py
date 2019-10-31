@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+# ---------------------------------------------------------------------------
+# Create Composite DEM
+# Author: Timm Nawrocki
+# Last Updated: 2019-10-29
+# Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
+# Description: "Create Composite DEM" is a function that creates, reprojects, and resamples a DEM composite from a set of DEM tiles.
+# ---------------------------------------------------------------------------
+
+
 # Define function to create composite DEM
 def create_composite_dem(**kwargs):
     """

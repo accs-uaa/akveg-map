@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+# ---------------------------------------------------------------------------
+# Reproject to Integer Raster
+# Author: Timm Nawrocki
+# Last Updated: 2019-10-29
+# Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
+# Description: "Reproject to Integer Raster" is a function that reprojects and resamples a raster and converts the output to 16 bit signed integers.
+# ---------------------------------------------------------------------------
+
 # Define function to reproject raster and store integer result
 def reproject_integer(**kwargs):
     """

@@ -1,44 +1,50 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Reproject 60 m USGS DEM
+# Create Composite USGS 3DEP 60 m Alaska
 # Author: Timm Nawrocki
-# Created on: 2019-10-25
+# Last Updated: 2019-10-30
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Reproject 60 m USGS DEM" reprojects to NAD 1983 Alaska Albers and resamples to 10 m.
+# Description: "Create Composite USGS 3DEP 60 m Alaska" combines individual DEM tiles, reprojects to NAD 1983 Alaska Albers, and resamples to 10 m.
 # ---------------------------------------------------------------------------
 
 # Import packages
 import arcpy
+from package_GeospatialProcessing import arcpy_geoprocessing
+from package_GeospatialProcessing import create_composite_dem
 import os
-from beringianGeospatialProcessing import arcpy_geoprocessing
-from beringianGeospatialProcessing import reproject_integer
 
 # Set root directory
 drive = 'K:/'
-root_directory = os.path.join(drive, 'ACCS_Work/Data/topography/USGS_60m')
+root_folder = 'ACCS_Work'
+
+# Define data folder
+data_folder = os.path.join(drive, root_folder, 'Data/topography/USGS3DEP_60m_Alaska')
 
 # Set arcpy working environment
-arcpy.env.workspace = os.path.join(drive, 'ACCS_Work/Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/BeringiaVegetation.gdb')
+arcpy.env.workspace = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/BeringiaVegetation.gdb')
 
 # Define input datasets
-input_raster = os.path.join(root_directory, 'Alaska_USGS3DEP_Elevation_2ArcSecond_NAD83_20181106.tif')
+tile_folder = os.path.join(data_folder, 'tiles')
+projected_folder = os.path.join(data_folder, 'tiles_projected')
 snap_raster = os.path.join(drive, 'ACCS_Work/Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/areaOfInterest_Initial.tif')
 
 # Define output raster
-output_raster = os.path.join(root_directory, 'Resample_10m/Alaska_USGS3DEP_Elevation_60m_AKALB_20191025.tif')
+alaska60m_composite = os.path.join(data_folder, 'Elevation_USGS3DEP_60m_Alaska_AKALB.tif')
 
 # Define input and output arrays
-reproject_integer_inputs = [input_raster, snap_raster]
-reproject_integer_outputs = [output_raster]
+create_dem_inputs = [snap_raster]
+create_dem_outputs = [alaska60m_composite]
 
 # Create key word arguments
-reproject_integer_kwargs = {'cell_size': 10,
-                            'input_projection': 4269,
-                            'output_projection': 3338,
-                            'geographic_transformation': '',
-                            'input_array': reproject_integer_inputs,
-                            'output_array': reproject_integer_outputs
-                            }
+create_dem_kwargs = {'tile_folder': tile_folder,
+                     'projected_folder': projected_folder,
+                     'cell_size': 10,
+                     'input_projection': 4269,
+                     'output_projection': 3338,
+                     'geographic_transformation': '',
+                     'input_array': create_dem_inputs,
+                     'output_array': create_dem_outputs
+                     }
 
 # Process the create polygon function with the point array
-arcpy_geoprocessing(reproject_integer, **reproject_integer_kwargs)
+arcpy_geoprocessing(create_composite_dem, **create_dem_kwargs)

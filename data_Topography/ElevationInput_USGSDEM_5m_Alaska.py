@@ -1,32 +1,35 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Create Composite 5 m USGS DEM
+# Create Composite USGS 3DEP 5 m Alaska
 # Author: Timm Nawrocki
-# Created on: 2019-10-15
+# Last Updated: 2019-10-30
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Create Composite 5 m USGS DEM" combines individual DEM tiles, reprojects to NAD 1983 Alaska Albers, and resamples to 10 m.
+# Description: "Create Composite USGS 3DEP 5 m Alaska" combines individual DEM tiles, reprojects to NAD 1983 Alaska Albers, and resamples to 10 m.
 # ---------------------------------------------------------------------------
 
 # Import packages
 import arcpy
+from package_GeospatialProcessing import arcpy_geoprocessing
+from package_GeospatialProcessing import create_composite_dem
 import os
-from beringianGeospatialProcessing import arcpy_geoprocessing
-from beringianGeospatialProcessing import create_composite_dem
 
 # Set root directory
 drive = 'K:/'
-root_directory = os.path.join(drive, 'ACCS_Work/Data/topography/USGS_5m')
+root_folder = 'ACCS_Work'
+
+# Define data folder
+data_folder = os.path.join(drive, root_folder, 'Data/topography/USGS3DEP_5m_Alaska')
 
 # Set arcpy working environment
-arcpy.env.workspace = os.path.join(drive, 'ACCS_Work/Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/BeringiaVegetation.gdb')
+arcpy.env.workspace = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/BeringiaVegetation.gdb')
 
 # Define input datasets
-tile_folder = os.path.join(root_directory, 'tiles')
-projected_folder = os.path.join(root_directory, 'tiles_projected')
-snap_raster = os.path.join(drive, 'ACCS_Work/Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/areaOfInterest_Initial.tif')
+tile_folder = os.path.join(data_folder, 'tiles')
+projected_folder = os.path.join(data_folder, 'tiles_projected')
+snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/areaOfInterest_Initial.tif')
 
 # Define output raster
-usgs5m_composite = os.path.join(root_directory, 'Alaska_USGS3DEP_Elevation_5m_AKALB_20191015.tif')
+usgs5m_composite = os.path.join(data_folder, 'Elevation_USGS3DEP_5m_Alaska_AKALB.tif')
 
 # Define input and output arrays
 create_dem_inputs = [snap_raster]

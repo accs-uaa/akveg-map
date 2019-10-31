@@ -8,7 +8,7 @@
 # ---------------------------------------------------------------------------
 
 # Define a function to download files from a csv
-def downloadFromCSV(input_table, url_column, directory):
+def download_from_csv(input_table, url_column, directory):
     """
     Description: downloads set of files specified in a particular column of a csv table.
     Inputs: input_table -- csv table containing rows for download items.

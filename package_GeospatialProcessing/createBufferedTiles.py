@@ -1,3 +1,13 @@
+# -*- coding: utf-8 -*-
+# ---------------------------------------------------------------------------
+# Create Buffered Tiles
+# Author: Timm Nawrocki
+# Last Updated: 2019-10-29
+# Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
+# Description: "Create Buffered Tiles" is a function that extracts, buffers, and clips a set of grids from a grid index to form individual feature classes.
+# ---------------------------------------------------------------------------
+
+
 # Define a function to create buffered tiles for a grid index
 def create_buffered_tiles(**kwargs):
     """

@@ -1,31 +1,34 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Reproject 30 m Yukon DEM
+# Reproject EnvYukon 30 m Yukon DEM
 # Author: Timm Nawrocki
-# Created on: 2019-10-25
+# Last Updated: 2019-10-30
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Reproject 30 m Yukon DEM" reprojects to NAD 1983 Alaska Albers and resamples to 10 m.
+# Description: "Reproject EnvYukon 30 m Yukon DEM" reprojects to NAD 1983 Alaska Albers and resamples to 10 m.
 # ---------------------------------------------------------------------------
 
 # Import packages
 import arcpy
+from package_GeospatialProcessing import arcpy_geoprocessing
+from package_GeospatialProcessing import reproject_integer
 import os
-from beringianGeospatialProcessing import arcpy_geoprocessing
-from beringianGeospatialProcessing import reproject_integer
 
 # Set root directory
 drive = 'K:/'
-root_directory = os.path.join(drive, 'ACCS_Work/Data/topography/Yukon_30m')
+root_folder = 'ACCS_Work'
+
+# Define data folder
+data_folder = os.path.join(drive, root_folder, 'Data/topography/EnvYukon_30m_Yukon')
 
 # Set arcpy working environment
-arcpy.env.workspace = os.path.join(drive, 'ACCS_Work/Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/BeringiaVegetation.gdb')
+arcpy.env.workspace = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/BeringiaVegetation.gdb')
 
 # Define input datasets
-input_raster = os.path.join(root_directory, 'original/yt_30m_dem.tif')
-snap_raster = os.path.join(drive, 'ACCS_Work/Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/areaOfInterest_Initial.tif')
+input_raster = os.path.join(data_folder, 'original/yt_30m_dem.tif')
+snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/areaOfInterest_Initial.tif')
 
 # Define output raster
-output_raster = os.path.join(root_directory, 'Yukon_EnvYukon_Elevation_30m_AKALB_20191025.tif')
+output_raster = os.path.join(data_folder, 'Elevation_EnvYukon_30m_Yukon_AKALB.tif')
 
 # Define input and output arrays
 reproject_integer_inputs = [input_raster, snap_raster]

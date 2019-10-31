@@ -8,7 +8,7 @@
 # ---------------------------------------------------------------------------
 
 # Import packages
-from package_GeospatialProcessing import downloadFromCSV
+from package_GeospatialProcessing import download_from_csv
 import os
 
 # Define base folder structure
@@ -26,4 +26,4 @@ url_column = 'downloadURL'
 directory = os.path.join(data_folder, 'original')
 
 # Download files
-downloadFromCSV(input_table, url_column, directory)
+download_from_csv(input_table, url_column, directory)
