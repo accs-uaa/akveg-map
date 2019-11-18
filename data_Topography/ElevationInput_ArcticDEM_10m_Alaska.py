@@ -14,7 +14,7 @@ from package_GeospatialProcessing import create_composite_dem
 import os
 
 # Set root directory
-drive = 'K:/'
+drive = 'L:/'
 root_folder = 'ACCS_Work'
 
 # Define data folder
@@ -38,6 +38,7 @@ create_dem_outputs = [arctic10m_composite]
 # Create key word arguments
 create_dem_kwargs = {'tile_folder': tile_folder,
                      'projected_folder': projected_folder,
+                     'workspace': arcpy.env.workspace,
                      'cell_size': 10,
                      'input_projection': 3413,
                      'output_projection': 3338,

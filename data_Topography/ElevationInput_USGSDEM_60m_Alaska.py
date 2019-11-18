@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Create Composite USGS 3DEP 60 m Alaska
 # Author: Timm Nawrocki
-# Last Updated: 2019-10-30
+# Created on: 2019-10-25
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Create Composite USGS 3DEP 60 m Alaska" combines individual DEM tiles, reprojects to NAD 1983 Alaska Albers, and resamples to 10 m.
 # ---------------------------------------------------------------------------
@@ -14,7 +14,7 @@ from package_GeospatialProcessing import create_composite_dem
 import os
 
 # Set root directory
-drive = 'K:/'
+drive = 'L:/'
 root_folder = 'ACCS_Work'
 
 # Define data folder
@@ -38,6 +38,7 @@ create_dem_outputs = [alaska60m_composite]
 # Create key word arguments
 create_dem_kwargs = {'tile_folder': tile_folder,
                      'projected_folder': projected_folder,
+                     'workspace': arcpy.env.workspace,
                      'cell_size': 10,
                      'input_projection': 4269,
                      'output_projection': 3338,

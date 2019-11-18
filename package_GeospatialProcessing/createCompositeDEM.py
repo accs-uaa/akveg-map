@@ -1,13 +1,3 @@
-# -*- coding: utf-8 -*-
-# ---------------------------------------------------------------------------
-# Create Composite DEM
-# Author: Timm Nawrocki
-# Last Updated: 2019-10-29
-# Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Create Composite DEM" is a function that creates, reprojects, and resamples a DEM composite from a set of DEM tiles.
-# ---------------------------------------------------------------------------
-
-
 # Define function to create composite DEM
 def create_composite_dem(**kwargs):
     """
@@ -34,9 +24,13 @@ def create_composite_dem(**kwargs):
     # Set overwrite option
     arcpy.env.overwriteOutput = True
 
+    # Use two thirds of cores on processes that can be split.
+    arcpy.env.parallelProcessingFactor = "66%"
+
     # Parse key word argument inputs
     tile_folder = kwargs['tile_folder']
     projected_folder = kwargs['projected_folder']
+    workspace = kwargs['workspace']
     cell_size = kwargs['cell_size']
     input_projection = kwargs['input_projection']
     output_projection = kwargs['output_projection']
@@ -53,6 +47,13 @@ def create_composite_dem(**kwargs):
     print('Compiling list of raster tiles...')
     arcpy.env.workspace = tile_folder
     tile_list = arcpy.ListRasters('*', 'ALL')
+    # Add file path to raster list
+    tile_rasters = []
+    for tile in tile_list:
+        tile_path = os.path.join(tile_folder, tile)
+        tile_rasters.append(tile_path)
+    # Set environment workspace
+    arcpy.env.workspace = workspace
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)
@@ -63,7 +64,7 @@ def create_composite_dem(**kwargs):
     print('----------')
 
     # Define projection and reproject all rasters in list
-    print(f'Reprojecting {len(tile_list)} raster tiles...')
+    print(f'Reprojecting {len(tile_rasters)} raster tiles...')
     # Define the initial projection
     tile_projection = arcpy.SpatialReference(input_projection)
     # Define the target projection
@@ -73,32 +74,30 @@ def create_composite_dem(**kwargs):
     # Set initial counter
     count = 1
     # Reproject all rasters in list
-    for raster in tile_list:
-        # Define input raster path
-        input_raster = os.path.join(tile_folder, raster)
+    for raster in tile_rasters:
         # Define intermediate and output raster
-        reprojected_raster = os.path.join(projected_folder, os.path.splitext(raster)[0] + '_reprojected.tif')
-        output_raster = os.path.join(projected_folder, os.path.splitext(raster)[0] + '.tif')
+        reprojected_raster = os.path.join(projected_folder, os.path.splitext(os.path.split(raster)[1])[0] + '_reprojected.tif')
+        output_raster = os.path.join(projected_folder, os.path.splitext(os.path.split(raster)[1])[0] + '.tif')
         # Check if output raster already exists:
         if os.path.exists(output_raster) == 0:
             # Start timing function
             iteration_start = time.time()
             print(f'\tReprojecting tile {count} of {len(tile_list)}...')
             # Define initial projection
-            arcpy.DefineProjection_management(input_raster, tile_projection)
+            arcpy.DefineProjection_management(raster, tile_projection)
             # Reproject tile
-            arcpy.ProjectRaster_management(input_raster,
+            arcpy.ProjectRaster_management(raster,
                                            reprojected_raster,
                                            composite_projection,
                                            'BILINEAR',
                                            cell_size,
                                            geographic_transformation)
-            # Round to integer and store as 16 bit signed raster
-            integer_raster = Int(Raster(reprojected_raster) + 0.5)
             # Set values less than -50 to null
-            corrected_raster = SetNull(integer_raster, integer_raster, 'VALUE < -50')
+            corrected_raster = SetNull(reprojected_raster, reprojected_raster, 'VALUE < -50')
+            # Round to integer and store as 16 bit signed raster
+            integer_raster = Int(Raster(corrected_raster) + 0.5)
             # Convert corrected raster to 16 bit signed
-            arcpy.CopyRaster_management(corrected_raster, output_raster, '', '', '-32768', 'NONE', 'NONE', '16_BIT_SIGNED','NONE', 'NONE', 'TIFF', 'NONE')
+            arcpy.CopyRaster_management(integer_raster, output_raster, '', '', '-32768', 'NONE', 'NONE', '16_BIT_SIGNED','NONE', 'NONE', 'TIFF', 'NONE')
             # Delete intermediate raster
             arcpy.Delete_management(reprojected_raster)
             # End timing
@@ -123,7 +122,14 @@ def create_composite_dem(**kwargs):
     # Create a list of projected DEM raster tiles
     print('Compiling list of projected raster tiles...')
     arcpy.env.workspace = projected_folder
-    projected_tile_list = arcpy.ListRasters('*', 'ALL')
+    projected_list = arcpy.ListRasters('*', 'ALL')
+    # Add file path to raster list
+    projected_rasters = []
+    for tile in projected_list:
+        tile_path = os.path.join(projected_folder, tile)
+        projected_rasters.append(tile_path)
+    # Set environment workspace
+    arcpy.env.workspace = workspace
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)
@@ -137,7 +143,7 @@ def create_composite_dem(**kwargs):
     iteration_start = time.time()
     print('Creating composite from tiles...')
     # Mosaic raster tiles to new raster
-    arcpy.MosaicToNewRaster_management(projected_tile_list,
+    arcpy.MosaicToNewRaster_management(projected_rasters,
                                        mosaic_location,
                                        mosaic_name,
                                        composite_projection,

@@ -2,9 +2,9 @@
 # ---------------------------------------------------------------------------
 # Create Buffered Tiles
 # Author: Timm Nawrocki
-# Last Updated: 2019-10-29
+# Last Updated: 2019-11-05
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Create Buffered Tiles" is a function that extracts, buffers, and clips a set of grids from a grid index to form individual feature classes.
+# Description: "Create Buffered Tiles" is a function that extracts, buffers, and clips a set of grids from a grid index to form individual raster tiles.
 # ---------------------------------------------------------------------------
 
 
@@ -20,16 +20,29 @@ def create_buffered_tiles(**kwargs):
 
     # Import packages
     import arcpy
+    from arcpy.sa import ExtractByMask
+    from arcpy.sa import Reclassify
+    from arcpy.sa import RemapRange
     import datetime
     import os
     import time
+
+    # Set overwrite option
+    arcpy.env.overwriteOutput = True
+
+    # Use two thirds of the possible cores on the machine
+    arcpy.env.parallelProcessingFactor = '66%'
 
     # Parse key word argument inputs
     tile_name = kwargs['tile_name']
     distance = kwargs['distance']
     grid_index = kwargs['input_array'][0]
-    clip_area = kwargs['input_array'][1]
-    output_geodatabase = kwargs['output_geodatabase']
+    snap_raster = kwargs['input_array'][1]
+    output_folder = kwargs['output_folder']
+    arcpy.env.workspace = kwargs['workspace']
+
+    # Set the snap raster
+    arcpy.env.snapRaster = snap_raster
 
     # Print initial status
     print(f'Extracting grid tiles from {os.path.split(grid_index)[1]}...')
@@ -40,9 +53,10 @@ def create_buffered_tiles(**kwargs):
     with arcpy.da.SearchCursor(grid_index, fields) as cursor:
         # Iterate through each feature in the feature class
         for row in cursor:
-            # Define an output and temporary feature class
-            output_grid = os.path.join(output_geodatabase, 'Grid_' + row[1])
-            temporary_grid = os.path.join(output_geodatabase, 'Grid_' + row[1] + '_Buffer')
+            # Define an output and temporary raster
+            buffer_feature = os.path.join(arcpy.env.workspace, 'Grid_' + row[1] + '_Buffer')
+            output_grid = os.path.join(output_folder, 'Grid_' + row[1] + '.tif')
+
             print(f'\tProcessing grid tile {os.path.split(output_grid)[1]}...')
             # If tile does not exist, then create tile
             if arcpy.Exists(output_grid) == 0:
@@ -51,12 +65,16 @@ def create_buffered_tiles(**kwargs):
                 # Define feature
                 feature = row[0]
                 # Buffer feature by user specified distance
-                arcpy.Buffer_analysis(feature, temporary_grid, distance, 'FULL', 'ROUND', 'NONE', '', 'PLANAR')
-                # Clip buffered feature to clip area
-                arcpy.Clip_analysis(temporary_grid, clip_area, output_grid)
+                arcpy.Buffer_analysis(feature, buffer_feature, distance)
+                # Extract snap raster to buffered tile feature
+                extractRaster = ExtractByMask(snap_raster, buffer_feature)
+                # Reclassify values to 1
+                reclassifyRaster = Reclassify(extractRaster, 'Value', RemapRange([[1,100000,1]]))
+                # Copy raster to output
+                arcpy.CopyRaster_management(reclassifyRaster, output_grid, '', '', '0', 'NONE', 'NONE', '1_BIT', 'NONE', 'NONE', 'TIFF', 'None')
                 # If temporary feature class exists, then delete it
-                if arcpy.Exists(temporary_grid) == 1:
-                    arcpy.Delete_management(temporary_grid)
+                if arcpy.Exists(buffer_feature) == 1:
+                    arcpy.Delete_management(buffer_feature)
                 # End timing
                 iteration_end = time.time()
                 iteration_elapsed = int(iteration_end - iteration_start)
