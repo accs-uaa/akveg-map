@@ -15,7 +15,7 @@ from package_GeospatialProcessing import create_grid_indices
 import os
 
 # Set root directory
-drive = 'K:/'
+drive = 'N:/'
 root_folder = os.path.join(drive, 'ACCS_Work')
 
 # Set data folder
