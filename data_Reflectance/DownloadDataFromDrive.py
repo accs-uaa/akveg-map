@@ -18,9 +18,6 @@ from package_GeospatialProcessing import list_from_drive
 import pickle
 import time
 
-# If modifying these scopes, delete the file token.pickle.
-SCOPES = ['https://www.googleapis.com/auth/drive']
-
 # Set root directory
 drive = 'L:/'
 root_folder = os.path.join(drive, 'ACCS_Work')
@@ -35,39 +32,46 @@ google_folder = '1KSwPnPWmf0PGJWM0kVX1TFCL28FyyUt2' # Beringia_Sentinel-2
 credentials_folder = os.path.join(root_folder, 'Administrative/Credentials')
 os.chdir(credentials_folder)
 
+# Set scopes
+scopes = ['https://www.googleapis.com/auth/drive']
+
 # Create persistent credentials
-creds = None
-# The file token.pickle stores the user's access and refresh tokens, and is
-# created automatically when the authorization flow completes for the first
-# time.
+credentials = None
+# The file token.pickle stores the user's access and refresh tokens, and is created automatically when the authorization flow completes for the first time.
 if os.path.exists('token.pickle'):
     with open('token.pickle', 'rb') as token:
-        creds = pickle.load(token)
+        credentials = pickle.load(token)
 # If there are no (valid) credentials available, let the user log in.
-if not creds or not creds.valid:
-    if creds and creds.expired and creds.refresh_token:
-        creds.refresh(Request())
+if not credentials or not credentials.valid:
+    if credentials and credentials.expired and credentials.refresh_token:
+        credentials.refresh(Request())
     else:
         flow = InstalledAppFlow.from_client_secrets_file(
-            'client_secrets.json', SCOPES)
-        creds = flow.run_local_server(port=8080)
+            'client_secrets.json', scopes)
+        credentials = flow.run_local_server(port=8080)
     # Save the credentials for the next run
     with open('token.pickle', 'wb') as token:
-        pickle.dump(creds, token)
+        pickle.dump(credentials, token)
 
 # Build a Google Drive instance
-drive_service = build('drive', 'v2', credentials=creds)
+drive_service = build('drive', 'v2', credentials=credentials)
+print('Refresh token active:')
+print(credentials.refresh_token)
+print('----------')
 
 # List all files in Google Drive Folder
 file_id_list = list_from_drive(drive_service, google_folder)
 
 # Subset list
-file_id_subset = file_id_list[:]
+file_id_subset = file_id_list[265:]
 total = len(file_id_subset)
 
 # Download all files in Google Drive Folder
 count = 1
 for file_id in file_id_subset:
+
+    # Refresh the access token
+    credentials.refresh(Request())
 
     # Get file title metadata by file id
     file_meta = drive_service.files().get(fileId=file_id).execute()
