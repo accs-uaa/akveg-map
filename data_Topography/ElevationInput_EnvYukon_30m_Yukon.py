@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Reproject EnvYukon 30 m Yukon DEM
 # Author: Timm Nawrocki
-# Last Updated: 2019-10-30
+# Last Updated: 2019-12-03
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Reproject EnvYukon 30 m Yukon DEM" reprojects to NAD 1983 Alaska Albers and resamples to 10 m.
 # ---------------------------------------------------------------------------
@@ -14,7 +14,7 @@ from package_GeospatialProcessing import reproject_integer
 import os
 
 # Set root directory
-drive = 'K:/'
+drive = 'N:/'
 root_folder = 'ACCS_Work'
 
 # Define data folder
@@ -43,5 +43,5 @@ reproject_integer_kwargs = {'cell_size': 10,
                             'output_array': reproject_integer_outputs
                             }
 
-# Process the create polygon function with the point array
+# Process the reproject integer function
 arcpy_geoprocessing(reproject_integer, **reproject_integer_kwargs)

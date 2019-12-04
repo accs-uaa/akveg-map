@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Create Composite USGS 3DEP 30 m Canada
 # Author: Timm Nawrocki
-# Last Updated: 2019-10-30
+# Last Updated: 2019-12-03
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Create Composite USGS 3DEP 30 m Canada" combines individual DEM tiles, reprojects to NAD 1983 Alaska Albers, and resamples to 10 m.
 # ---------------------------------------------------------------------------
@@ -10,11 +10,11 @@
 # Import packages
 import arcpy
 from package_GeospatialProcessing import arcpy_geoprocessing
-from package_GeospatialProcessing import create_composite_dem
+from package_GeospatialProcessing import merge_source_tiles
 import os
 
 # Set root directory
-drive = 'K:/'
+drive = 'N:/'
 root_folder = 'ACCS_Work'
 
 # Define data folder
@@ -32,19 +32,20 @@ snap_raster = os.path.join(drive, 'ACCS_Work/Projects/VegetationEcology/AKVEG_Qu
 canada30m_composite = os.path.join(data_folder, 'Elevation_USGS3DEP_30m_Canada_AKALB.tif')
 
 # Define input and output arrays
-create_dem_inputs = [snap_raster]
-create_dem_outputs = [canada30m_composite]
+merge_tiles_inputs = [snap_raster]
+merge_tiles_outputs = [canada30m_composite]
 
 # Create key word arguments
-create_dem_kwargs = {'tile_folder': tile_folder,
+merge_tiles_kwargs = {'tile_folder': tile_folder,
                      'projected_folder': projected_folder,
+                     'workspace': arcpy.env.workspace,
                      'cell_size': 10,
                      'input_projection': 4269,
                      'output_projection': 3338,
                      'geographic_transformation': '',
-                     'input_array': create_dem_inputs,
-                     'output_array': create_dem_outputs
+                     'input_array': merge_tiles_inputs,
+                     'output_array': merge_tiles_outputs
                      }
 
-# Process the create polygon function with the point array
-arcpy_geoprocessing(create_composite_dem, **create_dem_kwargs)
+# Merge source tiles
+arcpy_geoprocessing(merge_source_tiles, **merge_tiles_kwargs)
