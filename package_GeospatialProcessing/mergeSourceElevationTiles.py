@@ -101,6 +101,8 @@ def merge_source_tiles(**kwargs):
                                            'BILINEAR',
                                            cell_size,
                                            geographic_transformation)
+            # Enforce new projection
+            arcpy.DefineProjection_management(reprojected_raster, composite_projection)
             # Set values less than -50 to null
             corrected_raster = SetNull(reprojected_raster, reprojected_raster, 'VALUE < -50')
             # Round to integer and store as 16 bit signed raster
@@ -161,6 +163,8 @@ def merge_source_tiles(**kwargs):
                                        '1',
                                        'MAXIMUM',
                                        'FIRST')
+    # Enforce correct projection
+    arcpy.DefineProjection_management(dem_composite, composite_projection)
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)

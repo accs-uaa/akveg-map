@@ -7,7 +7,7 @@
 # Description: "Create Composite DEM" is a function that merges multiple DEM source rasters according to a specified order of priority.
 # ---------------------------------------------------------------------------
 
-# Define a wrapper function for arcpy geoprocessing tasks
+# Define a function to merge multiple source elevation rasters according to an order of priority
 def create_composite_dem(**kwargs):
     """
     Description: extracts source rasters to an area and mosaics extracted source rasters with first data priority
@@ -115,15 +115,17 @@ def create_composite_dem(**kwargs):
     # Mosaic raster tiles to new raster
     print(f'\tMosaicking the input rasters for {grid_title}...')
     iteration_start = time.time()
-    out_process = arcpy.MosaicToNewRaster_management(input_rasters,
-                                                     mosaic_location,
-                                                     mosaic_name,
-                                                     composite_projection,
-                                                     '16_BIT_SIGNED',
-                                                     cell_size,
-                                                     '1',
-                                                     'FIRST',
-                                                     'FIRST')
+    arcpy.MosaicToNewRaster_management(input_rasters,
+                                       mosaic_location,
+                                       mosaic_name,
+                                       composite_projection,
+                                       '16_BIT_SIGNED',
+                                       cell_size,
+                                       '1',
+                                       'FIRST',
+                                       'FIRST')
+    # Enforce correct projection
+    arcpy.DefineProjection_management(composite_raster, composite_projection)
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)
