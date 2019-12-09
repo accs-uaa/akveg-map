@@ -19,7 +19,7 @@ import pickle
 import time
 
 # Set root directory
-drive = 'L:/'
+drive = 'K:/'
 root_folder = os.path.join(drive, 'ACCS_Work')
 
 # Set data folder
@@ -35,69 +35,76 @@ os.chdir(credentials_folder)
 # Set scopes
 scopes = ['https://www.googleapis.com/auth/drive']
 
-# Create persistent credentials
-credentials = None
-# The file token.pickle stores the user's access and refresh tokens, and is created automatically when the authorization flow completes for the first time.
-if os.path.exists('token.pickle'):
-    with open('token.pickle', 'rb') as token:
-        credentials = pickle.load(token)
-# If there are no (valid) credentials available, let the user log in.
-if not credentials or not credentials.valid:
-    if credentials and credentials.expired and credentials.refresh_token:
+# Reiterate download process until manually stopped in case errors occur in individual downloads
+reiterate = True
+while reiterate == True:
+
+    # Create persistent credentials
+    credentials = None
+    # The file token.pickle stores the user's access and refresh tokens, and is created automatically when the authorization flow completes for the first time.
+    if os.path.exists('token.pickle'):
+        with open('token.pickle', 'rb') as token:
+            credentials = pickle.load(token)
+    # If there are no (valid) credentials available, let the user log in.
+    if not credentials or not credentials.valid:
+        if credentials and credentials.expired and credentials.refresh_token:
+            credentials.refresh(Request())
+        else:
+            flow = InstalledAppFlow.from_client_secrets_file(
+                'client_secrets.json', scopes)
+            credentials = flow.run_local_server(port=8080)
+        # Save the credentials for the next run
+        with open('token.pickle', 'wb') as token:
+            pickle.dump(credentials, token)
+
+    # Build a Google Drive instance
+    drive_service = build('drive', 'v2', credentials=credentials)
+    print('Refresh token active:')
+    print(credentials.refresh_token)
+    print('----------')
+
+    # List all files in Google Drive Folder
+    file_id_list = list_from_drive(drive_service, google_folder)
+
+    # Subset list
+    file_id_subset = file_id_list[2101:5546]
+    total = len(file_id_subset)
+
+    # Download all files in Google Drive Folder
+
+    count = 1
+    for file_id in file_id_subset:
+
+        # Refresh the access token
         credentials.refresh(Request())
-    else:
-        flow = InstalledAppFlow.from_client_secrets_file(
-            'client_secrets.json', scopes)
-        credentials = flow.run_local_server(port=8080)
-    # Save the credentials for the next run
-    with open('token.pickle', 'wb') as token:
-        pickle.dump(credentials, token)
 
-# Build a Google Drive instance
-drive_service = build('drive', 'v2', credentials=credentials)
-print('Refresh token active:')
-print(credentials.refresh_token)
-print('----------')
+        # Get file title metadata by file id
+        file_meta = drive_service.files().get(fileId=file_id).execute()
+        file_title = file_meta['title']
+        # Generate download file path
+        output_file = os.path.join(data_folder, file_title)
 
-# List all files in Google Drive Folder
-file_id_list = list_from_drive(drive_service, google_folder)
+        # Start download file iteration if file does not exist.
+        if os.path.exists(output_file) == 0:
+            try:
+                # Start timing function
+                iteration_start = time.time()
+                # Download file
+                print(f'Downloading file {count} of {total}...')
+                download_from_drive(drive_service, file_id, file_title, output_file)
+                # End timing
+                iteration_end = time.time()
+                iteration_elapsed = int(iteration_end - iteration_start)
+                iteration_success_time = datetime.datetime.now()
+                # Report success
+                print(f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
+                print('\t----------')
+            except:
+                print('Download error occurred.')
 
-# Subset list
-file_id_subset = file_id_list[265:]
-total = len(file_id_subset)
+        # If file exists then skip download file iteration
+        else:
+            print(f'File {count} of {total} already exists...')
 
-# Download all files in Google Drive Folder
-count = 1
-for file_id in file_id_subset:
-
-    # Refresh the access token
-    credentials.refresh(Request())
-
-    # Get file title metadata by file id
-    file_meta = drive_service.files().get(fileId=file_id).execute()
-    file_title = file_meta['title']
-    # Generate download file path
-    output_file = os.path.join(data_folder, file_title)
-
-    # Start download file iteration if file does not exist.
-    if os.path.exists(output_file) == 0:
-
-        # Start timing function
-        iteration_start = time.time()
-        # Download file
-        print(f'Downloading file {count} of {total}...')
-        download_from_drive(drive_service, file_id, file_title, output_file)
-        # End timing
-        iteration_end = time.time()
-        iteration_elapsed = int(iteration_end - iteration_start)
-        iteration_success_time = datetime.datetime.now()
-        # Report success
-        print(f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
-        print('\t----------')
-
-    # If file exists then skip download file iteration
-    else:
-        print(f'File {count} of {total} already exists...')
-
-    # Increase count
-    count += 1
+        # Increase count
+        count += 1
