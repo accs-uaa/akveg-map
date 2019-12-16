@@ -20,8 +20,10 @@ def download_from_csv(input_table, url_column, directory):
     """
 
     # Import packages
+    import datetime
     import os
     import pandas as pd
+    import time
     import urllib
 
     # Import a csv file with the download urls for the Arctic DEM tiles
@@ -37,17 +39,28 @@ def download_from_csv(input_table, url_column, directory):
         target = os.path.join(directory, os.path.split(url)[1])
         if os.path.exists(target) == 0:
             try:
+                # Start timing function
+                iteration_start = time.time()
+                print(f'\tDownloading {count} of {n} tiles...')
+                # Download data
                 filedata = urllib.request.urlopen(url)
                 datatowrite = filedata.read()
                 with open(target, 'wb') as file:
                     file.write(datatowrite)
                     file.close()
-                print(f'\tDownloaded {count} of {n} tiles...')
+                # End timing
+                iteration_end = time.time()
+                iteration_elapsed = int(iteration_end - iteration_start)
+                iteration_success_time = datetime.datetime.now()
+                # Report success
+                print(f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
+                print('\t----------')
             except:
                 print(f'\tTile {count} of {n} not available for download. Check url.')
+                print('\t----------')
         else:
             print(f'\tTile {count} of {n} already exists...')
+            print('\t----------')
         count += 1
 
-    print('----------------')
     print('Finished downloading tiles.')
