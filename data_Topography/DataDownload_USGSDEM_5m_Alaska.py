@@ -19,7 +19,7 @@ root_folder = 'ACCS_Work'
 data_folder = os.path.join(drive, root_folder, 'Data/topography/USGS3DEP_5m_Alaska')
 
 # Define input csv table
-input_table = os.path.join(data_folder, 'USGS3DEP_Alaska_5m_20191014.csv')
+input_table = os.path.join(data_folder, 'USGS3DEP_5m_Alaska_Tiles.csv')
 url_column = 'downloadURL'
 
 # Set target directory for downloads
