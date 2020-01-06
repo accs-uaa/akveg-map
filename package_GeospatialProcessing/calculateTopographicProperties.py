@@ -31,7 +31,6 @@ def calculate_topographic_properties(**kwargs):
     from arcpy.sa import Aspect
     from package_Geomorphometry import compound_topographic
     from package_Geomorphometry import getZFactor
-    from package_Geomorphometry import integrated_moisture
     from package_Geomorphometry import linear_aspect
     from package_Geomorphometry import mean_slope
     from package_Geomorphometry import roughness
@@ -199,11 +198,15 @@ def calculate_topographic_properties(**kwargs):
                                     'NONE',
                                     'TIFF',
                                     'NONE')
-        arcpy.Delete_management(aspect_intermediate)
         # End timing
         iteration_end = time.time()
         iteration_elapsed = int(iteration_end - iteration_start)
         iteration_success_time = datetime.datetime.now()
+        # Delete intermediate dataset if possible
+        try:
+            arcpy.Delete_management(aspect_intermediate)
+        except:
+            print('\t\tCould not delete intermediate dataset...')
         # Report success
         print(f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
         print('\t----------')
@@ -241,11 +244,15 @@ def calculate_topographic_properties(**kwargs):
                                     'NONE',
                                     'TIFF',
                                     'NONE')
-        arcpy.Delete_management(cti_intermediate)
         # End timing
         iteration_end = time.time()
         iteration_elapsed = int(iteration_end - iteration_start)
         iteration_success_time = datetime.datetime.now()
+        # Delete intermediate dataset if possible
+        try:
+            arcpy.Delete_management(cti_intermediate)
+        except:
+            print('\t\tCould not delete intermediate dataset...')
         # Report success
         print(f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
         print('\t----------')
@@ -281,11 +288,15 @@ def calculate_topographic_properties(**kwargs):
                                     'NONE',
                                     'TIFF',
                                     'NONE')
-        arcpy.Delete_management(roughness_intermediate)
         # End timing
         iteration_end = time.time()
         iteration_elapsed = int(iteration_end - iteration_start)
         iteration_success_time = datetime.datetime.now()
+        # Delete intermediate dataset if possible
+        try:
+            arcpy.Delete_management(roughness_intermediate)
+        except:
+            print('\t\tCould not delete intermediate dataset...')
         # Report success
         print(
             f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
@@ -323,11 +334,15 @@ def calculate_topographic_properties(**kwargs):
                                     'NONE',
                                     'TIFF',
                                     'NONE')
-        arcpy.Delete_management(exposure_intermediate)
         # End timing
         iteration_end = time.time()
         iteration_elapsed = int(iteration_end - iteration_start)
         iteration_success_time = datetime.datetime.now()
+        # Delete intermediate dataset if possible
+        try:
+            arcpy.Delete_management(exposure_intermediate)
+        except:
+            print('\t\tCould not delete intermediate dataset...')
         # Report success
         print(
             f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
@@ -364,11 +379,15 @@ def calculate_topographic_properties(**kwargs):
                                     'NONE',
                                     'TIFF',
                                     'NONE')
-        arcpy.Delete_management(slope_intermediate)
         # End timing
         iteration_end = time.time()
         iteration_elapsed = int(iteration_end - iteration_start)
         iteration_success_time = datetime.datetime.now()
+        # Delete intermediate dataset if possible
+        try:
+            arcpy.Delete_management(slope_intermediate)
+        except:
+            print('\t\tCould not delete intermediate dataset...')
         # Report success
         print(
             f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
@@ -405,11 +424,15 @@ def calculate_topographic_properties(**kwargs):
                                     'NONE',
                                     'TIFF',
                                     'NONE')
-        arcpy.Delete_management(area_intermediate)
         # End timing
         iteration_end = time.time()
         iteration_elapsed = int(iteration_end - iteration_start)
         iteration_success_time = datetime.datetime.now()
+        # Delete intermediate dataset if possible
+        try:
+            arcpy.Delete_management(area_intermediate)
+        except:
+            print('\t\tCould not delete intermediate dataset...')
         # Report success
         print(
             f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
@@ -446,11 +469,15 @@ def calculate_topographic_properties(**kwargs):
                                     'NONE',
                                     'TIFF',
                                     'NONE')
-        arcpy.Delete_management(relief_intermediate)
         # End timing
         iteration_end = time.time()
         iteration_elapsed = int(iteration_end - iteration_start)
         iteration_success_time = datetime.datetime.now()
+        # Delete intermediate dataset if possible
+        try:
+            arcpy.Delete_management(relief_intermediate)
+        except:
+            print('\t\tCould not delete intermediate dataset...')
         # Report success
         print(
             f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
@@ -487,11 +514,15 @@ def calculate_topographic_properties(**kwargs):
                                     'NONE',
                                     'TIFF',
                                     'NONE')
-        arcpy.Delete_management(position_intermediate)
         # End timing
         iteration_end = time.time()
         iteration_elapsed = int(iteration_end - iteration_start)
         iteration_success_time = datetime.datetime.now()
+        # Delete intermediate dataset if possible
+        try:
+            arcpy.Delete_management(position_intermediate)
+        except:
+            print('\t\tCould not delete intermediate dataset...')
         # Report success
         print(
             f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
@@ -531,11 +562,15 @@ def calculate_topographic_properties(**kwargs):
                                     'NONE',
                                     'TIFF',
                                     'NONE')
-        arcpy.Delete_management(radiation_intermediate)
         # End timing
         iteration_end = time.time()
         iteration_elapsed = int(iteration_end - iteration_start)
         iteration_success_time = datetime.datetime.now()
+        # Delete intermediate dataset if possible
+        try:
+            arcpy.Delete_management(radiation_intermediate)
+        except:
+            print('\t\tCould not delete intermediate dataset...')
         # Report success
         print(
             f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
