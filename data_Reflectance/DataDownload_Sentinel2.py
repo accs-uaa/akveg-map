@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Download Data from Drive
+# Download Sentinel-2 Data from Drive
 # Author: Timm Nawrocki
-# Last Updated: 2019-12-03
+# Last Updated: 2020-01-06
 # Usage: Must be executed in a Python 3.7 installation with Google API Python Client and PyDrive installed.
-# Description: "Download Data from Drive" programmatically downloads batches of data from Google Drive. The script can be used to download spectral data processed into a Google Drive folder from Google Earth Engine.
+# Description: "Download Sentinel-2 Data from Drive" programmatically downloads Sentinel-2 tiles from a Google Drive folder. The spectral composites must first be calculated in Google Earth Engine and exported to the Google Drive folder.
 # ---------------------------------------------------------------------------
 
 # Import packages
