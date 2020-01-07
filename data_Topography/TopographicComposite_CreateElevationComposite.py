@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Create Elevation Composite Tiles
+# Create Elevation Composite
 # Author: Timm Nawrocki
-# Created on: 2019-12-03
+# Last Updated: 2019-12-19
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Create Elevation Composite Tiles" creates a composite from multiple sources based on order of priority. All sources must be in the same projection with the same cell size and grid. The grid tiles must be predefined as rasters.
+# Description: "Create Elevation Composite" creates a composite from multiple source DEMs based on order of priority. All sources must be in the same projection with the same cell size and grid. The grid tiles must be predefined as rasters.
 # ---------------------------------------------------------------------------
 
 # Import packages
@@ -28,7 +28,6 @@ snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG
 
 # Define source_rasters
 source_USGS_5m = os.path.join(data_folder, 'USGS3DEP_5m_Alaska/Elevation_USGS3DEP_5m_Alaska_AKALB.tif')
-source_USGS_10m = os.path.join(data_folder, 'USGS3DEP_10m_NPRA/Elevation_USGS3DEP_10m_NPRA_AKALB.tif')
 source_USGS_30m = os.path.join(data_folder, 'USGS3DEP_30m_Canada/Elevation_USGS3DEP_30m_Canada_AKALB.tif')
 source_USGS_60m = os.path.join(data_folder, 'USGS3DEP_60m_Alaska/Elevation_USGS3DEP_60m_Alaska_AKALB.tif')
 source_Alaska_10m = os.path.join(data_folder, 'ArcticDEM_10m_Alaska/Elevation_ArcticDEM_10m_Alaska_AKALB.tif')
@@ -36,7 +35,7 @@ source_Canada_10m = os.path.join(data_folder, 'ArcticDEM_10m_Canada/Elevation_Ar
 source_Yukon_30m = os.path.join(data_folder, 'EnvYukon_30m_Yukon/Elevation_EnvYukon_30m_Yukon_AKALB.tif')
 
 # Define prioritized list of elevation inputs
-elevation_inputs = [source_USGS_5m, source_USGS_10m, source_Alaska_10m, source_Canada_10m, source_USGS_30m, source_Yukon_30m, source_USGS_60m]
+elevation_inputs = [source_USGS_5m, source_Alaska_10m, source_Canada_10m, source_USGS_30m, source_Yukon_30m, source_USGS_60m]
 
 # Define root output name
 mosaic_name_root = 'Elevation_Composite_10m_Beringia_AKALB_'

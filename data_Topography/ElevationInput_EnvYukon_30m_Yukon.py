@@ -39,6 +39,7 @@ reproject_integer_kwargs = {'cell_size': 10,
                             'input_projection': 3578,
                             'output_projection': 3338,
                             'geographic_transformation': '',
+                            'conversion_factor': 1,
                             'input_array': reproject_integer_inputs,
                             'output_array': reproject_integer_outputs
                             }

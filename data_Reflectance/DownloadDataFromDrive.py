@@ -19,7 +19,7 @@ import pickle
 import time
 
 # Set root directory
-drive = 'K:/'
+drive = 'N:/'
 root_folder = os.path.join(drive, 'ACCS_Work')
 
 # Set data folder
@@ -67,7 +67,7 @@ while reiterate == True:
     file_id_list = list_from_drive(drive_service, google_folder)
 
     # Subset list
-    file_id_subset = file_id_list[2101:5546]
+    file_id_subset = file_id_list[310:5546]
     total = len(file_id_subset)
 
     # Download all files in Google Drive Folder

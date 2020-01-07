@@ -10,7 +10,7 @@
 # Import packages
 import arcpy
 from package_GeospatialProcessing import arcpy_geoprocessing
-from package_GeospatialProcessing import merge_source_tiles
+from package_GeospatialProcessing import merge_elevation_tiles
 import os
 
 # Set root directory
@@ -48,4 +48,4 @@ merge_tiles_kwargs = {'tile_folder': tile_folder,
                      }
 
 # Merge source tiles
-arcpy_geoprocessing(merge_source_tiles, **merge_tiles_kwargs)
+arcpy_geoprocessing(merge_elevation_tiles, **merge_tiles_kwargs)

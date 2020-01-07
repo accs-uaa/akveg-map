@@ -8,7 +8,7 @@
 # ---------------------------------------------------------------------------
 
 # Define function to merge source elevation tiles
-def merge_source_tiles(**kwargs):
+def merge_elevation_tiles(**kwargs):
     """
     Description: creates a DEM from individual DEM tiles
     Inputs: 'tile_folder' -- a folder containing the raster tiles
