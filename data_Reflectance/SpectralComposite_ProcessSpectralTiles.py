@@ -21,11 +21,10 @@ root_folder = 'ACCS_Work'
 
 # Define data folder
 data_folder = os.path.join(drive, root_folder, 'Data/imagery/sentinel-2')
-unprocessed_folder = os.path.join(data_folder, 'test')
+unprocessed_folder = os.path.join(data_folder, 'unprocessed/select')
 processed_folder = os.path.join(data_folder, 'processed')
 
 # Define input datasets
-grid_major = os.path.join(drive, root_folder, 'Data/analyses/gridMajor')
 snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/areaOfInterest_Initial.tif')
 
 # Define working geodatabase
@@ -61,9 +60,6 @@ print('----------')
 arcpy.env.workspace = geodatabase
 # Set initial tile count
 tile_count = 1
-
-# Subset list
-#unprocessed_tiles = unprocessed_tiles[120:121]
 
 # Reproject all imagery tiles
 for tile in unprocessed_tiles:

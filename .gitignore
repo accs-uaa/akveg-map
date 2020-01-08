@@ -11,6 +11,8 @@
 # Logs #
 ######################
 *.log
+*.xml
+*.iml
 
 # OS generated files #
 ######################
@@ -21,3 +23,4 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
+*.db
