@@ -51,19 +51,11 @@ These instructions will enable you to run the Beringian Vegetation Ecological At
 
 ### Installing
 
-1. Install ArcGIS Pro, 
-
-   [Anaconda]: https://www.anaconda.com/distribution/
-
-   , and 
-
-   [R]: https://www.r-project.org/
-
-    in a local environment according to the documentation provided by the originators.
+1. Install ArcGIS Pro, [Anaconda](https://www.anaconda.com/distribution/), and [R](https://www.r-project.org/) in a local environment according to the documentation provided by the originators.
 
 2. In ArcGIS Pro, select the python management option. Using the conda install option, install the most recent version of psycopg2.
 3. Download or clone this repository to a folder on a drive accessible to your machine. Local drives may perform better than network drives. The structure and names of files and folders within the repository should not be altered.
-4. In order to query a local version of the Alaska Vegetation Plots Database, set up a PostGreSQL server and create a local instance of the database. For more information, see: https://github.com/accs-uaa/vegetation-plots-database.
+4. In order to query a local version of the Alaska Vegetation Plots Database, set up a [PostGreSQL](https://www.postgresql.org/) server and create a local instance of the database. For more information, see: https://github.com/accs-uaa/vegetation-plots-database.
 5. Configure access to Google Earth Engine and an appropriate Google data storage option that can be associated with Google Earth Engine. For more information, see: https://earthengine.google.com/.
 6. *Optional*: Configure access to Google Cloud Compute Engine (or another provisioner of cloud computational resources) and set up virtual machines. Instructions for setting up virtual machines are included in the "cloudCompute" folder of this repository. For more information on configuring Google Cloud Compute Engine, see: https://cloud.google.com/compute/.
 
@@ -91,11 +83,7 @@ Scripts are located in (../data_Reflectance/sentinel2):
 
 **Instructions for Google Earth Engine:**
 
-* In the 
-
-  [Google Earth Engine code editor]: https://code.earthengine.google.com/
-
-  , paste the monthly earth engine script into the javascript window. You can optionally modify and save the script in a git repository within Google Earth Engine.
+* In the [Google Earth Engine code editor](https://code.earthengine.google.com/), paste the monthly earth engine script into the javascript window. You can optionally modify and save the script in a git repository within Google Earth Engine.
 
 * Run the script. The results can be inspected in the map window (shows a natural color blue-green-red image), in the inspector, and in the console.
 * Each image must be exported to a Google Drive folder (or other Google storage option) by clicking the "Run" button. The export requires a large amount of available storage in the Google Drive (over 10 TB) and can take several days to weeks to process.
@@ -111,23 +99,15 @@ Script is located in (../data_Reflectance/modis_lst):
 
 **Instructions for Google Earth Engine:**
 
-* In the 
+* In the [Google Earth Engine code editor](https://code.earthengine.google.com/), paste the earth engine script into the javascript window. You can optionally modify and save the script in a git repository within Google Earth Engine.
 
-  [Google Earth Engine code editor]: https://code.earthengine.google.com/
-
-  , paste the monthly earth engine script into the javascript window. You can optionally modify and save the script in a git repository within Google Earth Engine.
-
-* Run the script. The results can be inspected in the map window (shows a natural color blue-green-red image), in the inspector, and in the console.
+* Run the script. The results can be inspected in the map window (shows a false color LST image), in the inspector, and in the console.
 * Each image must be exported to a Google Drive folder (or other Google storage option) by clicking the "Run" button.
 * Download the imagery from the Google storage to a local directory (see the script "DataDownload_lstMODIS.py").
 
 #### 1.3. Download Sentinel-2 Data
 
-Anaconda Python script downloads all files from a google folder. Depending on amount of data to be downloaded and connection speed, this process may take days to weeks to complete. The 
-
-[Google API client]: https://console.developers.google.com/
-
- must be used to create a credentials file called "client_secrets.json" prior to running this script and the file must be in an accessible location specified in the script. For more information on "client_secrets.json", see the Google documentation: https://developers.google.com/api-client-library/dotnet/guide/aaa_client_secrets.
+Anaconda Python script downloads all files from a google folder. Depending on amount of data to be downloaded and connection speed, this process may take days to weeks to complete. The [Google API client](https://console.developers.google.com/) must be used to create a credentials file called "client_secrets.json" prior to running this script and the file must be in an accessible location specified in the script. For more information on "client_secrets.json", see the Google documentation: https://developers.google.com/api-client-library/dotnet/guide/aaa_client_secrets.
 
 Script is located in (../data_Reflectance)
 
@@ -149,11 +129,7 @@ Script is located in (../data_Reflectance)
 
 #### 1.4. Download MODIS LST Data
 
-Anaconda Python script downloads all files from a google folder. The 
-
-[Google API client]: https://console.developers.google.com/
-
- must be used to create a credentials file called "client_secrets.json" prior to running this script and the file must be in an accessible location specified in the script. For more information on "client_secrets.json", see the Google documentation: https://developers.google.com/api-client-library/dotnet/guide/aaa_client_secrets.
+Anaconda Python script downloads all files from a google folder. The [Google API client](https://console.developers.google.com/) must be used to create a credentials file called "client_secrets.json" prior to running this script and the file must be in an accessible location specified in the script. For more information on "client_secrets.json", see the Google documentation: https://developers.google.com/api-client-library/dotnet/guide/aaa_client_secrets.
 
 Script is located in (../data_Reflectance)
 
@@ -173,11 +149,7 @@ Script is located in (../data_Reflectance)
 
 #### 1.5. Download SNAP 15 km Climate Data for Northwest North America
 
-Anaconda Python script downloads all files specified in a column of a csv file. The csv file must be created manually prior to executing this script. Climate data from the Scenarios Network for Alaska and Arctic Planning (SNAP) is publicly available through an 
-
-[online data portal]: http://data.snap.uaf.edu/data/
-
-. This script was originally set via the csv file to download the 15 km resolution data for Northwest North America.
+Anaconda Python script downloads all files specified in a column of a csv file. The csv file must be created manually prior to executing this script. Climate data from the Scenarios Network for Alaska and Arctic Planning (SNAP) is publicly available through an [online data portal](http://data.snap.uaf.edu/data/). This script was originally set via the csv file to download the 15 km resolution data for Northwest North America.
 
 Script is located in (../data_Climate)
 
@@ -194,11 +166,7 @@ Script is located in (../data_Climate)
 
 #### 1.6. Download SNAP 2 km Climate Data for Northwest North America
 
-Anaconda Python script downloads all files specified in a column of a csv file. The csv file must be created manually prior to executing this script. Climate data from the Scenarios Network for Alaska and Arctic Planning (SNAP) is publicly available through an 
-
-[online data portal]: http://data.snap.uaf.edu/data/
-
-. This script was originally set via the csv file to download the 2 km resolution data for Northwest North America.
+Anaconda Python script downloads all files specified in a column of a csv file. The csv file must be created manually prior to executing this script. Climate data from the Scenarios Network for Alaska and Arctic Planning (SNAP) is publicly available through an [online data portal](http://data.snap.uaf.edu/data/). This script was originally set via the csv file to download the 2 km resolution data for Northwest North America.
 
 Script is located in (../data_Climate)
 
@@ -215,11 +183,7 @@ Script is located in (../data_Climate)
 
 #### 1.7. Download Arctic DEM 10 m Alaska Tiles
 
-Anaconda Python script downloads all files specified in a column of a csv file. The csv file should be created manually prior to executing this script from the Grid Index shapefile for the Arctic Digital Elevation Model (DEM). The Grid Index shapefile is publicly available through the 
-
-[Arctic DEM website]: https://www.pgc.umn.edu/data/arcticdem/
-
-. This script was originally set via the csv file to download the tiles from Alaska.
+Anaconda Python script downloads all files specified in a column of a csv file. The csv file should be created manually prior to executing this script from the Grid Index shapefile for the Arctic Digital Elevation Model (DEM). The Grid Index shapefile is publicly available through the [Arctic DEM website](https://www.pgc.umn.edu/data/arcticdem/). This script was originally set via the csv file to download the tiles from Alaska.
 
 Script is located in (../data_Topography)
 
@@ -236,11 +200,7 @@ Script is located in (../data_Topography)
 
 #### 1.8. Download Arctic DEM 10 m Canada Tiles
 
-Anaconda Python script downloads all files specified in a column of a csv file. The csv file should be created manually prior to executing this script from the Grid Index shapefile for the Arctic Digital Elevation Model (DEM). The Grid Index shapefile is publicly available through the 
-
-[Arctic DEM website]: https://www.pgc.umn.edu/data/arcticdem/
-
-. This script was originally set via the csv file to download the tiles from Northwest Canada.
+Anaconda Python script downloads all files specified in a column of a csv file. The csv file should be created manually prior to executing this script from the Grid Index shapefile for the Arctic Digital Elevation Model (DEM). The Grid Index shapefile is publicly available through the [Arctic DEM website](https://www.pgc.umn.edu/data/arcticdem/). This script was originally set via the csv file to download the tiles from Northwest Canada.
 
 Script is located in (../data_Topography)
 
@@ -257,11 +217,7 @@ Script is located in (../data_Topography)
 
 #### 1.9. Download EnvYukon DEM 30 m Yukon Tiles
 
-Anaconda Python script downloads all files specified in a column of a csv file. The csv file should be created manually prior to executing this script. The Yukon 30 m DEM is available from the 
-
-[Environment Yukon website]: https://yukon.ca/en/map-gis-data-environmental#yukon-digital-elevation-model
-
-.
+Anaconda Python script downloads all files specified in a column of a csv file. The csv file should be created manually prior to executing this script. The Yukon 30 m DEM is available from the [Environment Yukon website](https://yukon.ca/en/map-gis-data-environmental#yukon-digital-elevation-model).
 
 Script is located in (../data_Topography)
 
@@ -278,11 +234,7 @@ Script is located in (../data_Topography)
 
 #### 1.10. Download USGS3DEP 5 m Alaska Tiles
 
-Anaconda Python script downloads all files specified in a column of a csv file. The csv file should be created automatically through the USGS National Map Viewer web application prior to executing this script. The 5 m DEM elevation tiles can be filtered through the "Elevation Products (3DEP)" category of the
-
-[National Map Viewer]: https://viewer.nationalmap.gov/basic/
-
-.
+Anaconda Python script downloads all files specified in a column of a csv file. The csv file should be created automatically through the USGS National Map Viewer web application prior to executing this script. The 5 m DEM elevation tiles can be filtered through the "Elevation Products (3DEP)" category of the [National Map Viewer](https://viewer.nationalmap.gov/basic/).
 
 Script is located in (../data_Topography)
 
@@ -299,11 +251,7 @@ Script is located in (../data_Topography)
 
 #### 1.11. Download USGS3DEP 10 m Alaska Tiles
 
-Anaconda Python script downloads all files specified in a column of a csv file. The csv file should be created automatically through the USGS National Map Viewer web application prior to executing this script. The 1/3 arc-second (approximately 10 m) DEM elevation tiles can be filtered through the "Elevation Products (3DEP)" category of the
-
-[National Map Viewer]: https://viewer.nationalmap.gov/basic/
-
-.
+Anaconda Python script downloads all files specified in a column of a csv file. The csv file should be created automatically through the USGS National Map Viewer web application prior to executing this script. The 1/3 arc-second (approximately 10 m) DEM elevation tiles can be filtered through the "Elevation Products (3DEP)" category of the [National Map Viewer](https://viewer.nationalmap.gov/basic/).
 
 Script is located in (../data_Topography)
 
@@ -320,11 +268,7 @@ Script is located in (../data_Topography)
 
 #### 1.12. Download USGS3DEP 30 m Canada Tiles
 
-Anaconda Python script downloads all files specified in a column of a csv file. The csv file should be created automatically through the USGS National Map Viewer web application prior to executing this script. The 1 arc-second (approximately 30 m) DEM elevation tiles can be filtered through the "Elevation Products (3DEP)" category of the
-
-[National Map Viewer]: https://viewer.nationalmap.gov/basic/
-
-.
+Anaconda Python script downloads all files specified in a column of a csv file. The csv file should be created automatically through the USGS National Map Viewer web application prior to executing this script. The 1 arc-second (approximately 30 m) DEM elevation tiles can be filtered through the "Elevation Products (3DEP)" category of the [National Map Viewer](https://viewer.nationalmap.gov/basic/).
 
 Script is located in (../data_Topography)
 
@@ -341,11 +285,7 @@ Script is located in (../data_Topography)
 
 #### 1.13. Download USGS3DEP 60 m Alaska Tiles
 
-Anaconda Python script downloads all files specified in a column of a csv file. The csv file should be created automatically through the USGS National Map Viewer web application prior to executing this script. The 2 arc-second (approximately 60 m) DEM elevation tiles can be filtered through the "Elevation Products (3DEP)" category of the
-
-[National Map Viewer]: https://viewer.nationalmap.gov/basic/
-
-.
+Anaconda Python script downloads all files specified in a column of a csv file. The csv file should be created automatically through the USGS National Map Viewer web application prior to executing this script. The 2 arc-second (approximately 60 m) DEM elevation tiles can be filtered through the "Elevation Products (3DEP)" category of the [National Map Viewer](https://viewer.nationalmap.gov/basic/).
 
 Script is located in (../data_Topography)
 
@@ -609,11 +549,7 @@ This section describes the packages and functions designed for the analysis of B
 
 ### 1. Geomorphometry
 
-The Geomorphometry package includes scripts to calculate topographic properties from a DEM. All scripts in the Geomorphometry package are adapted from the 
-
-[Geomorphometry and Gradient Metrics Toolbox 2.0]: https://github.com/jeffreyevans/GradientMetrics
-
- (Evans et al. 2014) and based on the gradient surface metrics described by Cushman et al. (2010).
+The Geomorphometry package includes scripts to calculate topographic properties from a DEM. All scripts in the Geomorphometry package are adapted from the [Geomorphometry and Gradient Metrics Toolbox 2.0](https://github.com/jeffreyevans/GradientMetrics) (Evans et al. 2014) and based on the gradient surface metrics described by Cushman et al. (2010).
 
 #### 1.1. Compound Topographic
 
