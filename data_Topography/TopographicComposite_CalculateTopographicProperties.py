@@ -26,9 +26,6 @@ data_folder = os.path.join(drive, root_folder, 'Data/topography/Composite_10m_Be
 grid_major = os.path.join(drive, root_folder, 'Data/analyses/gridMajor')
 snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/areaOfInterest_Initial.tif')
 
-# Select the Geomorphometry and Gradient Toolbox
-gradient_toolbox = os.path.join(drive, root_folder, 'Tools/GradientMetrics/Geomorphometry_Gradient_Metrics.tbx')
-
 # Define root input name
 elevation_name_root = 'Elevation_Composite_10m_Beringia_AKALB_'
 
