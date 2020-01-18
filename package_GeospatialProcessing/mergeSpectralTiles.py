@@ -226,7 +226,9 @@ def merge_spectral_tiles(**kwargs):
                                 'NONE',
                                 'TIFF',
                                 'NONE')
-
+    # Delete mosaic raster
+    if arcpy.Exists(mosaic_raster) == 1:
+        arcpy.Delete_management(mosaic_raster)
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)
