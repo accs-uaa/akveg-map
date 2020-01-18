@@ -135,5 +135,5 @@ for metric in metrics_list:
             print(f'Spectral grid {grid_count} of {grids_length} for {metric} already exists.')
             print('----------')
 
-            # Increase counter
-        tile_count += 1
+        # Increase counter
+        grid_count += 1
