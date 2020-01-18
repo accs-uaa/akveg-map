@@ -31,6 +31,8 @@ snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG
 
 # Define working geodatabase
 geodatabase = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/BeringiaVegetation.gdb')
+# Set environment workspace
+arcpy.env.workspace = geodatabase
 
 # Set overwrite option
 arcpy.env.overwriteOutput = True
@@ -65,19 +67,22 @@ for month in months:
     for property in properties:
         month_property = month + '_' + property
         metrics_list.append(month_property)
+metrics_length = len(metrics_list)
 
 # List grid rasters
 print('Searching for grid rasters...')
 # Start timing function
 iteration_start = time.time()
-# Set environment workspace to the folder containing the grid rasters
-arcpy.env.workspace = grid_major
-# Create a raster list using the Arcpy List Rasters function
-raster_list = arcpy.ListRasters('*', 'TIF')
+# Create a list of included grids
+grid_list = ['A5', 'A6', 'A7', 'A8', 'A9',
+             'B4', 'B5', 'B6', 'B7', 'B8', 'B9', 'B10',
+             'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10',
+             'D4', 'D5', 'D6',
+             'E5']
 # Append file names to rasters in list
 grids = []
-for raster in raster_list:
-    raster_path = os.path.join(grid_major, raster)
+for grid in grid_list:
+    raster_path = os.path.join(grid_major, 'Grid_' + grid + '.tif')
     grids.append(raster_path)
 grids_length = len(grids)
 print(f'Spectral composites will be created for {grids_length} grids and {metrics_length} metrics...')
@@ -88,9 +93,6 @@ iteration_success_time = datetime.datetime.now()
 # Report success
 print(f'Completed at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
 print('----------')
-
-# Reset environment workspace
-arcpy.env.workspace = geodatabase
 
 # Iterate through each buffered grid and create elevation composite
 for metric in metrics_list:
@@ -112,7 +114,7 @@ for metric in metrics_list:
 
         # If spectral grid does not exist then create spectral grid
         if arcpy.Exists(spectral_grid) == 0:
-            print(f'Processing {metric} grid {grid_count} of {grid_length}...')
+            print(f'Processing {metric} grid {grid_count} of {grids_length}...')
 
             # Define input and output arrays
             merge_inputs = [grid] + metric_tiles
