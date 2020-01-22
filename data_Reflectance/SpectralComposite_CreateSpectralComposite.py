@@ -38,11 +38,7 @@ arcpy.env.workspace = geodatabase
 arcpy.env.overwriteOutput = True
 
 # Define month and property values
-months = ['05May',
-          '06June',
-          '07July',
-          '08August',
-          '09September']
+months = ['07July']
 properties = ['2_blue',
               '3_green',
               '4_red',
