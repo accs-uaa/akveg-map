@@ -1,19 +1,18 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Create Spectral Composite
+# Format MODIS Land Surface Temperature
 # Author: Timm Nawrocki
-# Last Updated: 2019-12-30
+# Last Updated: 2020-03-02
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Create Spectral Composite" merges spectral tiles by month and property per predefined grid.
+# Description: "Format MODIS Land Surface Temperature" reprojects the LST data and converts to integers per predefined grid.
 # ---------------------------------------------------------------------------
 
 # Import packages
 import arcpy
 import datetime
-import glob
 import os
 from package_GeospatialProcessing import arcpy_geoprocessing
-from package_GeospatialProcessing import merge_spectral_tiles
+from package_GeospatialProcessing import format_lst
 import time
 
 # Set root directory
@@ -21,8 +20,8 @@ drive = 'N:/'
 root_folder = 'ACCS_Work'
 
 # Define data folder
-data_folder = os.path.join(drive, root_folder, 'Data/imagery/sentinel-2')
-processed_folder = os.path.join(data_folder, 'processed')
+data_folder = os.path.join(drive, root_folder, 'Data/imagery/modis')
+unprocessed_folder = os.path.join(data_folder, 'unprocessed')
 gridded_folder = os.path.join(data_folder, 'gridded')
 
 # Define input datasets
@@ -44,30 +43,13 @@ months = ['05May',
           '08August',
           '09September'
           ]
-properties = ['2_blue',
-              '3_green',
-              '4_red',
-              '5_redEdge1',
-              '6_redEdge2',
-              '7_redEdge3',
-              '8_nearInfrared',
-              '8a_redEdge4',
-              '11_shortInfrared1',
-              '12_shortInfrared2',
-              'evi2',
-              'nbr',
-              'ndmi',
-              'ndsi',
-              'ndvi',
-              'ndwi'
-              ]
+property = 'meanLST'
 
 # Create a list of all month-property combinations
 metrics_list = []
 for month in months:
-    for property in properties:
-        month_property = month + '_' + property
-        metrics_list.append(month_property)
+    month_property = month + '_' + property
+    metrics_list.append(month_property)
 metrics_length = len(metrics_list)
 
 # List grid rasters
@@ -95,11 +77,10 @@ iteration_success_time = datetime.datetime.now()
 print(f'Completed at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
 print('----------')
 
-# Iterate through each buffered grid and create spectral composite
+# Iterate through each buffered grid and create LST composite
 for metric in metrics_list:
-    # Create list of all metric tiles
-    file_search = 'Sent2_' + metric + '*.tif'
-    metric_tiles = glob.glob(os.path.join(processed_folder, file_search))
+    # Define LST Raster
+    lst_raster = os.path.join(unprocessed_folder, 'MODIS_' + metric + '.tif')
 
     # Set initial grid count
     grid_count = 1
@@ -111,29 +92,31 @@ for metric in metrics_list:
         grid_folder = os.path.join(gridded_folder, grid_title)
 
         # Define processed grid raster
-        spectral_grid = os.path.join(grid_folder, 'Sent2_' + metric + '_AKALB_' + grid_title + '.tif')
+        lst_grid = os.path.join(grid_folder, 'MODIS_' + metric + '_AKALB_' + grid_title + '.tif')
 
-        # If spectral grid does not exist then create spectral grid
-        if arcpy.Exists(spectral_grid) == 0:
+        # If LST grid does not exist then create LST grid
+        if arcpy.Exists(lst_grid) == 0:
             print(f'Processing {metric} grid {grid_count} of {grids_length}...')
 
             # Define input and output arrays
-            merge_inputs = [grid] + metric_tiles
-            merge_outputs = [spectral_grid]
+            lst_inputs = [grid, lst_raster]
+            lst_outputs = [lst_grid]
 
             # Create key word arguments
-            merge_kwargs = {'cell_size': 10,
-                            'output_projection': 3338,
-                            'input_array': merge_inputs,
-                            'output_array': merge_outputs
-                            }
+            lst_kwargs = {'cell_size': 10,
+                          'input_projection': 4326,
+                          'output_projection': 3338,
+                          'geographic_transform': 'WGS_1984_(ITRF00)_To_NAD_1983',
+                          'input_array': lst_inputs,
+                          'output_array': lst_outputs
+                          }
 
             # Process the reproject integer function
-            arcpy_geoprocessing(merge_spectral_tiles, **merge_kwargs)
+            arcpy_geoprocessing(format_lst, **lst_kwargs)
             print('----------')
 
         else:
-            print(f'Spectral grid {grid_count} of {grids_length} for {metric} already exists.')
+            print(f'LST grid {grid_count} of {grids_length} for {metric} already exists.')
             print('----------')
 
         # Increase counter
