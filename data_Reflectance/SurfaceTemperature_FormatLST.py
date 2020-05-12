@@ -22,11 +22,11 @@ root_folder = 'ACCS_Work'
 # Define data folder
 data_folder = os.path.join(drive, root_folder, 'Data/imagery/modis')
 unprocessed_folder = os.path.join(data_folder, 'unprocessed')
-gridded_folder = os.path.join(data_folder, 'gridded')
+gridded_folder = os.path.join(data_folder, 'gridded_full')
 
 # Define input datasets
 grid_major = os.path.join(drive, root_folder, 'Data/analyses/gridMajor')
-snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/areaOfInterest_Initial.tif')
+snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/northAmericanBeringia_TotalArea.tif')
 
 # Define working geodatabase
 geodatabase = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/BeringiaVegetation.gdb')

@@ -27,7 +27,7 @@ arcpy.env.workspace = os.path.join(project_folder, 'BeringiaVegetation.gdb')
 
 # Define input raster datasets
 total_area = os.path.join(arcpy.env.workspace, 'northAmericanBeringia_TotalArea')
-snap_raster = os.path.join(project_folder, 'Data_Input/areaOfInterest_Initial.tif')
+snap_raster = os.path.join(project_folder, 'Data_Input/northAmericanBeringia_TotalArea.tif')
 
 # Define grid datasets
 major_grid = os.path.join(arcpy.env.workspace, 'NorthAmericanBeringia_GridIndex_Major_400km')

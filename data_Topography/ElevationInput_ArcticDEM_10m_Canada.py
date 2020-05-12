@@ -26,7 +26,7 @@ arcpy.env.workspace = os.path.join(drive, root_folder, 'Projects/VegetationEcolo
 # Define input datasets
 tile_folder = os.path.join(data_folder, 'tiles')
 projected_folder = os.path.join(data_folder, 'tiles_projected')
-snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/areaOfInterest_Initial.tif')
+snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/northAmericanBeringia_TotalArea.tif')
 
 # Define output raster
 arctic10m_composite = os.path.join(data_folder, 'Elevation_ArcticDEM_10m_Canada_AKALB.tif')

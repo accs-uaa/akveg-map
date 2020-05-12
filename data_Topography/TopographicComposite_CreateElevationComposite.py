@@ -24,7 +24,7 @@ data_folder = os.path.join(drive, root_folder, 'Data/topography')
 
 # Define input datasets
 grid_major = os.path.join(drive, root_folder, 'Data/analyses/gridMajor')
-snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/areaOfInterest_Initial.tif')
+snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/northAmericanBeringia_TotalArea.tif')
 
 # Define source_rasters
 source_USGS_5m = os.path.join(data_folder, 'USGS3DEP_5m_Alaska/Elevation_USGS3DEP_5m_Alaska_AKALB.tif')
@@ -75,7 +75,7 @@ for grid in grids:
     grid_title = os.path.splitext(os.path.split(grid)[1])[0]
 
     # Define mosaic name and location
-    mosaic_location = os.path.join(data_folder, 'Composite_10m_Beringia', grid_title)
+    mosaic_location = os.path.join(data_folder, 'Composite_10m_Beringia', grid_title + '_full')
     mosaic_name = mosaic_name_root + grid_title + '.tif'
     output_mosaic = os.path.join(mosaic_location, mosaic_name)
 

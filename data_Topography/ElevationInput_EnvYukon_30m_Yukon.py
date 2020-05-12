@@ -25,7 +25,7 @@ arcpy.env.workspace = os.path.join(drive, root_folder, 'Projects/VegetationEcolo
 
 # Define input datasets
 input_raster = os.path.join(data_folder, 'original/yt_30m_dem.tif')
-snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/areaOfInterest_Initial.tif')
+snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/northAmericanBeringia_TotalArea.tif')
 
 # Define output raster
 output_raster = os.path.join(data_folder, 'Elevation_EnvYukon_30m_Yukon_AKALB.tif')

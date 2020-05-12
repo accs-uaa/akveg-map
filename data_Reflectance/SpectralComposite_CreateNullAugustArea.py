@@ -23,7 +23,7 @@ processed_folder = os.path.join(data_folder, 'processed')
 mask_folder = os.path.join(data_folder, 'mask')
 
 # Define input dataset
-snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/areaOfInterest_Initial.tif')
+snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/northAmericanBeringia_TotalArea.tif')
 extent_feature = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/BeringiaVegetation.gdb/NorthAmericanBeringia_ModelArea')
 
 # Define output dataset
