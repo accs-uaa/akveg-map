@@ -24,6 +24,7 @@ data_folder = os.path.join(drive, root_folder, 'Data')
 input_sentinel = os.path.join(data_folder, 'imagery/sentinel-2/gridded_full')
 input_modis = os.path.join(data_folder, 'imagery/modis/gridded_full')
 input_topography = os.path.join(data_folder, 'topography/Composite_10m_Beringia/gridded_full')
+input_grids = os.path.join(data_folder, 'analyses/GridMajor')
 
 # Define work environment
 work_geodatabase = os.path.join(drive,
@@ -46,6 +47,9 @@ study_area = os.path.join(drive,
 # Loop through each grid in list and extract all predictors to study area
 for grid in grid_list:
     print(f'Extracting rasters for Grid {grid}...')
+
+    # Define the grid raster
+    grid_raster = os.path.join(input_grids, "Grid_" + grid + ".tif")
 
     # Generate a list of rasters
     raster_list = []
@@ -84,7 +88,7 @@ for grid in grid_list:
         # Check if output already exists
         if arcpy.Exists(output_raster) == 0:
             # Define input and output arrays
-            extract_inputs = [input_raster, study_area]
+            extract_inputs = [input_raster, study_area, grid_raster]
             extract_outputs = [output_raster]
 
             # Create key word arguments

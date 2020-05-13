@@ -12,7 +12,7 @@ def extract_to_study_area(**kwargs):
     """
     Description: extracts a raster to a study area
     Inputs: 'work_geodatabase' -- path to a file geodatabase that will serve as the workspace
-            'input_array' -- an array containing the target raster to extract (must be first) and the study area raster
+            'input_array' -- an array containing the target raster to extract (must be first), the study area raster (must be second), and the grid raster (must be third)
             'output_array' -- an array containing the output raster
     Returned Value: Returns a raster dataset
     Preconditions: the initial raster must be created from other scripts and the study area raster must be created manually
@@ -21,14 +21,15 @@ def extract_to_study_area(**kwargs):
     # Import packages
     import arcpy
     from arcpy.sa import ExtractByMask
+    from arcpy.sa import Raster
     import datetime
-    import os
     import time
 
     # Parse key word argument inputs
     work_geodatabase = kwargs['work_geodatabase']
     input_raster = kwargs['input_array'][0]
     study_area = kwargs['input_array'][1]
+    grid_raster = kwargs['input_array'][2]
     output_raster = kwargs['output_array'][0]
 
     # Set overwrite option
@@ -37,8 +38,9 @@ def extract_to_study_area(**kwargs):
     # Set workspace
     arcpy.env.workspace = work_geodatabase
 
-    # Set snap raster
+    # Set snap raster and extent
     arcpy.env.snapRaster = study_area
+    arcpy.env.extent = Raster(grid_raster).extent
 
     # Extract raster to study area
     iteration_start = time.time()

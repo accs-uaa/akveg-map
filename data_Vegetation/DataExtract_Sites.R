@@ -41,6 +41,7 @@ print(grid_list)
 # Loop through all grids with site data and extract features to sites
 count = 1
 for (grid in grid_list) {
+  print(grid)
   print(paste('Extracting predictor data to site grid ', count, ' of ', grid_length, '...', sep=''))
   count = count + 1
   
