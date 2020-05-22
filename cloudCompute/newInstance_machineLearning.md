@@ -87,8 +87,10 @@ Using ssh for the first time will create an SSH directory and key with optional 
 
 #### Install latest Anaconda release
 ```
-wget https://repo.anaconda.com/archive/Anaconda3-2019.10-Linux-x86_64.sh
-bash Anaconda3-2019.10-Linux-x86_64.sh
+#wget https://repo.anaconda.com/archive/Anaconda3-2019.10-Linux-x86_64.sh
+#bash Anaconda3-2019.10-Linux-x86_64.sh
+wget https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_64.s
+bash Anaconda3-2020.02-Linux-x86_64.sh
 ```
 
 At the option to prepend the Anaconda3 install location to PATH in your /home... enter yes.
@@ -97,12 +99,13 @@ At the option to install Microsoft VSCode enter no.
 
 #### Remove the installation file and start bashrc
 ```
-rm Anaconda3-2019.10-Linux-x86_64.sh
+#rm Anaconda3-2019.10-Linux-x86_64.sh
+rm Anaconda3-2020.02-Linux-x86_64.sh
 source ~/.bashrc
 ```
 
 #### Install additional python packages
-The cover modeling notebooks require packages that are not included in the Anaconda distribution for bayesian optimization and gradient boosting. Those must be installed using pip.
+pythonThe cover modeling notebooks require packages that are not included in the Anaconda distribution for bayesian optimization and gradient boosting. Those must be installed using pip.
 
 ```
 python3 -m pip install --upgrade pip setuptools wheel
@@ -169,7 +172,7 @@ The following commands must be run every time the instance is started to launch 
 
 ### Start jupyter notebook server
 ```
-cd notebooks
+cd scripts
 jupyter notebook
 ```
 

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Format Site Data
+# Parse Sites to Grids
 # Author: Timm Nawrocki
 # Created on: 2020-05-06
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Format Site Data" prepares a table of point data for feature extraction by selecting appropriate raster cells based on cell size and splitting raster points by major grid.
+# Description: "Parse Sites to Grids" prepares a table of point data for feature extraction by selecting appropriate raster cells based on cell size and splits raster points by major grids.
 # ---------------------------------------------------------------------------
 
 # Import packages

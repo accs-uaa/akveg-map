@@ -12,16 +12,33 @@ drive = 'N:'
 root_folder = 'ACCS_Work'
 
 # Define input folders
-parsed_folder = paste(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/sites/parsed', sep = '/')
-sentinel2_folder = paste(drive, root_folder, 'Data/imagery/sentinel-2/gridded_select', sep = '/')
-modis_folder = paste(drive, root_folder, 'Data/imagery/modis/gridded_select', sep = '/')
-topography_folder = paste(drive, root_folder, 'Data/topography/Composite_10m_Beringia/gridded_select', sep = '/')
+site_folder = paste(drive,
+                    root_folder,
+                    'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/sites',
+                    sep = '/')
+parsed_folder = paste(site_folder,
+                      'parsed',
+                      sep = '/')
+sentinel2_folder = paste(drive,
+                         root_folder,
+                         'Data/imagery/sentinel-2/gridded_select',
+                         sep = '/')
+modis_folder = paste(drive,
+                     root_folder,
+                     'Data/imagery/modis/gridded_select',
+                     sep = '/')
+topography_folder = paste(drive,
+                          root_folder,
+                          'Data/topography/Composite_10m_Beringia/gridded_select',
+                          sep = '/')
 
-# Define output folder
-output_folder = paste(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/sites/extracted', sep = '/')
+# Define input site metadata
+site_file = paste(site_folder,
+                  'sites_all.csv',
+                  sep = '/')
 
 # Install required libraries if they are not already installed.
-Required_Packages <- c('sp', 'raster', 'rgdal', 'stringr')
+Required_Packages <- c('dplyr', 'raster', 'rgdal', 'sp', 'stringr', 'tidyr')
 New_Packages <- Required_Packages[!(Required_Packages %in% installed.packages()[,"Package"])]
 if (length(New_Packages) > 0) {
   install.packages(New_Packages)
@@ -33,10 +50,16 @@ library(rgdal)
 library(sp)
 library(stringr)
 
+# Read site metadata into dataframe
+site_metadata = read.csv(site_file, fileEncoding = 'UTF-8')
+
 # Generate a list of all watersheds in the watersheds directory
 grid_list = list.files(parsed_folder, pattern='shp$', full.names=FALSE)
 grid_length = length(grid_list)
 print(grid_list)
+
+# Create an empty list to store data frames
+data_list = list()
 
 # Loop through all grids with site data and extract features to sites
 count = 1
@@ -266,8 +289,22 @@ for (grid in grid_list) {
               lst_09 = round(mean(lst_09), digits = 0),
               num_points = n())
   
-  # Export data as a csv
-  output_csv = paste(output_folder, '/', grid_name, '.csv', sep = '')
-  write.csv(sites_mean, file = output_csv)
-  print('Finished extracting data to sites.')
+  # Add sites mean to list of data frames
+  data_list = c(data_list, list(sites_mean))
 }
+
+# Import required library for data manipulation: tidyr. NOTE: Tidyr conflicts with raster and therefore must be loaded after all raster extractions are complete.
+library(tidyr)
+
+# Merge data list into single data frame
+sites_extracted = bind_rows(data_list)
+
+# Join site metadata to extracted data and remove na values
+sites_joined = site_metadata %>%
+  inner_join(sites_extracted, by = 'siteCode') %>%
+  drop_na()
+
+# Export data as a csv
+output_csv = paste(site_folder, 'sites_extracted.csv', sep = '/')
+write.csv(sites_joined, file = output_csv, fileEncoding = 'UTF-8')
+print('Finished extracting data to sites.')
