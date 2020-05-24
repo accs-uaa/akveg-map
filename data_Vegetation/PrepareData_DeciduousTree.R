@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Prepare Class Data - Carex bigelowii ssp. ensifolia
+# Prepare Class Data - Deciduous Trees
 # Author: Timm Nawrocki
-# Created on: 2020-05-16
+# Created on: 2020-05-22
 # Usage: Must be executed in R 4.0.0+.
-# Description: "Prepare Class Data - Carex bigelowii ssp. ensifolia" prepares the map class data for statistical modeling.
+# Description: "Prepare Class Data - Deciduous Trees" prepares the map class data for statistical modeling.
 # ---------------------------------------------------------------------------
 
 # Set root directory
@@ -53,17 +53,27 @@ species_data = species_data %>%
 
 # Filter the species data to include only the map class
 presence_sites = species_data %>%
-  filter(nameAccepted == 'Carex bigelowii ssp. ensifolia') %>%
+  filter(nameAccepted == 'Betula neoalaskana' |
+           nameAccepted == 'Betula kenaica' |
+           nameAccepted == 'Populus balsamifera' |
+           nameAccepted == 'Populus tremuloides' |
+           nameAccepted == 'Populus trichocarpa') %>%
   group_by(siteCode, year, day, nameAccepted, genus) %>%
-  summarize(coverTotal = max(coverTotal)) %>%
+  summarize(coverTotal = max(coverTotal))
+
+# Sum multiple taxa to single summary
+presence_sites = presence_sites %>%
+  group_by(siteCode, year, day) %>%
+  summarize(coverTotal = sum(coverTotal)) %>%
+  mutate(nameAccepted = 'Deciduous Tree') %>%
+  mutate(genus = 'Tree') %>%
   mutate(zero = 1)
 
 #### REMOVE INAPPROPRIATE DATA
 
 # Identify sites that are inappropriate for the modeled class
 remove_sites = species_data %>%
-  filter(nameAccepted == 'Carex' |
-           nameAccepted == 'Graminoid')
+  filter(nameAccepted == 'Betula')
   
 # Remove inappropriate sites from site data
 site_data = site_data %>%
@@ -82,8 +92,8 @@ date_data = unique(species_data[c('siteCode', 'year', 'day')])
 absence_sites = site_data['siteCode'] %>%
   anti_join(presence_sites, by = 'siteCode') %>%
   inner_join(date_data, by = 'siteCode') %>%
-  mutate(nameAccepted = 'Carex bigelowii ssp. ensifolia') %>%
-  mutate(genus = 'Carex') %>%
+  mutate(nameAccepted = 'Deciduous Tree') %>%
+  mutate(genus = 'Tree') %>%
   mutate(coverTotal = 0) %>%
   mutate(zero = 0)
 
@@ -97,5 +107,5 @@ map_class = map_class %>%
   inner_join(site_data, by = 'siteCode')
 
 # Export map class data as csv
-output_csv = paste(data_folder, 'species_data/mapClass_CarexBigelowii.csv', sep = '/')
+output_csv = paste(data_folder, 'species_data/mapClass_DeciduousTree.csv', sep = '/')
 write.csv(map_class, file = output_csv, fileEncoding = 'UTF-8')

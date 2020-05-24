@@ -84,7 +84,7 @@ absence_sites = site_data['siteCode'] %>%
   mutate(nameAccepted = 'Rhododendron tomentosum ssp. decumbens') %>%
   mutate(genus = 'Rhododendron') %>%
   mutate(coverTotal = 0) %>%
-  mutate(zero = 1)
+  mutate(zero = 0)
 
 #### MERGE PRESENCE AND ABSENCE DATA
 

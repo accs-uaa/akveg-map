@@ -93,7 +93,8 @@ absence_sites = site_data['siteCode'] %>%
   inner_join(date_data, by = 'siteCode') %>%
   mutate(nameAccepted = 'Salix glauca') %>%
   mutate(genus = 'Salix') %>%
-  mutate(coverTotal = 0)
+  mutate(coverTotal = 0) %>%
+  mutate(zero = 0)
 
 #### MERGE PRESENCE AND ABSENCE DATA
 

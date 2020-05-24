@@ -83,7 +83,7 @@ absence_sites = site_data['siteCode'] %>%
   mutate(nameAccepted = 'Empetrum nigrum') %>%
   mutate(genus = 'Empetrum') %>%
   mutate(coverTotal = 0) %>%
-  mutate(zero = 1)
+  mutate(zero = 0)
 
 #### MERGE PRESENCE AND ABSENCE DATA
 

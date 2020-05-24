@@ -72,19 +72,18 @@ def format_site_data(**kwargs):
     print('\tSelecting plots for analysis based on plot geometry...')
     iteration_start = time.time()
     codeblock = """def set_buffer_distance(plot_dimensions):
-    if (plot_dimensions == '10 radius'
-    or plot_dimensions == '10×10'
+    if (plot_dimensions == '10×10'
     or plot_dimensions == '5 radius'
-    or plot_dimensions == '8 radius'
     or plot_dimensions == '8×10'
     or plot_dimensions == '8×12'
-    or plot_dimensions == '8×8'
-    or plot_dimensions == '20×20'):
-        return 15
-    elif (plot_dimensions == '15 radius'
-    or plot_dimensions == '30×30'):
-        return 15
-    elif plot_dimensions == '20 radius':
+    or plot_dimensions == '8×8'):
+        return 1
+    elif (plot_dimensions == '10 radius'
+    or plot_dimensions == '8 radius'
+    or plot_dimensions == '20×20'
+    or plot_dimensions == '15 radius'
+    or plot_dimensions == '30×30'
+    or plot_dimensions == '20 radius'):
         return 15
     elif plot_dimensions == '23 radius':
         return 18
@@ -103,15 +102,15 @@ def format_site_data(**kwargs):
                                     'PYTHON3',
                                     codeblock)
     # Create a new feature class of plot locations that will not be buffered
-    #arcpy.MakeFeatureLayer_management(sites_all_AKALB,
-    #                                  'sites_selected_point_layer',
-    #                                  'buffer_distance = 1')
-    #arcpy.CopyFeatures_management('sites_selected_point_layer',
-    #                              sites_selected_point)
+    arcpy.MakeFeatureLayer_management(sites_all_AKALB,
+                                      'sites_selected_point_layer',
+                                      'buffer_distance = 1')
+    arcpy.CopyFeatures_management('sites_selected_point_layer',
+                                  sites_selected_point)
     # Create a new feature class of plot locations that will be buffered
     arcpy.MakeFeatureLayer_management(sites_all_AKALB,
                                       'sites_selected_toBuffer_layer',
-                                      'buffer_distance IN (10, 15, 18, 25, 30)')
+                                      'buffer_distance IN (15, 18, 25, 30)')
     arcpy.CopyFeatures_management('sites_selected_toBuffer_layer',
                                   sites_selected_toBuffer)
     # End timing
@@ -141,8 +140,7 @@ def format_site_data(**kwargs):
                                      10
                                      )
     arcpy.RasterToPoint_conversion(sites_selected_raster,
-    #                               sites_selected_converted,
-                                    sites_formatted,
+                                   sites_selected_converted,
                                    'siteCode')
     # End timing
     iteration_end = time.time()
@@ -156,29 +154,25 @@ def format_site_data(**kwargs):
     print(f'\tMerging selected raster cell points...')
     iteration_start = time.time()
     # Merge the plot points and converted buffered points
-    #arcpy.Merge_management([sites_selected_point, sites_selected_converted],
-    #                       sites_formatted,
-    #                       '',
-    #                       '')
-    # Delete all fields except site code
-    #arcpy.DeleteField_management(sites_formatted,
-    #                             ['initialProject',
-    #                              'coverType',
-    #                              'coverMethod',
-    #                              'scopeVascular',
-    #                              'scopeBryophyte',
-    #                              'scopeLichen',
-    #                              'plotDimensions',
-    #                              'datum',
-    #                              'latitude',
-    #                              'longitude',
-    #                              'error',
-    #                              'buffer_distance',
-    #                              'pointid',
-    #                              'grid_code'])
+    arcpy.Merge_management([sites_selected_point, sites_selected_converted],
+                           sites_formatted,
+                           '',
+                           '')
     # Delete all fields except site code
     arcpy.DeleteField_management(sites_formatted,
-                                 ['pointid',
+                                 ['initialProject',
+                                  'coverType',
+                                  'coverMethod',
+                                  'scopeVascular',
+                                  'scopeBryophyte',
+                                  'scopeLichen',
+                                  'plotDimensions',
+                                  'datum',
+                                  'latitude',
+                                  'longitude',
+                                  'error',
+                                  'buffer_distance',
+                                  'pointid',
                                   'grid_code'])
     # Delete intermediate feature classes and rasters
     if arcpy.Exists(sites_all_NAD83) == 1:

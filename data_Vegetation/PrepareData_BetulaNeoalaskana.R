@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Prepare Class Data - Betula neoalaskana
 # Author: Timm Nawrocki
-# Created on: 2020-05-16
+# Created on: 2020-05-22
 # Usage: Must be executed in R 4.0.0+.
 # Description: "Prepare Class Data - Betula neoalaskana" prepares the map class data for statistical modeling.
 # ---------------------------------------------------------------------------
@@ -53,9 +53,17 @@ species_data = species_data %>%
 
 # Filter the species data to include only the map class
 presence_sites = species_data %>%
-  filter(nameAccepted == 'Betula neoalaskana') %>%
+  filter(nameAccepted == 'Betula neoalaskana' |
+           nameAccepted == 'Betula kenaica') %>%
   group_by(siteCode, year, day, nameAccepted, genus) %>%
-  summarize(coverTotal = max(coverTotal)) %>%
+  summarize(coverTotal = max(coverTotal))
+
+# Sum multiple taxa to single summary
+presence_sites = presence_sites %>%
+  group_by(siteCode, year, day) %>%
+  summarize(coverTotal = sum(coverTotal)) %>%
+  mutate(nameAccepted = 'Betula neoalaskana - kenaica') %>%
+  mutate(genus = 'Betula') %>%
   mutate(zero = 1)
 
 #### REMOVE INAPPROPRIATE DATA
@@ -81,7 +89,7 @@ date_data = unique(species_data[c('siteCode', 'year', 'day')])
 absence_sites = site_data['siteCode'] %>%
   anti_join(presence_sites, by = 'siteCode') %>%
   inner_join(date_data, by = 'siteCode') %>%
-  mutate(nameAccepted = 'Betula neoalaskana') %>%
+  mutate(nameAccepted = 'Betula neoalaskana - kenaica') %>%
   mutate(genus = 'Betula') %>%
   mutate(coverTotal = 0) %>%
   mutate(zero = 0)

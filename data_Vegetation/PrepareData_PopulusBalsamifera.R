@@ -53,9 +53,17 @@ species_data = species_data %>%
 
 # Filter the species data to include only the map class
 presence_sites = species_data %>%
-  filter(nameAccepted == 'Populus balsamifera') %>%
+  filter(nameAccepted == 'Populus balsamifera' |
+           nameAccepted == 'Populus trichocarpa') %>%
   group_by(siteCode, year, day, nameAccepted, genus) %>%
-  summarize(coverTotal = max(coverTotal)) %>%
+  summarize(coverTotal = max(coverTotal))
+
+# Sum multiple taxa to single summary
+presence_sites = presence_sites %>%
+  group_by(siteCode, year, day) %>%
+  summarize(coverTotal = sum(coverTotal)) %>%
+  mutate(nameAccepted = 'Populus balsamifera-trichocarpa') %>%
+  mutate(genus = 'Populus') %>%
   mutate(zero = 1)
 
 #### REMOVE INAPPROPRIATE DATA
@@ -81,7 +89,7 @@ date_data = unique(species_data[c('siteCode', 'year', 'day')])
 absence_sites = site_data['siteCode'] %>%
   anti_join(presence_sites, by = 'siteCode') %>%
   inner_join(date_data, by = 'siteCode') %>%
-  mutate(nameAccepted = 'Populus balsamifera') %>%
+  mutate(nameAccepted = 'Populus balsamifera-trichocarpa') %>%
   mutate(genus = 'Populus') %>%
   mutate(coverTotal = 0) %>%
   mutate(zero = 0)

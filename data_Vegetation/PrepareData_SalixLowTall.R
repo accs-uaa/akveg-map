@@ -56,6 +56,8 @@ presence_sites = species_data %>%
   filter(nameAccepted == 'Salix alaxensis' |
            nameAccepted == 'Salix alaxensis var. alaxensis' |
            nameAccepted == 'Salix alaxensis var. longistylus' |
+           nameAccepted == 'Salix arbusculoides' |
+           nameAccepted == 'Salix athabascensis' |
            nameAccepted == 'Salix barclayi' |
            nameAccepted == 'Salix barrattiana' |
            nameAccepted == 'Salix bebbiana' |
@@ -63,7 +65,17 @@ presence_sites = species_data %>%
            nameAccepted == 'Salix glauca' |
            nameAccepted == 'Salix glauca ssp. acutifolia' |
            nameAccepted == 'Salix glauca ssp. stipulifera' |
-           nameAccepted == 'Salix pulchra') %>%
+           nameAccepted == 'Salix hastata' |
+           nameAccepted == 'Salix hookeriana' |
+           nameAccepted == 'Salix lasiandra var. lasiandra' |
+           nameAccepted == 'Salix niphoclada' |
+           nameAccepted == 'Salix planifolia' |
+           nameAccepted == 'Salix pseudomonticola' |
+           nameAccepted == 'Salix pseudomyrsinites' |
+           nameAccepted == 'Salix pulchra' |
+           nameAccepted == 'Salix richardsonii' |
+           nameAccepted == 'Salix scouleriana' |
+           nameAccepted == 'Salix sitchensis') %>%
   group_by(siteCode, year, day, nameAccepted, genus) %>%
   summarize(coverTotal = max(coverTotal))
 

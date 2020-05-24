@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Prepare Class Data - Calamagrostis canadensis
+# Prepare Class Data - Myrica gale
 # Author: Timm Nawrocki
 # Created on: 2020-05-16
 # Usage: Must be executed in R 4.0.0+.
-# Description: "Prepare Class Data - Calamagrostis canadensis" prepares the map class data for statistical modeling.
+# Description: "Prepare Class Data - Myrica gale" prepares the map class data for statistical modeling.
 # ---------------------------------------------------------------------------
 
 # Set root directory
@@ -53,34 +53,23 @@ species_data = species_data %>%
 
 # Filter the species data to include only the map class
 presence_sites = species_data %>%
-  filter(nameAccepted == 'Calamagrostis canadensis' |
-           nameAccepted == 'Calamagrostis canadensis var. canadensis' |
-           nameAccepted == 'Calamagrostis canadensis var. langsdorffii') %>%
+  filter(nameAccepted == 'Myrica gale') %>%
   group_by(siteCode, year, day, nameAccepted, genus) %>%
-  summarize(coverTotal = max(coverTotal))
-
-# Sum multiple taxa to single summary
-presence_sites = presence_sites %>%
-  group_by(siteCode, year, day) %>%
-  summarize(coverTotal = sum(coverTotal)) %>%
-  mutate(nameAccepted = 'Calamagrostis canadensis') %>%
-  mutate(genus = 'Calamagrostis')
+  summarize(coverTotal = max(coverTotal)) %>%
+  mutate(zero = 1)
 
 #### REMOVE INAPPROPRIATE DATA
 
 # Identify sites that are inappropriate for the modeled class
-remove_sites = species_data %>%
-  filter(nameAccepted == 'Calamagrostis' |
-           nameAccepted == 'Graminoid')
+# N/A
   
 # Remove inappropriate sites from site data
 site_data = site_data %>%
-  # Remove inappropriate projects from site data
   filter(initialProject != 'NPS ARCN Lichen' &
            initialProject != 'NPS CAKN I&M' &
-           initialProject != 'NPS ARCN I&M') %>%
-  # Remove sites that are inappropriate for the modeled class
-  anti_join(remove_sites, by = 'siteCode')
+           initialProject != 'NPS ARCN I&M')
+  # Remove site that are inappropriate for the modeled class
+  # N/A
 
 #### CREATE ABSENCE DATA
 
@@ -91,9 +80,10 @@ date_data = unique(species_data[c('siteCode', 'year', 'day')])
 absence_sites = site_data['siteCode'] %>%
   anti_join(presence_sites, by = 'siteCode') %>%
   inner_join(date_data, by = 'siteCode') %>%
-  mutate(nameAccepted = 'Calamagrostis canadensis') %>%
-  mutate(genus = 'Calamagrostis') %>%
-  mutate(coverTotal = 0)
+  mutate(nameAccepted = 'Myrica gale') %>%
+  mutate(genus = 'Myrica') %>%
+  mutate(coverTotal = 0) %>%
+  mutate(zero = 0)
 
 #### MERGE PRESENCE AND ABSENCE DATA
 
@@ -102,11 +92,8 @@ map_class = bind_rows(presence_sites, absence_sites)
 
 # Join site data
 map_class = map_class %>%
-  inner_join(site_data, by = 'siteCode') %>%
-  mutate(coverTotal = round(coverTotal, 0)) %>%
-  mutate(zero = 0) %>%
-  mutate(zero = replace(zero, coverTotal > 0, 1))
+  inner_join(site_data, by = 'siteCode')
 
 # Export map class data as csv
-output_csv = paste(data_folder, 'species_data/mapClass_CalamagrostisCanadensis_Rounded.csv', sep = '/')
+output_csv = paste(data_folder, 'species_data/mapClass_MyricaGale.csv', sep = '/')
 write.csv(map_class, file = output_csv, fileEncoding = 'UTF-8')
