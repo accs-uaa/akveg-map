@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Prepare Class Data - Empetrum nigrum
+# Prepare Class Data - Deciduous Trees
 # Author: Timm Nawrocki
 # Created on: 2020-05-25
 # Usage: Must be executed in R 4.0.0+.
-# Description: "Prepare Class Data - Empetrum nigrum" prepares the map class data for statistical modeling.
+# Description: "Prepare Class Data - Deciduous Trees" prepares the map class data for statistical modeling.
 # ---------------------------------------------------------------------------
 
 # Set root directory
@@ -64,9 +64,20 @@ species_data = species_data %>%
 
 # Filter the species data to include only the map class
 presence_data = species_data %>%
-  filter(nameAccepted == 'Empetrum nigrum') %>%
+  filter(nameAccepted == 'Betula neoalaskana' |
+           nameAccepted == 'Betula kenaica' |
+           nameAccepted == 'Populus balsamifera' |
+           nameAccepted == 'Populus tremuloides' |
+           nameAccepted == 'Populus trichocarpa') %>%
   group_by(siteCode, year, day, nameAccepted, genus) %>%
-  summarize(coverTotal = max(coverTotal)) %>%
+  summarize(coverTotal = max(coverTotal))
+
+# Sum multiple taxa to single summary
+presence_data = presence_data %>%
+  group_by(siteCode, year, day) %>%
+  summarize(coverTotal = sum(coverTotal)) %>%
+  mutate(nameAccepted = 'Deciduous Trees') %>%
+  mutate(genus = 'Trees') %>%
   mutate(zero = 1)
 
 #### SPLIT PRESENCE DATA INTO GROUND AND AERIAL
@@ -81,15 +92,16 @@ aerial_presences = presence_data %>%
 #### REMOVE INAPPROPRIATE GROUND SITES
 
 # Identify sites that are inappropriate for the modeled class
-# N/A
+remove_sites = ground_presences %>%
+  filter(nameAccepted == 'Betula')
 
 # Remove inappropriate sites from site data
 ground_sites = ground_sites %>%
   filter(initialProject != 'NPS ARCN Lichen' &
            initialProject != 'NPS CAKN I&M' &
-           initialProject != 'NPS ARCN I&M')
+           initialProject != 'NPS ARCN I&M') %>%
   # Remove site that are inappropriate for the modeled class
-  # N/A
+  anti_join(remove_sites, by = 'siteCode')
 
 #### CREATE GROUND ABSENCES
 
@@ -97,8 +109,8 @@ ground_sites = ground_sites %>%
 ground_absences = ground_sites['siteCode'] %>%
   anti_join(ground_presences, by = 'siteCode') %>%
   inner_join(visit_date, by = 'siteCode') %>%
-  mutate(nameAccepted = 'Empetrum nigrum') %>%
-  mutate(genus = 'Empetrum') %>%
+  mutate(nameAccepted = 'Deciduous Trees') %>%
+  mutate(genus = 'Trees') %>%
   mutate(coverTotal = 0) %>%
   mutate(zero = 0)
 
@@ -120,5 +132,5 @@ aerial_data = aerial_presences %>%
 map_class = bind_rows(ground_data, aerial_data)
 
 # Export map class data as csv
-output_csv = paste(data_folder, 'species_data/mapClass_EmpetrumNigrum.csv', sep = '/')
+output_csv = paste(data_folder, 'species_data/mapClass_DeciduousTrees.csv', sep = '/')
 write.csv(map_class, file = output_csv, fileEncoding = 'UTF-8')

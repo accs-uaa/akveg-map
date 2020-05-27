@@ -33,11 +33,10 @@ work_geodatabase = os.path.join(drive,
 
 # Identify target major grids
 #grid_list = ['A5', 'A6', 'A7', 'A8',
-#             'B4', 'B5',
-#             'C4', 'C5',
-#             'D4', 'D5', 'D6',
-#             'E5', 'E6']
-grid_list = ['D6', 'E5']
+#             'B4', 'B5', 'B8',
+#             'C4', 'C5', 'C6', 'C7', 'C8',
+#             'D4', 'D5', 'D6']
+grid_list = ['C4', 'D4']
 
 # Define input datasets
 study_area = os.path.join(drive,

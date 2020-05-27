@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Process Spectral Tiles
+# Process Sentinel-1 Tiles
 # Author: Timm Nawrocki
-# Last Updated: 2019-12-30
+# Last Updated: 2020-05-27
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Process Spectral Tiles" reprojects tiles and converts to integer.
+# Description: "Process Sentinel-1 Tiles" reprojects tiles and converts to integer.
 # ---------------------------------------------------------------------------
 
 # Import packages
@@ -20,8 +20,8 @@ drive = 'N:/'
 root_folder = 'ACCS_Work'
 
 # Define data folder
-data_folder = os.path.join(drive, root_folder, 'Data/imagery/sentinel-2')
-unprocessed_folder = os.path.join(data_folder, 'unprocessed/select')
+data_folder = os.path.join(drive, root_folder, 'Data/imagery/sentinel-1')
+unprocessed_folder = os.path.join(data_folder, 'unprocessed')
 processed_folder = os.path.join(data_folder, 'processed')
 
 # Define input datasets
@@ -79,7 +79,7 @@ for tile in unprocessed_tiles:
                             'input_projection': 4326,
                             'output_projection': 3338,
                             'geographic_transformation': 'WGS_1984_(ITRF00)_To_NAD_1983',
-                            'conversion_factor': 10000,
+                            'conversion_factor': 100,
                             'input_array': reproject_inputs,
                             'output_array': reproject_outputs
                             }

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Prepare Class Data - Empetrum nigrum
+# Prepare Class Data - Betula neoalaskana-kenaica
 # Author: Timm Nawrocki
 # Created on: 2020-05-25
 # Usage: Must be executed in R 4.0.0+.
-# Description: "Prepare Class Data - Empetrum nigrum" prepares the map class data for statistical modeling.
+# Description: "Prepare Class Data - Betula neoalaskana-kenaica" prepares the map class data for statistical modeling.
 # ---------------------------------------------------------------------------
 
 # Set root directory
@@ -24,9 +24,6 @@ site_file = paste(data_folder,
 species_file = paste(data_folder,
                      'species_data/akveg_CoverTotal.xlsx',
                      sep = '/')
-date_file = paste(data_folder,
-                  'sites/visit_date.xlsx',
-                  sep = '/')
 observation_sheet = 1
 
 # Install required libraries if they are not already installed.
@@ -45,8 +42,6 @@ library(tidyr)
 site_data = read.csv(site_file, fileEncoding = 'UTF-8')
 species_data = read_xlsx(species_file,
                          sheet = observation_sheet)
-visit_date = read_xlsx(date_file,
-                       sheet = observation_sheet)
 
 # Parse site data into ground sites and aerial sites
 ground_sites = site_data %>%
@@ -64,9 +59,17 @@ species_data = species_data %>%
 
 # Filter the species data to include only the map class
 presence_data = species_data %>%
-  filter(nameAccepted == 'Empetrum nigrum') %>%
+  filter(nameAccepted == 'Betula neoalaskana' |
+           nameAccepted == 'Betula kenaica') %>%
   group_by(siteCode, year, day, nameAccepted, genus) %>%
-  summarize(coverTotal = max(coverTotal)) %>%
+  summarize(coverTotal = max(coverTotal))
+
+# Sum multiple taxa to single summary
+presence_data = presence_data %>%
+  group_by(siteCode, year, day) %>%
+  summarize(coverTotal = sum(coverTotal)) %>%
+  mutate(nameAccepted = 'Alnus') %>%
+  mutate(genus = 'Alnus') %>%
   mutate(zero = 1)
 
 #### SPLIT PRESENCE DATA INTO GROUND AND AERIAL
@@ -81,24 +84,29 @@ aerial_presences = presence_data %>%
 #### REMOVE INAPPROPRIATE GROUND SITES
 
 # Identify sites that are inappropriate for the modeled class
-# N/A
+remove_sites = ground_presences %>%
+  filter(nameAccepted == 'Alnus viridis ssp. sinuata' &
+           coverTotal >= 100)
 
 # Remove inappropriate sites from site data
 ground_sites = ground_sites %>%
   filter(initialProject != 'NPS ARCN Lichen' &
            initialProject != 'NPS CAKN I&M' &
-           initialProject != 'NPS ARCN I&M')
+           initialProject != 'NPS ARCN I&M') %>%
   # Remove site that are inappropriate for the modeled class
-  # N/A
+  anti_join(remove_sites, by = 'siteCode')
 
 #### CREATE GROUND ABSENCES
+
+# Summarize date information from species data
+date_data = unique(species_data[c('siteCode', 'year', 'day')])
 
 # Remove ground presences from filtered sites to create absence sites
 ground_absences = ground_sites['siteCode'] %>%
   anti_join(ground_presences, by = 'siteCode') %>%
-  inner_join(visit_date, by = 'siteCode') %>%
-  mutate(nameAccepted = 'Empetrum nigrum') %>%
-  mutate(genus = 'Empetrum') %>%
+  inner_join(date_data, by = 'siteCode') %>%
+  mutate(nameAccepted = 'Alnus') %>%
+  mutate(genus = 'Alnus') %>%
   mutate(coverTotal = 0) %>%
   mutate(zero = 0)
 
@@ -120,5 +128,5 @@ aerial_data = aerial_presences %>%
 map_class = bind_rows(ground_data, aerial_data)
 
 # Export map class data as csv
-output_csv = paste(data_folder, 'species_data/mapClass_EmpetrumNigrum.csv', sep = '/')
+output_csv = paste(data_folder, 'species_data/mapClass_Alnus.csv', sep = '/')
 write.csv(map_class, file = output_csv, fileEncoding = 'UTF-8')

@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Prepare Class Data - Eriophorum vaginatum
 # Author: Timm Nawrocki
-# Created on: 2020-05-16
+# Created on: 2020-05-25
 # Usage: Must be executed in R 4.0.0+.
 # Description: "Prepare Class Data - Eriophorum vaginatum" prepares the map class data for statistical modeling.
 # ---------------------------------------------------------------------------
@@ -24,6 +24,9 @@ site_file = paste(data_folder,
 species_file = paste(data_folder,
                      'species_data/akveg_CoverTotal.xlsx',
                      sep = '/')
+date_file = paste(data_folder,
+                  'sites/visit_date.xlsx',
+                  sep = '/')
 observation_sheet = 1
 
 # Install required libraries if they are not already installed.
@@ -42,8 +45,16 @@ library(tidyr)
 site_data = read.csv(site_file, fileEncoding = 'UTF-8')
 species_data = read_xlsx(species_file,
                          sheet = observation_sheet)
+visit_date = read_xlsx(date_file,
+                       sheet = observation_sheet)
 
-#### FILTER SPECIES DATA
+# Parse site data into ground sites and aerial sites
+ground_sites = site_data %>%
+  filter(coverType != 'aerial')
+aerial_sites = site_data %>%
+  filter(coverType == 'aerial')
+
+#### CREATE PRESENCE DATA
 
 # Clean unused columns from species data
 species_data = species_data[c('siteCode', 'year', 'day', 'nameAccepted', 'genus', 'coverTotal')]
@@ -52,48 +63,62 @@ species_data = species_data %>%
   filter(year >= 2000)
 
 # Filter the species data to include only the map class
-presence_sites = species_data %>%
+presence_data = species_data %>%
   filter(nameAccepted == 'Eriophorum vaginatum ssp. vaginatum') %>%
   group_by(siteCode, year, day, nameAccepted, genus) %>%
   summarize(coverTotal = max(coverTotal)) %>%
   mutate(zero = 1)
 
-#### REMOVE INAPPROPRIATE DATA
+#### SPLIT PRESENCE DATA INTO GROUND AND AERIAL
+
+ground_presences = presence_data %>%
+  anti_join(aerial_sites, by = 'siteCode')
+
+aerial_presences = presence_data %>%
+  anti_join(ground_sites, by = 'siteCode') %>%
+  filter(coverTotal > 5)
+
+#### REMOVE INAPPROPRIATE GROUND SITES
 
 # Identify sites that are inappropriate for the modeled class
 remove_sites = species_data %>%
   filter(nameAccepted == 'Eriophorum')
-  
+
 # Remove inappropriate sites from site data
-site_data = site_data %>%
+ground_sites = ground_sites %>%
   filter(initialProject != 'NPS ARCN Lichen' &
            initialProject != 'NPS CAKN I&M' &
            initialProject != 'NPS ARCN I&M') %>%
   # Remove site that are inappropriate for the modeled class
   anti_join(remove_sites, by = 'siteCode')
 
-#### CREATE ABSENCE DATA
+#### CREATE GROUND ABSENCES
 
-# Summarize date information from species data
-date_data = unique(species_data[c('siteCode', 'year', 'day')])
-
-# Remove presence sites from filtered sites to create absence sites
-absence_sites = site_data['siteCode'] %>%
-  anti_join(presence_sites, by = 'siteCode') %>%
-  inner_join(date_data, by = 'siteCode') %>%
+# Remove ground presences from filtered sites to create absence sites
+ground_absences = ground_sites['siteCode'] %>%
+  anti_join(ground_presences, by = 'siteCode') %>%
+  inner_join(visit_date, by = 'siteCode') %>%
   mutate(nameAccepted = 'Eriophorum vaginatum ssp. vaginatum') %>%
   mutate(genus = 'Eriophorum') %>%
   mutate(coverTotal = 0) %>%
   mutate(zero = 0)
 
-#### MERGE PRESENCE AND ABSENCE DATA
+#### MERGE GROUND PRESENCES AND GROUND ABSENCES
 
-# Bind rows from presence sites and absence sites
-map_class = bind_rows(presence_sites, absence_sites)
+# Bind rows from ground data
+ground_data = bind_rows(ground_presences, ground_absences)
 
-# Join site data
-map_class = map_class %>%
-  inner_join(site_data, by = 'siteCode')
+# Join ground data to ground sites
+ground_data = ground_data %>%
+  inner_join(ground_sites, by = 'siteCode')
+
+#### MERGE GROUND DATA AND AERIAL DATA
+
+aerial_data = aerial_presences %>%
+  inner_join(aerial_sites, by = 'siteCode')
+
+# Bind rows from ground and aerial data
+map_class = bind_rows(ground_data, aerial_data)
 
 # Export map class data as csv
 output_csv = paste(data_folder, 'species_data/mapClass_EriophorumVaginatum.csv', sep = '/')
