@@ -5,7 +5,7 @@ from sklearn.metrics import r2_score
 directory = 'N:/ACCS_Work/Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Output/model_results/iteration_10_aer'
 
 input_file = os.path.join(directory,
-                          'calcan/prediction.csv')
+                          'vacvit/prediction.csv')
 
 projects = ['AIM GMT2', 'AIM NPR-A', 'Bristol Bay VC', 'NPS Alagnak LC', 'NPS ARCN ELS', 'NPS Katmai ELS', 'NPS Lake Clark ELS', 'NPS Wrangell-St. Elias ELS', 'Selawik NWR ELS', 'Shell ONES Habitat', 'Bering LC', 'Dalton Earth Cover', 'Goodnews Earth Cover', 'Koyukuk Earth Cover', 'Kvichak Earth Cover', 'Naknek Earth Cover', 'Northern Yukon Earth Cover', 'Nowitna Earth Cover', 'Seward Peninsula Earth Cover', 'Southern Yukon Earth Cover', 'Tetlin Earth Cover', 'Yukon Delta Earth Cover']
 

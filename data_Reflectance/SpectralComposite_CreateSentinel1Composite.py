@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Create Spectral Composite
+# Create Sentinel-1 Composite
 # Author: Timm Nawrocki
-# Last Updated: 2019-12-30
+# Last Updated: 2020-05-29
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Create Spectral Composite" merges spectral tiles by month and property per predefined grid.
+# Description: "Create Sentinel-1 Composite" merges Sentinel-1 tiles by month and property per predefined grid.
 # ---------------------------------------------------------------------------
 
 # Import packages
@@ -13,7 +13,7 @@ import datetime
 import glob
 import os
 from package_GeospatialProcessing import arcpy_geoprocessing
-from package_GeospatialProcessing import merge_spectral_tiles
+from package_GeospatialProcessing import merge_sentinel1_tiles
 import time
 
 # Set root directory
@@ -21,7 +21,7 @@ drive = 'N:/'
 root_folder = 'ACCS_Work'
 
 # Define data folder
-data_folder = os.path.join(drive, root_folder, 'Data/imagery/sentinel-2')
+data_folder = os.path.join(drive, root_folder, 'Data/imagery/sentinel-1')
 processed_folder = os.path.join(data_folder, 'processed')
 gridded_folder = os.path.join(data_folder, 'gridded_full')
 
@@ -37,49 +37,21 @@ arcpy.env.workspace = geodatabase
 # Set overwrite option
 arcpy.env.overwriteOutput = True
 
-# Define month and property values
-months = ['05May',
-          '06June',
-          '07July',
-          '08August',
-          '09September'
-          ]
-properties = ['2_blue',
-              '3_green',
-              '4_red',
-              '5_redEdge1',
-              '6_redEdge2',
-              '7_redEdge3',
-              '8_nearInfrared',
-              '8a_redEdge4',
-              '11_shortInfrared1',
-              '12_shortInfrared2',
-              'evi2',
-              'nbr',
-              'ndmi',
-              'ndsi',
-              'ndvi',
-              'ndwi'
+# Define property values
+properties = ['vh',
+              'vv'
               ]
-
-# Create a list of all month-property combinations
-metrics_list = []
-for month in months:
-    for property in properties:
-        month_property = month + '_' + property
-        metrics_list.append(month_property)
-metrics_length = len(metrics_list)
 
 # List grid rasters
 print('Searching for grid rasters...')
 # Start timing function
 iteration_start = time.time()
 # Create a list of included grids
-grid_list = ['A5', 'A6', 'A7', 'A8', 'A9',
-             'B4', 'B5', 'B6', 'B7', 'B8', 'B9', 'B10',
-             'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10',
+grid_list = ['A5', 'A6', 'A7', 'A8',
+             'B4', 'B5', 'B6', 'B7', 'B8',
+             'C4', 'C5', 'C6', 'C7', 'C8',
              'D4', 'D5', 'D6',
-             'E5']
+             'E5', 'E6']
 # Append file names to rasters in list
 grids = []
 for grid in grid_list:
@@ -96,9 +68,9 @@ print(f'Completed at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapse
 print('----------')
 
 # Iterate through each buffered grid and create spectral composite
-for metric in metrics_list:
+for property in properties:
     # Create list of all metric tiles
-    file_search = 'Sent2_' + metric + '*.tif'
+    file_search = 'Sent1_' + property + '*.tif'
     metric_tiles = glob.glob(os.path.join(processed_folder, file_search))
 
     # Set initial grid count
@@ -110,8 +82,12 @@ for metric in metrics_list:
         grid_title = os.path.splitext(os.path.split(grid)[1])[0]
         grid_folder = os.path.join(gridded_folder, grid_title)
 
+        # Make grid folder if it does not already exist
+        if os.path.exists(grid_folder) == 0:
+            os.mkdir(grid_folder)
+
         # Define processed grid raster
-        spectral_grid = os.path.join(grid_folder, 'Sent2_' + metric + '_AKALB_' + grid_title + '.tif')
+        spectral_grid = os.path.join(grid_folder, 'Sent1_' + property + '_AKALB_' + grid_title + '.tif')
 
         # If spectral grid does not exist then create spectral grid
         if arcpy.Exists(spectral_grid) == 0:
@@ -129,7 +105,7 @@ for metric in metrics_list:
                             }
 
             # Process the reproject integer function
-            arcpy_geoprocessing(merge_spectral_tiles, **merge_kwargs)
+            arcpy_geoprocessing(merge_sentinel1_tiles, **merge_kwargs)
             print('----------')
 
         else:

@@ -57,9 +57,6 @@ def merge_spectral_tiles(**kwargs):
     # Define folder structure
     grid_title = os.path.splitext(os.path.split(grid_raster)[1])[0]
     mosaic_location, mosaic_name = os.path.split(mosaic_raster)
-    # Create mosaic location if it does not already exist
-    if os.path.exists(mosaic_location) == 0:
-        os.mkdir(mosaic_location)
 
     # Create source folder within mosaic location if it does not already exist
     source_folder = os.path.join(mosaic_location, 'sources')
