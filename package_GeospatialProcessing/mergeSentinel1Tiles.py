@@ -47,7 +47,8 @@ def merge_sentinel1_tiles(**kwargs):
 
     # Define folder structure
     grid_title = os.path.splitext(os.path.split(grid_raster)[1])[0]
-    mosaic_location, mosaic_name = os.path.split(spectral_grid)
+    mosaic_raster = os.path.splitext(spectral_grid)[0] + '_mosaic.tif'
+    mosaic_location, mosaic_name = os.path.split(mosaic_raster)
 
     # Create source folder within mosaic location if it does not already exist
     source_folder = os.path.join(mosaic_location, 'sources')
@@ -110,8 +111,24 @@ def merge_sentinel1_tiles(**kwargs):
                                        '1',
                                        'FIRST',
                                        'FIRST')
+    # Copy raster to new raster with correct NoData value
+    arcpy.CopyRaster_management(mosaic_raster,
+                                spectral_grid,
+                                '',
+                                '',
+                                '-32768',
+                                'NONE',
+                                'NONE',
+                                '16_BIT_SIGNED',
+                                'NONE',
+                                'NONE',
+                                'TIFF',
+                                'NONE')
+    # Delete mosaic raster
+    if arcpy.Exists(mosaic_raster) == 1:
+        arcpy.Delete_management(mosaic_raster)
     # Enforce correct projection
-    arcpy.DefineProjection_management(mosaic_raster, composite_projection)
+    arcpy.DefineProjection_management(spectral_grid, composite_projection)
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)

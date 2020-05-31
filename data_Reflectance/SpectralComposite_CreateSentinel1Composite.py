@@ -17,7 +17,7 @@ from package_GeospatialProcessing import merge_sentinel1_tiles
 import time
 
 # Set root directory
-drive = 'N:/'
+drive = 'K:/'
 root_folder = 'ACCS_Work'
 
 # Define data folder
@@ -38,9 +38,7 @@ arcpy.env.workspace = geodatabase
 arcpy.env.overwriteOutput = True
 
 # Define property values
-properties = ['vh',
-              'vv'
-              ]
+properties = ['vh']
 
 # List grid rasters
 print('Searching for grid rasters...')
@@ -58,7 +56,7 @@ for grid in grid_list:
     raster_path = os.path.join(grid_major, 'Grid_' + grid + '.tif')
     grids.append(raster_path)
 grids_length = len(grids)
-print(f'Spectral composites will be created for {grids_length} grids and {metrics_length} metrics...')
+print(f'Spectral composites will be created for {grids_length} grids...')
 # End timing
 iteration_end = time.time()
 iteration_elapsed = int(iteration_end - iteration_start)
@@ -91,7 +89,7 @@ for property in properties:
 
         # If spectral grid does not exist then create spectral grid
         if arcpy.Exists(spectral_grid) == 0:
-            print(f'Processing {metric} grid {grid_count} of {grids_length}...')
+            print(f'Processing {property} grid {grid_count} of {grids_length}...')
 
             # Define input and output arrays
             merge_inputs = [grid] + metric_tiles
@@ -109,7 +107,7 @@ for property in properties:
             print('----------')
 
         else:
-            print(f'Spectral grid {grid_count} of {grids_length} for {metric} already exists.')
+            print(f'Spectral grid {grid_count} of {grids_length} for {property} already exists.')
             print('----------')
 
         # Increase counter
