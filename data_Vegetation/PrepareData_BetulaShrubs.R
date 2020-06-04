@@ -58,9 +58,6 @@ aerial_sites = site_data %>%
 
 # Clean unused columns from species data
 species_data = species_data[c('siteCode', 'year', 'day', 'nameAccepted', 'genus', 'coverTotal')]
-# Filter out years prior to 2000
-species_data = species_data %>%
-  filter(year >= 2000)
 
 # Filter the species data to include only the map class
 presence_data = species_data %>%
@@ -128,6 +125,19 @@ aerial_data = aerial_presences %>%
 
 # Bind rows from ground and aerial data
 map_class = bind_rows(ground_data, aerial_data)
+
+# Control for fire year, year, cover type, and project
+map_class = map_class %>%
+  filter(year > fireYear) %>%
+  filter(year >= 2000) %>%
+  filter(coverType != 'Braun-Blanquet Classification') %>%
+  filter(initialProject != 'NPS CAKN Permafrost') %>%
+  filter(initialProject != 'NPS YUCH PA') %>%
+  filter(initialProject != 'Shell ONES Remote Sensing') %>%
+  filter(initialProject != 'USFWS IRM') %>%
+  filter(initialProject != 'Bering LC') %>%
+  filter(initialProject != 'NPS Katmai LC') %>%
+  filter(initialProject != 'Wrangell-St. Elias LC')
 
 # Export map class data as csv
 output_csv = paste(data_folder, 'species_data/mapClass_BetulaShrubs.csv', sep = '/')

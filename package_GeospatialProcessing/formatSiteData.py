@@ -27,7 +27,8 @@ def format_site_data(**kwargs):
     # Parse key word argument inputs
     work_geodatabase = kwargs['work_geodatabase']
     site_table = kwargs['input_array'][0]
-    area_of_interest = kwargs['input_array'][1]
+    study_area = kwargs['input_array'][1]
+    area_of_interest = kwargs['input_array'][2]
     sites_formatted = kwargs['output_array'][0]
 
     # Set overwrite option
@@ -39,6 +40,7 @@ def format_site_data(**kwargs):
     # Define intermediate datasets
     sites_all_NAD83 = os.path.join(work_geodatabase, 'sites_all_NAD83')
     sites_all_AKALB = os.path.join(work_geodatabase, 'sites_all_AKALB')
+    sites_clip = os.path.join(work_geodatabase, 'sites_clip')
     sites_selected_point = os.path.join(work_geodatabase, 'sites_selected_points')
     sites_selected_toBuffer = os.path.join(work_geodatabase, 'sites_selected_toBuffer')
     sites_selected_buffered = os.path.join(work_geodatabase, 'sites_selected_buffered')
@@ -60,12 +62,14 @@ def format_site_data(**kwargs):
     arcpy.Project_management(sites_all_NAD83,
                              sites_all_AKALB,
                              arcpy.SpatialReference(3338))
+    print('\tClipping points to model study area...')
+    arcpy.Clip_analysis(sites_all_AKALB, study_area, sites_clip)
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)
     iteration_success_time = datetime.datetime.now()
     # Report success
-    print(f'\tImport completed at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
+    print(f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
     print('\t----------')
 
     # Add a new field for the buffer distance and calculate buffer distance from plot dimensions
@@ -93,22 +97,22 @@ def format_site_data(**kwargs):
         return 30
     else:
         return 0"""
-    arcpy.AddField_management(sites_all_AKALB,
+    arcpy.AddField_management(sites_clip,
                               'buffer_distance',
                               'SHORT')
-    arcpy.CalculateField_management(sites_all_AKALB,
+    arcpy.CalculateField_management(sites_clip,
                                     'buffer_distance',
                                     'set_buffer_distance(!plotDimensions!)',
                                     'PYTHON3',
                                     codeblock)
     # Create a new feature class of plot locations that will not be buffered
-    arcpy.MakeFeatureLayer_management(sites_all_AKALB,
+    arcpy.MakeFeatureLayer_management(sites_clip,
                                       'sites_selected_point_layer',
                                       'buffer_distance = 1')
     arcpy.CopyFeatures_management('sites_selected_point_layer',
                                   sites_selected_point)
     # Create a new feature class of plot locations that will be buffered
-    arcpy.MakeFeatureLayer_management(sites_all_AKALB,
+    arcpy.MakeFeatureLayer_management(sites_clip,
                                       'sites_selected_toBuffer_layer',
                                       'buffer_distance IN (15, 18, 25, 30)')
     arcpy.CopyFeatures_management('sites_selected_toBuffer_layer',
@@ -179,6 +183,8 @@ def format_site_data(**kwargs):
         arcpy.Delete_management(sites_all_NAD83)
     if arcpy.Exists(sites_all_AKALB) == 1:
         arcpy.Delete_management(sites_all_AKALB)
+    if arcpy.Exists(sites_clip) == 1:
+        arcpy.Delete_management(sites_clip)
     if arcpy.Exists(sites_selected_point) == 1:
         arcpy.Delete_management(sites_selected_point)
     if arcpy.Exists(sites_selected_toBuffer) == 1:

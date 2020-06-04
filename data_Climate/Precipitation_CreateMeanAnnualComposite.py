@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Create Mean Annual Precipitation Composite for 2000-2015
+# Create Mean Annual Total Precipitation Composite for 2000-2015
 # Author: Timm Nawrocki
 # Last Updated: 2020-05-28
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Create Mean Annual Precipitation Composite for 2000-2015" calculates the mean annual precipitation from all months for years 2000-2015. The primary data are the SNAP Alaska-Yukon 2km data. The SNAP Alaska-Canada 10 minute data fill in the included portion of Northwest Territories.
+# Description: "Create Mean Annual Total Precipitation Composite for 2000-2015" calculates the mean annual precipitation from all months for years 2000-2015. The primary data are the SNAP Alaska-Yukon 2km data. The SNAP Alaska-Canada 10 minute data fill in the included portion of Northwest Territories.
 # ---------------------------------------------------------------------------
 
 # Import packages
@@ -25,9 +25,9 @@ root_folder = 'ACCS_Work'
 data_folder = os.path.join(drive, root_folder, 'Data/climatology')
 data_2km = os.path.join(data_folder, 'SNAP_NorthwestNorthAmerica_2km/unprocessed')
 data_15km = os.path.join(data_folder, 'SNAP_NorthwestNorthAmerica_15km/unprocessed')
-data_10m = os.path.join(data_folder, 'SNAP_NorthwestNorthAmerica_10m')
 processed_2km = os.path.join(data_folder, 'SNAP_NorthwestNorthAmerica_2km/processed')
 processed_15km = os.path.join(data_folder, 'SNAP_NorthwestNorthAmerica_15km/processed')
+data_10m = os.path.join(data_folder, 'SNAP_NorthwestNorthAmerica_10m')
 gridded_folder = os.path.join(data_10m, 'gridded_full')
 
 # Define input datasets

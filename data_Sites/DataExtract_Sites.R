@@ -39,6 +39,10 @@ climate_folder = paste(drive,
                        root_folder,
                        'Data/climatology/SNAP_NorthwestNorthAmerica_10m/gridded_select',
                        sep = '/')
+fire_folder = paste(drive,
+                    root_folder,
+                    'Data/climatology/Fire/gridded_select',
+                    sep = '/')
 
 # Define input site metadata
 site_file = paste(site_folder,
@@ -86,7 +90,8 @@ for (grid in grid_list) {
   sentinel1_grid = paste(sentinel1_folder, grid_folder, sep = '/')
   sentinel2_grid = paste(sentinel2_folder, grid_folder, sep = '/')
   modis_grid = paste(modis_folder, grid_folder, sep = '/')
-  climate_grid = paste(topography_folder, grid_folder, sep = '/')
+  climate_grid = paste(climate_folder, grid_folder, sep = '/')
+  fire_grid = paste(fire_folder, grid_folder, sep = '/')
   
   # Create a list of all predictor rasters
   predictors_topography = list.files(topography_grid, pattern = 'tif$', full.names = TRUE)
@@ -94,11 +99,15 @@ for (grid in grid_list) {
   predictors_sentinel2 = list.files(sentinel2_grid, pattern = 'tif$', full.names = TRUE)
   predictors_modis = list.files(modis_grid, pattern = 'tif$', full.names = TRUE)
   predictors_climate = list.files(climate_grid, pattern = 'tif$', full.names = TRUE)
+  predictors_fire = list.files(fire_grid, pattern = 'tif$', full.names = TRUE)
   predictors_all = c(predictors_topography,
                      predictors_sentinel1,
                      predictors_sentinel2,
                      predictors_modis,
-                     predictors_climate)
+                     predictors_climate,
+                     predictors_fire)
+  print("Number of predictor rasters:")
+  print(length(predictors_all))
   
   # Generate a stack of all predictor rasters
   predictor_stack = stack(predictors_all)
@@ -203,7 +212,8 @@ for (grid in grid_list) {
     rename(ndwi_09 = paste('Sent2_09September_ndwi_AKALB_Grid_', grid_name, sep = '')) %>%
     rename(lstWarmth = paste('MODIS_LST_WarmthIndex_AKALB_Grid_', grid_name, sep = '')) %>%
     rename(summerWarmth = paste('SummerWarmth_MeanAnnual_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(precip = paste('Precipitation_MeanAnnual_AKALB_Grid_', grid_name, sep = ''))
+    rename(precip = paste('Precipitation_MeanAnnual_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(fireYear = paste('FireHistory_AKALB_Grid_', grid_name, sep = ''))
 
   # Summarize data by site and taxon
   sites_mean = sites_extracted %>%
@@ -303,6 +313,7 @@ for (grid in grid_list) {
               lstWarmth = round(mean(lstWarmth), digits = 0),
               precip = round(mean(precip), digits = 0),
               summerWarmth = round(mean(summerWarmth), digits = 0),
+              fireYear = round(max(fireYear), digits = 0),
               num_points = n())
   
   # Add sites mean to list of data frames

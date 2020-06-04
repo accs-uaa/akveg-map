@@ -25,9 +25,9 @@ root_folder = 'ACCS_Work'
 data_folder = os.path.join(drive, root_folder, 'Data/climatology')
 data_2km = os.path.join(data_folder, 'SNAP_NorthwestNorthAmerica_2km/unprocessed')
 data_15km = os.path.join(data_folder, 'SNAP_NorthwestNorthAmerica_15km/unprocessed')
-data_10m = os.path.join(data_folder, 'SNAP_NorthwestNorthAmerica_10m')
 processed_2km = os.path.join(data_folder, 'SNAP_NorthwestNorthAmerica_2km/processed')
 processed_15km = os.path.join(data_folder, 'SNAP_NorthwestNorthAmerica_15km/processed')
+data_10m = os.path.join(data_folder, 'SNAP_NorthwestNorthAmerica_10m')
 gridded_folder = os.path.join(data_10m, 'gridded_full')
 
 # Define input datasets

@@ -31,6 +31,7 @@ work_geodatabase = os.path.join(drive, root_folder, 'Projects/VegetationEcology/
 
 # Define input datasets
 site_table = os.path.join(data_folder, 'sites/sites_all.csv')
+study_area = os.path.join(work_geodatabase, 'NorthAmericanBeringia_ModelArea')
 grid_major = os.path.join(drive, root_folder, 'Data/analyses/NorthAmericanBeringia_GridIndex_Major_400km_Selected.shp')
 snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/northAmericanBeringia_TotalArea.tif')
 
@@ -41,7 +42,7 @@ sites_formatted = os.path.join(work_geodatabase, 'sites_formatted')
 arcpy.env.overwriteOutput = True
 
 # Define input and output arrays
-sites_inputs = [site_table, snap_raster]
+sites_inputs = [site_table, study_area, snap_raster]
 sites_outputs = [sites_formatted]
 
 # Create key word arguments
