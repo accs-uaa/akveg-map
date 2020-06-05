@@ -1,43 +1,29 @@
----
-title: "Convert Distribution-abundance Predictions to Rasters"
-author: "Timm Nawrocki"
-date: "October 22, 2018"
-output: html_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
-
-```{r header}
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Convert Distribution-abundance Predictions to Raster
+# Convert Abundance Predictions to Rasters
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Created on: 2018-10-22
+# Created on: 2020-06-04
 # Usage: Code chunks must be executed sequentially in R Studio or R Studio Server installation. Created using R Studio version 1.1.456 and R 3.5.1.
 # Description: "Convert Distribution-abundance Predictions to Raster" processes the composite distribution-adundance predictions in csv tables into rasters in img format. Raster outputs are in the same coordinate system that watersheds were exported in but will not be associated with that projection.
 # ---------------------------------------------------------------------------
-```
 
-## 1. Introduction
+# Set root directory
+drive = 'K:'
+root_folder = 'ACCS_Work'
 
-This script converts distribution-abundance predictions by watershed from a regular grid point matrix to a raster at matching resolution, grid, and projection. The resulting rasters delineate the predicted species distribution from the classifier and the predicted species abundance from the regressor. The coordinate system of the output rasters is undefined. The watershed rasters are not merged by this script but can be merged with the "Mosaic to New Raster" tool in ArcGIS Pro.
-
-## 2. Import data and variables
-
-This script must be executed on the outputs of the predecessors "DistributionAbundanceTrainTest" and "DistributionAbundancePredict". Conversion of distribution-abundance predictions in regular grid point matrix stored as csv to raster requires the sp, raster, rgdal, and stringr libraries.
-
-```{r inputs}
-# Enter numerical range to subset the list of watersheds
-list_range = 1:2
 # Define input folder
-prediction_folder = '/home/twnawrocki_rstudio/predictions/carex_aquatilis/'
+prediction_folder = paste(drive,
+                          root_folder,
+                          'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Output/predicted_grids/alnus',
+                          sep = '/'
+                          )
 # Define output folder
-raster_folder = '/home/twnawrocki_rstudio/rasters/carex_aquatilis/'
-```
+raster_folder = paste(drive,
+                      root_folder,
+                      'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Output/predicted_rasters/alnus',
+                      sep = '/'
+                      )
 
-```{r libraries}
 # Install required libraries if they are not already installed.
 Required_Packages <- c('sp', 'raster', 'rgdal', 'stringr')
 New_Packages <- Required_Packages[!(Required_Packages %in% installed.packages()[,"Package"])]
@@ -49,30 +35,19 @@ library(sp)
 library(raster)
 library(rgdal)
 library(stringr)
-```
 
-```{r input_files}
 # Generate a list of all predictions in the predictions directory
 prediction_list = list.files(prediction_folder, pattern='csv$', full.names=TRUE)
 # Subset the prediction list to the list range
-prediction_list = prediction_list[list_range]
 prediction_length = length(prediction_list)
-```
 
-## 3. Define Functions
-
-```{r functions}
 # Define a function to convert the prediction csv to a raster and export an img raster file
 convertPredictions = function(input_data, output_raster) {
-  prediction_data = input_data[,c('POINT_X', 'POINT_Y', 'prediction')]
-  prediction_raster = rasterFromXYZ(prediction_data, res=c(30,30), crs=NA, digits=5)
+  prediction_data = input_data[,c('x', 'y', 'prediction')]
+  prediction_raster = rasterFromXYZ(prediction_data, res=c(10,10), crs='+init=EPSG:3338', digits=5)
   writeRaster(prediction_raster, output_raster, format='HFA', overwrite=TRUE)
 }
-```
 
-## 4. Conduct conversions
-
-```{r conversions}
 # Create img raster file for each prediction table in the predictions directory
 count = 1
 for (prediction in prediction_list) {
@@ -82,4 +57,3 @@ for (prediction in prediction_list) {
   print(paste('Conversion iteration ', toString(count), ' out of ', toString(prediction_length), ' completed...', sep=''))
   count = count + 1
 }
-```
