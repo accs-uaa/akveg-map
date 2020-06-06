@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Prepare Class Data - Picea glauca-×lutzii
+# Prepare Class Data - Picea glauca
 # Author: Timm Nawrocki
 # Created on: 2020-05-25
 # Usage: Must be executed in R 4.0.0+.
-# Description: "Prepare Class Data - Picea glauca-×lutzii" prepares the map class data for statistical modeling.
+# Description: "Prepare Class Data - Picea glauca" prepares the map class data for statistical modeling.
 # ---------------------------------------------------------------------------
 
 # Set root directory
@@ -48,16 +48,10 @@ species_data = read_xlsx(species_file,
 visit_date = read_xlsx(date_file,
                        sheet = observation_sheet)
 
-# Parse site data into ground sites and aerial sites
-ground_sites = site_data %>%
-  filter(coverType != 'aerial')
-aerial_sites = site_data %>%
-  filter(coverType == 'aerial')
-
 #### CREATE PRESENCE DATA
 
 # Clean unused columns from species data
-species_data = species_data[c('siteCode', 'year', 'day', 'nameAccepted', 'genus', 'coverTotal')]
+species_data = species_data[c('siteCode', 'year', 'day', 'nameAdjudicated', 'nameAccepted',  'genus', 'coverTotal')]
 
 # Filter the species data to include only the map class
 presence_data = species_data %>%
@@ -72,56 +66,52 @@ presence_data = presence_data %>%
   summarize(coverTotal = sum(coverTotal)) %>%
   mutate(nameAccepted = 'Picea glauca-×lutzii') %>%
   mutate(genus = 'Picea') %>%
-  mutate(zero = 1)
-
-#### SPLIT PRESENCE DATA INTO GROUND AND AERIAL
-
-ground_presences = presence_data %>%
-  anti_join(aerial_sites, by = 'siteCode')
-
-aerial_presences = presence_data %>%
-  anti_join(ground_sites, by = 'siteCode') %>%
-  filter(coverTotal > 5)
+  mutate(regress = 1)
 
 #### REMOVE INAPPROPRIATE GROUND SITES
 
 # Identify sites that are inappropriate for the modeled class
-remove_sites = ground_presences %>%
+remove_sites = species_data %>%
   filter(nameAccepted == 'Picea')
 
 # Remove inappropriate sites from site data
-ground_sites = ground_sites %>%
-  filter(initialProject != 'NPS ARCN Lichen') %>%
-  # Remove site that are inappropriate for the modeled class
+sites = site_data %>%
   anti_join(remove_sites, by = 'siteCode')
 
-#### CREATE GROUND ABSENCES
+#### CREATE ABSENCE DATA
 
-# Remove ground presences from filtered sites to create absence sites
-ground_absences = ground_sites['siteCode'] %>%
-  anti_join(ground_presences, by = 'siteCode') %>%
+# Remove presences from all sites to create absence sites
+absence_data = sites['siteCode'] %>%
+  anti_join(presence_data, by = 'siteCode') %>%
   inner_join(visit_date, by = 'siteCode') %>%
   mutate(nameAccepted = 'Picea glauca-×lutzii') %>%
   mutate(genus = 'Picea') %>%
   mutate(coverTotal = 0) %>%
-  mutate(zero = 0)
+  mutate(regress = 0)
 
-#### MERGE GROUND PRESENCES AND GROUND ABSENCES
+#### MERGE PRESENCES AND ABSENCES
 
 # Bind rows from ground data
-ground_data = bind_rows(ground_presences, ground_absences)
+combined_data = bind_rows(presence_data, absence_data)
 
-# Join ground data to ground sites
-ground_data = ground_data %>%
-  inner_join(ground_sites, by = 'siteCode')
+# Join site data to map class
+combined_data = combined_data %>%
+  inner_join(site_data, by = 'siteCode')
 
-#### MERGE GROUND DATA AND AERIAL DATA
-
-aerial_data = aerial_presences %>%
-  inner_join(aerial_sites, by = 'siteCode')
-
-# Bind rows from ground and aerial data
-map_class = bind_rows(ground_data, aerial_data)
+# Add zero field
+absences = combined_data %>%
+  filter(coverType != 'aerial') %>%
+  filter(coverTotal < 0.5) %>%
+  mutate(zero = 0)
+ground_presences = combined_data %>%
+  filter(coverType != 'aerial') %>%
+  filter(coverTotal >= 0.5) %>%
+  mutate(zero = 1)
+aerial_presences = combined_data %>%
+  filter(coverType == 'aerial') %>%
+  filter(coverTotal >= 5) %>%
+  mutate(zero = 1)
+map_class = bind_rows(absences, ground_presences, aerial_presences)
 
 # Control for fire year, year, cover type, and project
 map_class = map_class %>%
@@ -134,8 +124,14 @@ map_class = map_class %>%
   filter(initialProject != 'USFWS IRM') %>%
   filter(initialProject != 'Bering LC') %>%
   filter(initialProject != 'NPS Katmai LC') %>%
-  filter(initialProject != 'Wrangell-St. Elias LC')
+  filter(initialProject != 'Wrangell-St. Elias LC') %>%
+  filter(initialProject != 'NPS Alagnak ELS') %>%
+  filter(initialProject != 'NSSI LC')
+
+# Remove project data inappropriate to map class
+map_class = map_class %>%
+  filter(initialProject != 'NPS ARCN Lichen')
 
 # Export map class data as csv
-output_csv = paste(data_folder, 'species_data/mapClass_PiceaGlauca.csv', sep = '/')
+output_csv = paste(data_folder, 'species_data/mapClass_picgla.csv', sep = '/')
 write.csv(map_class, file = output_csv, fileEncoding = 'UTF-8')

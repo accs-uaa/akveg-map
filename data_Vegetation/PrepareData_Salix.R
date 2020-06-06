@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Prepare Class Data - Calamagrostis canadensis
+# Prepare Class Data - Salix
 # Author: Timm Nawrocki
 # Created on: 2020-05-25
 # Usage: Must be executed in R 4.0.0+.
-# Description: "Prepare Class Data - Calamagrostis canadensis" prepares the map class data for statistical modeling.
+# Description: "Prepare Class Data - Salix" prepares the map class data for statistical modeling.
 # ---------------------------------------------------------------------------
 
 # Set root directory
@@ -55,9 +55,7 @@ species_data = species_data[c('siteCode', 'year', 'day', 'nameAdjudicated', 'nam
 
 # Filter the species data to include only the map class
 presence_data = species_data %>%
-  filter(nameAccepted == 'Calamagrostis canadensis' |
-           nameAccepted == 'Calamagrostis canadensis var. canadensis' |
-           nameAccepted == 'Calamagrostis canadensis var. langsdorffii') %>%
+  filter(genus == 'Salix') %>%
   group_by(siteCode, year, day, nameAccepted, genus) %>%
   summarize(coverTotal = max(coverTotal))
 
@@ -65,20 +63,18 @@ presence_data = species_data %>%
 presence_data = presence_data %>%
   group_by(siteCode, year, day) %>%
   summarize(coverTotal = sum(coverTotal)) %>%
-  mutate(nameAccepted = 'Calamagrostis canadensis') %>%
-  mutate(genus = 'Calamagrostis') %>%
+  mutate(nameAccepted = 'Salix') %>%
+  mutate(genus = 'Salix') %>%
   mutate(regress = 1)
 
 #### REMOVE INAPPROPRIATE GROUND SITES
 
 # Identify sites that are inappropriate for the modeled class
-remove_sites = species_data %>%
-  filter(nameAccepted == 'Calamagrostis' |
-           nameAccepted == 'Graminoid')
+# N/A
 
 # Remove inappropriate sites from site data
-sites = site_data %>%
-  anti_join(remove_sites, by = 'siteCode')
+sites = site_data
+  # No sites to remove
 
 #### CREATE ABSENCE DATA
 
@@ -86,8 +82,8 @@ sites = site_data %>%
 absence_data = sites['siteCode'] %>%
   anti_join(presence_data, by = 'siteCode') %>%
   inner_join(visit_date, by = 'siteCode') %>%
-  mutate(nameAccepted = 'Calamagrostis canadensis') %>%
-  mutate(genus = 'Calamagrostis') %>%
+  mutate(nameAccepted = 'Salix') %>%
+  mutate(genus = 'Salix') %>%
   mutate(coverTotal = 0) %>%
   mutate(regress = 0)
 
@@ -134,9 +130,8 @@ map_class = map_class %>%
 map_class = map_class %>%
   filter(initialProject != 'NPS ARCN Lichen') %>%
   filter(initialProject != 'NPS ARCN I&M') %>%
-  filter(initialProject != 'NPS CAKN I&M') %>%
-  filter(initialProject != 'Southern Yukon Earth Cover')
+  filter(initialProject != 'NPS CAKN I&M')
 
 # Export map class data as csv
-output_csv = paste(data_folder, 'species_data/mapClass_calcan.csv', sep = '/')
+output_csv = paste(data_folder, 'species_data/mapClass_salix.csv', sep = '/')
 write.csv(map_class, file = output_csv, fileEncoding = 'UTF-8')

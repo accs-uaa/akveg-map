@@ -48,19 +48,94 @@ species_data = read_xlsx(species_file,
 visit_date = read_xlsx(date_file,
                        sheet = observation_sheet)
 
-# Parse site data into ground sites and aerial sites
-ground_sites = site_data %>%
-  filter(coverType != 'aerial')
-aerial_sites = site_data %>%
-  filter(coverType == 'aerial')
-
 #### CREATE PRESENCE DATA
 
 # Clean unused columns from species data
-species_data = species_data[c('siteCode', 'year', 'day', 'nameAccepted', 'genus', 'coverTotal')]
+species_data = species_data[c('siteCode', 'year', 'day', 'nameAdjudicated', 'nameAccepted',  'genus', 'coverTotal')]
 
 # Filter the species data to include only the map class
 presence_data = species_data %>%
+  filter(nameAccepted == 'Salix alaxensis' |
+           nameAccepted == 'Salix alaxensis var. alaxensis' |
+           nameAccepted == 'Salix alaxensis var. longistylus' |
+           nameAccepted == 'Salix arbusculoides' |
+           nameAccepted == 'Salix athabascensis' |
+           nameAccepted == 'Salix barclayi' |
+           nameAccepted == 'Salix barrattiana' |
+           nameAccepted == 'Salix bebbiana' |
+           nameAccepted == 'Salix candida' |
+           nameAccepted == 'Salix commutata' |
+           nameAccepted == 'Salix glauca' |
+           nameAccepted == 'Salix glauca ssp. acutifolia' |
+           nameAccepted == 'Salix glauca ssp. stipulifera' |
+           nameAccepted == 'Salix hastata' |
+           nameAccepted == 'Salix hookeriana' |
+           nameAccepted == 'Salix interior' |
+           nameAccepted == 'Salix lasiandra' |
+           nameAccepted == 'Salix lasiandra var. caudata' |
+           nameAccepted == 'Salix lasiandra var. lasiandra' |
+           nameAccepted == 'Salix myrtillifolia' |
+           nameAccepted == 'Salix niphoclada' |
+           nameAccepted == 'Salix planifolia' |
+           nameAccepted == 'Salix pseudomonticola' |
+           nameAccepted == 'Salix pseudomyrsinites' |
+           nameAccepted == 'Salix pulchra' |
+           nameAccepted == 'Salix richardsonii' |
+           nameAccepted == 'Salix scouleriana' |
+           nameAccepted == 'Salix sitchensis') %>%
+  group_by(siteCode, year, day, nameAccepted, genus) %>%
+  summarize(coverTotal = max(coverTotal))
+
+# Sum multiple taxa to single summary
+presence_data = presence_data %>%
+  group_by(siteCode, year, day) %>%
+  summarize(coverTotal = sum(coverTotal)) %>%
+  mutate(nameAccepted = 'Salix Low-Tall') %>%
+  mutate(genus = 'Salix') %>%
+  mutate(regress = 1)
+
+#### REMOVE INAPPROPRIATE GROUND SITES
+
+# Identify sites that are inappropriate for the modeled class
+remove_sites = species_data %>%
+  filter(nameAccepted == 'Salix')
+
+# Remove inappropriate sites from site data
+sites = site_data %>%
+  anti_join(remove_sites, by = 'siteCode')
+
+#### CREATE ABSENCE DATA
+
+# Remove presences from all sites to create absence sites
+absence_data = sites['siteCode'] %>%
+  anti_join(presence_data, by = 'siteCode') %>%
+  inner_join(visit_date, by = 'siteCode') %>%
+  mutate(nameAccepted = 'Salix') %>%
+  mutate(genus = 'Salix') %>%
+  mutate(coverTotal = 0) %>%
+  mutate(regress = 0)
+
+#### MERGE PRESENCES AND ABSENCES
+
+# Bind rows from ground data
+combined_data = bind_rows(presence_data, absence_data)
+
+# Join site data to map class
+combined_data = combined_data %>%
+  inner_join(site_data, by = 'siteCode')
+
+# Add zero field to ground data
+absences = combined_data %>%
+  filter(coverType != 'aerial') %>%
+  filter(coverTotal < 0.5) %>%
+  mutate(zero = 0)
+ground_presences = combined_data %>%
+  filter(coverType != 'aerial') %>%
+  filter(coverTotal >= 0.5) %>%
+  mutate(zero = 1)
+
+# Filter appropriate species presences for aerial sites
+aerial_data = species_data %>%
   filter(nameAccepted == 'Salix alaxensis' |
            nameAccepted == 'Salix alaxensis var. alaxensis' |
            nameAccepted == 'Salix alaxensis var. longistylus' |
@@ -94,63 +169,25 @@ presence_data = species_data %>%
   summarize(coverTotal = max(coverTotal))
 
 # Sum multiple taxa to single summary
-presence_data = presence_data %>%
+aerial_data = aerial_data %>%
   group_by(siteCode, year, day) %>%
   summarize(coverTotal = sum(coverTotal)) %>%
   mutate(nameAccepted = 'Salix Low-Tall') %>%
   mutate(genus = 'Salix') %>%
+  mutate(regress = 1)
+
+# Join site data to aerial data
+aerial_data = aerial_data %>%
+  inner_join(site_data, by = 'siteCode')
+
+# Filter aerial presences
+aerial_presences = aerial_data %>%
+  filter(coverType == 'aerial') %>%
+  filter(coverTotal >= 5) %>%
   mutate(zero = 1)
 
-#### SPLIT PRESENCE DATA INTO GROUND AND AERIAL
-
-ground_presences = presence_data %>%
-  anti_join(aerial_sites, by = 'siteCode')
-
-aerial_presences = presence_data %>%
-  anti_join(ground_sites, by = 'siteCode') %>%
-  filter(coverTotal > 5)
-
-#### REMOVE INAPPROPRIATE GROUND SITES
-
-# Identify sites that are inappropriate for the modeled class
-remove_sites = ground_presences %>%
-  filter(nameAccepted == 'Salix')
-
-# Remove inappropriate sites from site data
-ground_sites = ground_sites %>%
-  filter(initialProject != 'NPS ARCN Lichen' &
-           initialProject != 'NPS CAKN I&M' &
-           initialProject != 'NPS ARCN I&M') %>%
-  # Remove site that are inappropriate for the modeled class
-  anti_join(remove_sites, by = 'siteCode')
-
-#### CREATE GROUND ABSENCES
-
-# Remove ground presences from filtered sites to create absence sites
-ground_absences = ground_sites['siteCode'] %>%
-  anti_join(ground_presences, by = 'siteCode') %>%
-  inner_join(visit_date, by = 'siteCode') %>%
-  mutate(nameAccepted = 'Salix Low-Tall') %>%
-  mutate(genus = 'Salix') %>%
-  mutate(coverTotal = 0) %>%
-  mutate(zero = 0)
-
-#### MERGE GROUND PRESENCES AND GROUND ABSENCES
-
-# Bind rows from ground data
-ground_data = bind_rows(ground_presences, ground_absences)
-
-# Join ground data to ground sites
-ground_data = ground_data %>%
-  inner_join(ground_sites, by = 'siteCode')
-
-#### MERGE GROUND DATA AND AERIAL DATA
-
-aerial_data = aerial_presences %>%
-  inner_join(aerial_sites, by = 'siteCode')
-
-# Bind rows from ground and aerial data
-map_class = bind_rows(ground_data, aerial_data)
+# Bind all data into map class
+map_class = bind_rows(absences, ground_presences, aerial_presences)
 
 # Control for fire year, year, cover type, and project
 map_class = map_class %>%
@@ -163,8 +200,16 @@ map_class = map_class %>%
   filter(initialProject != 'USFWS IRM') %>%
   filter(initialProject != 'Bering LC') %>%
   filter(initialProject != 'NPS Katmai LC') %>%
-  filter(initialProject != 'Wrangell-St. Elias LC')
+  filter(initialProject != 'Wrangell-St. Elias LC') %>%
+  filter(initialProject != 'NPS Alagnak ELS') %>%
+  filter(initialProject != 'NSSI LC')
+
+# Remove project data inappropriate to map class
+map_class = map_class %>%
+  filter(initialProject != 'NPS ARCN Lichen') %>%
+  filter(initialProject != 'NPS ARCN I&M') %>%
+  filter(initialProject != 'NPS CAKN I&M')
 
 # Export map class data as csv
-output_csv = paste(data_folder, 'species_data/mapClass_SalixLowTall.csv', sep = '/')
+output_csv = paste(data_folder, 'species_data/mapClass_salshr.csv', sep = '/')
 write.csv(map_class, file = output_csv, fileEncoding = 'UTF-8')

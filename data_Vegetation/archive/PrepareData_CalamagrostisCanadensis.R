@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Prepare Class Data - Spiraea stevenii
+# Prepare Class Data - Calamagrostis canadensis
 # Author: Timm Nawrocki
 # Created on: 2020-05-25
 # Usage: Must be executed in R 4.0.0+.
-# Description: "Prepare Class Data - Spiraea stevenii" prepares the map class data for statistical modeling.
+# Description: "Prepare Class Data - Calamagrostis canadensis" prepares the map class data for statistical modeling.
 # ---------------------------------------------------------------------------
 
 # Set root directory
@@ -61,9 +61,18 @@ species_data = species_data[c('siteCode', 'year', 'day', 'nameAccepted', 'genus'
 
 # Filter the species data to include only the map class
 presence_data = species_data %>%
-  filter(nameAccepted == 'Spiraea stevenii') %>%
+  filter(nameAccepted == 'Calamagrostis canadensis' |
+           nameAccepted == 'Calamagrostis canadensis var. canadensis' |
+           nameAccepted == 'Calamagrostis canadensis var. langsdorffii') %>%
   group_by(siteCode, year, day, nameAccepted, genus) %>%
-  summarize(coverTotal = max(coverTotal)) %>%
+  summarize(coverTotal = max(coverTotal))
+
+# Sum multiple taxa to single summary
+presence_data = presence_data %>%
+  group_by(siteCode, year, day) %>%
+  summarize(coverTotal = sum(coverTotal)) %>%
+  mutate(nameAccepted = 'Calamagrostis canadensis') %>%
+  mutate(genus = 'Calamagrostis') %>%
   mutate(zero = 1)
 
 #### SPLIT PRESENCE DATA INTO GROUND AND AERIAL
@@ -78,15 +87,17 @@ aerial_presences = presence_data %>%
 #### REMOVE INAPPROPRIATE GROUND SITES
 
 # Identify sites that are inappropriate for the modeled class
-# N/A
+remove_sites = ground_presences %>%
+  filter(nameAccepted == 'Calamagrostis' |
+           nameAccepted == 'Graminoid')
 
 # Remove inappropriate sites from site data
 ground_sites = ground_sites %>%
   filter(initialProject != 'NPS ARCN Lichen' &
            initialProject != 'NPS CAKN I&M' &
-           initialProject != 'NPS ARCN I&M')
+           initialProject != 'NPS ARCN I&M') %>%
   # Remove site that are inappropriate for the modeled class
-  # N/A
+  anti_join(remove_sites, by = 'siteCode')
 
 #### CREATE GROUND ABSENCES
 
@@ -94,8 +105,8 @@ ground_sites = ground_sites %>%
 ground_absences = ground_sites['siteCode'] %>%
   anti_join(ground_presences, by = 'siteCode') %>%
   inner_join(visit_date, by = 'siteCode') %>%
-  mutate(nameAccepted = 'Spiraea stevenii') %>%
-  mutate(genus = 'Spiraea') %>%
+  mutate(nameAccepted = 'Calamagrostis canadensis') %>%
+  mutate(genus = 'Calamagrostis') %>%
   mutate(coverTotal = 0) %>%
   mutate(zero = 0)
 
@@ -130,5 +141,5 @@ map_class = map_class %>%
   filter(initialProject != 'Wrangell-St. Elias LC')
 
 # Export map class data as csv
-output_csv = paste(data_folder, 'species_data/mapClass_SpiraeaStevenii.csv', sep = '/')
+output_csv = paste(data_folder, 'species_data/mapClass_CalamagrostisCanadensis.csv', sep = '/')
 write.csv(map_class, file = output_csv, fileEncoding = 'UTF-8')

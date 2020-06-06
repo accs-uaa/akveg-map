@@ -65,7 +65,7 @@ grid_table = read.csv(grid_csv, encoding = 'UTF-8')
 grid_list = pull(grid_table, var = 'Minor')
 
 # Subset grid list
-grid_list = grid_list[1:7]
+grid_list = grid_list[345:345]
 grid_length = length(grid_list)
 
 # Loop through all grids with site data and extract features to sites
