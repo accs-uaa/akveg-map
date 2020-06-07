@@ -7,7 +7,7 @@
 # Description: "Extract to Study Area" is a function that extracts raster data to a smaller study area. This script is intended to ensure that all gridded predictor datasets are within the target study area and have the same extent.
 # ---------------------------------------------------------------------------
 
-# Define a function to format site data
+# Define a function to extract raster data to a study area
 def extract_to_study_area(**kwargs):
     """
     Description: extracts a raster to a study area

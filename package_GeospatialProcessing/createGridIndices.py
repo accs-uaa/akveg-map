@@ -15,6 +15,8 @@ def create_grid_indices(**kwargs):
             'distance_minor' -- a string representing an integer distance and units for the minor grid
             'input_array' -- an array containing the total area
             'output_array' -- an array containing the major grid and minor grid
+    Returned Value: Returns a feature class
+    Preconditions: an area of interest feature class must be manually generated to define grid extent
     """
 
     # Import packages

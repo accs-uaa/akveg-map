@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Generate Continuous Performance
 # Author: Timm Nawrocki
-# Created on: 2020-06-06
+# Last Updated: 2020-06-06
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Generate Continuous Performance" calculates the auc, accuracy, r squared, mean absolute error, and root mean squared error of the continuous vegetation maps.
 # ---------------------------------------------------------------------------

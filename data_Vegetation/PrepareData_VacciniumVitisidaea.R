@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Prepare Class Data - Vaccinium vitis-idaea
 # Author: Timm Nawrocki
-# Created on: 2020-05-25
+# Last Updated: 2020-06-05
 # Usage: Must be executed in R 4.0.0+.
 # Description: "Prepare Class Data - Vaccinium vitis-idaea" prepares the map class data for statistical modeling.
 # ---------------------------------------------------------------------------

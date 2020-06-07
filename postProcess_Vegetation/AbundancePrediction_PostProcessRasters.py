@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Post-process Abundance Rasters
 # Author: Timm Nawrocki
-# Created on: 2020-06-04
+# Last Updated: 2020-06-04
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Post-process Abundance Rasters" merges raster tiles and controls for water.
 # ---------------------------------------------------------------------------

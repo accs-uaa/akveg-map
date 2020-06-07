@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Create Analysis Grids
 # Author: Timm Nawrocki
-# Last Updated: 2019-11-05
+# Last Updated: 2020-06-06
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Create Analysis Grids" creates major and minor grid indices and overlapping grid tiles from a manually-generated study area polygon.
 # ---------------------------------------------------------------------------

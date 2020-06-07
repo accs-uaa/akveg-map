@@ -2,11 +2,10 @@
 # ---------------------------------------------------------------------------
 # Create Buffered Tiles
 # Author: Timm Nawrocki
-# Last Updated: 2019-11-05
+# Last Updated: 2020-06-07
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Create Buffered Tiles" is a function that extracts, buffers, and clips a set of grids from a grid index to form individual raster tiles.
 # ---------------------------------------------------------------------------
-
 
 # Define a function to create buffered tiles for a grid index
 def create_buffered_tiles(**kwargs):
@@ -16,6 +15,8 @@ def create_buffered_tiles(**kwargs):
             'distance' -- a string representing a number and units for buffer distance
             'input_array' -- an array containing the input grid index and a clip area
             'output_geodatabase' -- an empty geodatabase to store the output tiles
+    Returned Value: Returns a raster dataset for each grid in grid index
+    Preconditions: grid index must have been generated using create_grid_indices
     """
 
     # Import packages

@@ -16,7 +16,6 @@ def download_from_csv(input_table, url_column, directory):
             destination -- folder to store download results.
     Returned Value: Function returns status messages only. Downloaded data are stored on drive.
     Preconditions: csv tables must be generated from web application tools or manually.
-    Dependencies: requires os, pandas as pd, and urllib.
     """
 
     # Import packages

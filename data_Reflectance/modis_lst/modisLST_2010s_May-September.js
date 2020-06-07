@@ -2,7 +2,7 @@
 ---------------------------------------------------------------------------
 Mean Monthly Land Surface Temperature MODIS Terra 2010-2019
 Author: Timm Nawrocki, Alaska Center for Conservation Science
-Created on: 2020-01-06
+Last Updated: 2020-01-06
 Usage: Must be executed from the Google Earth Engine code editor.
 Description: This script produces a decadal monthly mean land surface temperature for May-September 2010-2019 at 1x1 km resolution from MODIS Terra data.
 ---------------------------------------------------------------------------*/

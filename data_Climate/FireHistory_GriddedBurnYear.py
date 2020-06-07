@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Convert Fire History To Gridded Burn Year
 # Author: Timm Nawrocki
-# Created on: 2020-06-02
+# Last Updated: 2020-06-02
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Convert Fire History To Gridded Burn Year" converts the Fire History polygons from 2000-2019 to a raster with most recent burn year as the value per major grid.
 # ---------------------------------------------------------------------------

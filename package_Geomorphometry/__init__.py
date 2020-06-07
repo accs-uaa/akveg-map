@@ -13,7 +13,7 @@ from package_Geomorphometry.getZFactor import getZFactor
 from package_Geomorphometry.integratedMoisture import integrated_moisture
 from package_Geomorphometry.linearAspect import linear_aspect
 from package_Geomorphometry.meanSlope import mean_slope
-from package_Geomorphometry.Roughness import roughness
+from package_Geomorphometry.roughness import roughness
 from package_Geomorphometry.siteExposure import site_exposure
 from package_Geomorphometry.surfaceArea import surface_area
 from package_Geomorphometry.surfaceRelief import surface_relief

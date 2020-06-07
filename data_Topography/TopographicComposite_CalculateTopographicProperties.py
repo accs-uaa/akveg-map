@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Calculate Topographic Properties
 # Author: Timm Nawrocki
-# Created on: 2019-12-07
+# Last Updated: 2019-12-07
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Calculate Topographic Properties" creates a composite from multiple sources based on order of priority. All sources must be in the same projection with the same cell size and grid. The grid tiles must be predefined as rasters.
 # ---------------------------------------------------------------------------

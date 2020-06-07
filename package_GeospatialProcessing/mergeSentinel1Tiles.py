@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Merge Sentinel1 Tiles
+# Merge Sentinel-1 Tiles
 # Author: Timm Nawrocki
-# Last Updated: 2019-12-30
+# Last Updated: 2020-05-28
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Merge spectral tiles" is a function that merges tiles of a spectral metric within a predefined grid.
+# Description: "Merge Sentinel-1 tiles" is a function that merges tiles of a Sentinel-1 metric within a predefined grid.
 # ---------------------------------------------------------------------------
 
-# Define a function to merge multiple source spectral tiles
+# Define a function to merge multiple source Sentinel-1 tiles
 def merge_sentinel1_tiles(**kwargs):
     """
     Description: extracts Sentinel-1 tiles to an area and mosaics extracted tiles with first data priority

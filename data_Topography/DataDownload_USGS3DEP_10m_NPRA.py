@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Download USGS 3DEP 10 m NPR-A Tiles
 # Author: Timm Nawrocki
-# LAst Updated: 2019-10-29
+# Last Updated: 2019-10-29
 # Usage: Can be executed in an Anaconda Python 3.7 distribution or an ArcGIS Pro Python 3.6 distribution.
 # Description: "Download USGS 3DEP 10 m NPR-A Tiles" contacts a server to download a series of files specified in a csv table. The full url to the resources must be specified in the table. The table can be generated from The National Map Viewer web application.
 # ---------------------------------------------------------------------------

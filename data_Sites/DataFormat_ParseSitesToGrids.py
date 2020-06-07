@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Parse Sites to Grids
 # Author: Timm Nawrocki
-# Created on: 2020-05-06
+# Last Updated: 2020-05-06
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Parse Sites to Grids" prepares a table of point data for feature extraction by selecting appropriate raster cells based on cell size and splits raster points by major grids.
 # ---------------------------------------------------------------------------

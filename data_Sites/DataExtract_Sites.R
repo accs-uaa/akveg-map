@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Extract Features to Sites
 # Author: Timm Nawrocki
-# Created on: 2020-05-07
+# Last Updated: 2020-05-07
 # Usage: Must be executed in R 4.0.0+.
 # Description: "Extract Features to Sites" extracts data from rasters to points representing plot locations and collapses multi-point plots into single points with plot-level means.
 # ---------------------------------------------------------------------------

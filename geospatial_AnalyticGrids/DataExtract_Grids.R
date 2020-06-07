@@ -2,53 +2,47 @@
 # ---------------------------------------------------------------------------
 # Extract Features to Grids
 # Author: Timm Nawrocki
-# Created on: 2020-05-29
+# Last Updated: 2020-06-07
 # Usage: Must be executed in R 4.0.0+.
 # Description: "Extract Features to Grids" extracts data from rasters to prediction grids.
 # ---------------------------------------------------------------------------
 
+# Enter machine number
+machine_number = 1
+
 # Set root directory
-drive = 'N:'
-root_folder = 'ACCS_Work'
+root_folder = '/home/twnawrocki_rstudio'
 
 # Define input grid list
-grid_csv = paste(drive,
-                 root_folder,
-                 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/gridMinor_Selected.csv',
+grid_csv = paste(root_folder,
+                 'meta/gridMinor_Selected.csv',
                  sep ='/')
 
 # Define input folders
-grid_folder = paste(drive,
-                    root_folder,
-                    'Data/analyses/gridMinor',
+grid_folder = paste(root_folder,
+                    'rasters/gridMinor',
                     sep = '/')
-topography_folder = paste(drive,
-                          root_folder,
-                          'Data/topography/Composite_10m_Beringia/gridded_select',
+topography_folder = paste(root_folder,
+                          'rasters/topography/gridded_select',
                           sep = '/')
-sentinel1_folder = paste(drive,
-                         root_folder,
-                         'Data/imagery/sentinel-1/gridded_select',
+sentinel1_folder = paste(root_folder,
+                         'rasters/sentinel-1/gridded_select',
                          sep = '/')
-sentinel2_folder = paste(drive,
-                         root_folder,
-                         'Data/imagery/sentinel-2/gridded_select',
+sentinel2_folder = paste(root_folder,
+                         'rasters/sentinel-2/gridded_select',
                          sep = '/')
-modis_folder = paste(drive,
-                     root_folder,
-                     'Data/imagery/modis/gridded_select',
+modis_folder = paste(root_folder,
+                     'rasters/modis/gridded_select',
                      sep = '/')
-climate_folder = paste(drive,
-                       root_folder,
-                       'Data/climatology/SNAP_NorthwestNorthAmerica_10m/gridded_select',
+climate_folder = paste(root_folder,
+                       'rasters/climate/gridded_select',
                        sep = '/')
-output_folder = paste(drive,
-                      root_folder,
-                      'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/grids',
+output_folder = paste(root_folder,
+                      'grids',
                       sep = '/')
 
 # Install required libraries if they are not already installed.
-Required_Packages <- c('dplyr', 'raster', 'rgdal', 'sp', 'stringr', 'tidyr')
+Required_Packages <- c('dplyr', 'raster', 'rgdal', 'sp', 'stringr')
 New_Packages <- Required_Packages[!(Required_Packages %in% installed.packages()[,"Package"])]
 if (length(New_Packages) > 0) {
   install.packages(New_Packages)
@@ -62,10 +56,14 @@ library(stringr)
 
 # Define input grid list
 grid_table = read.csv(grid_csv, encoding = 'UTF-8')
+grid_table = grid_table %>%
+  filter(Major != 'C6')
 grid_list = pull(grid_table, var = 'Minor')
 
 # Subset grid list
-grid_list = grid_list[345:345]
+first = (24 * machine_number) - 23
+last = 24 * machine_number
+grid_list = grid_list[first:last]
 grid_length = length(grid_list)
 
 # Loop through all grids with site data and extract features to sites

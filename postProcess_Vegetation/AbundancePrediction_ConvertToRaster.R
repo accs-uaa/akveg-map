@@ -2,25 +2,27 @@
 # ---------------------------------------------------------------------------
 # Convert Abundance Predictions to Rasters
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Created on: 2020-06-04
+# Last Updated: 2020-06-07
 # Usage: Code chunks must be executed sequentially in R Studio or R Studio Server installation. Created using R Studio version 1.2.5042 and R 4.0.0.
-# Description: "Convert Distribution-abundance Predictions to Raster" processes the composite distribution-adundance predictions in csv tables into rasters in img format. Raster outputs are in the same coordinate system that watersheds were exported in but will not be associated with that projection.
+# Description: "Convert Distribution-abundance Predictions to Raster" processes the composite distribution-adundance predictions in csv tables into rasters in img format. Raster outputs are in the same coordinate system that grids were exported in but will not be associated with that projection.
 # ---------------------------------------------------------------------------
 
 # Set root directory
-drive = 'N:'
-root_folder = 'ACCS_Work'
+root_folder = '/home/twnawrocki_rstudio'
+
+# Set map class folder
+map_class = 'alnus'
 
 # Define input folder
-prediction_folder = paste(drive,
-                          root_folder,
-                          'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Output/predicted_grids/alnus',
+prediction_folder = paste(root_folder,
+                          'predicted_grids',
+                          map_class,
                           sep = '/'
                           )
 # Define output folder
-raster_folder = paste(drive,
-                      root_folder,
-                      'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Output/predicted_rasters/alnus',
+raster_folder = paste(root_folder,
+                      'predicted_rasters',
+                      map_class,
                       sep = '/'
                       )
 
@@ -38,7 +40,6 @@ library(stringr)
 
 # Generate a list of all predictions in the predictions directory
 prediction_list = list.files(prediction_folder, pattern='csv$', full.names=TRUE)
-# Subset the prediction list to the list range
 prediction_length = length(prediction_list)
 
 # Define a function to convert the prediction csv to a raster and export an img raster file
