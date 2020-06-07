@@ -3,12 +3,12 @@
 # Convert Abundance Predictions to Rasters
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
 # Created on: 2020-06-04
-# Usage: Code chunks must be executed sequentially in R Studio or R Studio Server installation. Created using R Studio version 1.1.456 and R 3.5.1.
+# Usage: Code chunks must be executed sequentially in R Studio or R Studio Server installation. Created using R Studio version 1.2.5042 and R 4.0.0.
 # Description: "Convert Distribution-abundance Predictions to Raster" processes the composite distribution-adundance predictions in csv tables into rasters in img format. Raster outputs are in the same coordinate system that watersheds were exported in but will not be associated with that projection.
 # ---------------------------------------------------------------------------
 
 # Set root directory
-drive = 'K:'
+drive = 'N:'
 root_folder = 'ACCS_Work'
 
 # Define input folder

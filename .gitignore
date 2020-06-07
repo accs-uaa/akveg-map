@@ -24,3 +24,8 @@
 ehthumbs.db
 Thumbs.db
 *.db
+
+# Cache Folders #
+#################
+.idea
+.ipynb_checkpoints

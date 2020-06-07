@@ -14,7 +14,7 @@ from package_GeospatialProcessing import arcpy_geoprocessing
 from package_GeospatialProcessing import postprocess_abundance
 
 # Set root directory
-drive = 'K:/'
+drive = 'N:/'
 root_folder = 'ACCS_Work'
 
 # Define species folder
