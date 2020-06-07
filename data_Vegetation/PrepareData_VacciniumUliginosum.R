@@ -64,8 +64,8 @@ presence_data = species_data %>%
 # Sum multiple taxa to single summary
 presence_data = presence_data %>%
   group_by(siteCode, year, day) %>%
-  mutate(nameAccepted = 'Vaccinium uliginosum') %>%
   summarize(coverTotal = sum(coverTotal)) %>%
+  mutate(nameAccepted = 'Vaccinium uliginosum') %>%
   mutate(genus = 'Vaccinium') %>%
   mutate(regress = 1)
 
