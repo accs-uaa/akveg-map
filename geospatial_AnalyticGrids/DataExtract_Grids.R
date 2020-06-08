@@ -15,7 +15,7 @@ root_folder = '/home/twnawrocki_rstudio'
 
 # Define input grid list
 grid_csv = paste(root_folder,
-                 'meta/gridMinor_Selected.csv',
+                 'meta/gridMinor_selected.csv',
                  sep ='/')
 
 # Define input folders
