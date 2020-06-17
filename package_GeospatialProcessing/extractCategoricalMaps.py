@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Extract Categorical Maps to Model Results
 # Author: Timm Nawrocki
-# Last Updated: 2020-06-06
+# Last Updated: 2020-06-11
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Extract Categorical Maps to Model Results" is a function that extracts the class values of the NLCD, the coarse classes of the Alaska Vegetation and Wetland Composite, and the fine classes of the Alaska Vegetation and Wetland Composite to a set of x and y values in a table.
 # ---------------------------------------------------------------------------
@@ -36,6 +36,8 @@ def extract_categorical_maps(**kwargs):
     nlcd = kwargs['input_array'][1]
     coarse = kwargs['input_array'][2]
     fine = kwargs['input_array'][3]
+    minor_grid = kwargs['input_array'][4]
+    ecoregions = kwargs['input_array'][5]
     output_table = kwargs['output_array'][0]
 
     # Split output table into location and name
@@ -54,7 +56,7 @@ def extract_categorical_maps(**kwargs):
     print(f'\tExtracting raster data to points...')
     iteration_start = time.time()
     arcpy.XYTableToPoint_management(input_table, points_feature, 'longitude', 'latitude', '', feature_projection)
-    ExtractMultiValuesToPoints(points_feature, [[nlcd, 'nlcd'], [coarse, 'coarse'], [fine, 'fine']], 'NONE')
+    ExtractMultiValuesToPoints(points_feature, [[nlcd, 'nlcd'], [coarse, 'coarse'], [fine, 'fine'], [minor_grid, 'minor'], [ecoregions, 'ecoregion']], 'NONE')
     arcpy.TableToTable_conversion(points_feature, output_location, output_name)
     # Delete intermediate datasets
     if arcpy.Exists(points_feature) == 1:

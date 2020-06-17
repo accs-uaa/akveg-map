@@ -32,7 +32,7 @@ snap_raster = os.path.join(project_folder, 'Data_Input/northAmericanBeringia_Tot
 # Define grid datasets
 major_grid = os.path.join(arcpy.env.workspace, 'NorthAmericanBeringia_GridIndex_Major_400km')
 minor_grid = os.path.join(arcpy.env.workspace, 'NorthAmericanBeringia_GridIndex_Minor_10km')
-minor_selected = os.path.join(arcpy.env.workspace, 'NorthAmericanBeringia_GridIndex_Minor_10km_Selected')
+minor_selected = os.path.join(arcpy.env.workspace, 'NorthAmericanBeringia_GridIndex_Minor_10km_Bristol')
 
 # Define input and output arrays
 grid_inputs = [total_area]

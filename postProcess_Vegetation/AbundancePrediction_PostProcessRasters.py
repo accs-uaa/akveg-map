@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Post-process Abundance Rasters
 # Author: Timm Nawrocki
-# Created on: 2020-06-04
+# Last Updated: 2020-06-10
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Post-process Abundance Rasters" merges raster tiles and controls for water.
 # ---------------------------------------------------------------------------
@@ -36,9 +36,9 @@ work_geodatabase = os.path.join(drive,
                                 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/BeringiaVegetation.gdb')
 
 # Define input datasets
-snap_raster = os.path.join(drive,
+mask_raster = os.path.join(drive,
                            root_folder,
-                           'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/northAmericanBeringia_ModelArea.tif')
+                           'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/auxiliary_data/NorthAmericanBeringia_Bristol_Mask.tif')
 
 # Add species tile rasters to list
 tile_list = []
@@ -58,7 +58,7 @@ if os.path.exists(output_folder) == 0:
 output_raster = os.path.join(output_folder, 'NorthAmericanBeringia_' + output_name + '.tif')
 
 # Define input and output arrays
-process_inputs = [snap_raster] + tile_list
+process_inputs = [mask_raster] + tile_list
 process_outputs = [output_raster]
 
 # Create key word arguments
@@ -70,6 +70,6 @@ process_kwargs = {'work_geodatabase': work_geodatabase,
                   }
 
 # Extract raster to study area
-print(f'Post-processing raster...')
+print(f'Post-processing {output_name} raster...')
 arcpy_geoprocessing(postprocess_abundance, **process_kwargs)
 print('----------')

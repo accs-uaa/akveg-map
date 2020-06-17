@@ -14,7 +14,7 @@ def postprocess_abundance(**kwargs):
     Inputs: 'work_geodatabase' -- path to a file geodatabase that will serve as the workspace
             'cell_size' -- an integer cell size in the same units as the coordinate system
             'output_projection' -- an integer EPSG code for the output projected coordinate system
-            'input_array' -- an array containing the snap raster (must be first) and all tile rasters
+            'input_array' -- an array containing the mask raster (must be first) and all tile rasters
             'output_array' -- an array that contains the output species raster
     Returned Value: Returns a raster for the species abundance
     Preconditions: a set of species raster tiles must be generated through model prediction and conversion to raster.
@@ -22,6 +22,8 @@ def postprocess_abundance(**kwargs):
 
     # Import packages
     import arcpy
+    from arcpy.sa import ExtractByMask
+    from arcpy.sa import Raster
     import os
     import datetime
     import time
@@ -31,19 +33,23 @@ def postprocess_abundance(**kwargs):
     cell_size = kwargs['cell_size']
     output_projection = kwargs['output_projection']
     raster_tiles = kwargs['input_array']
-    snap_raster = raster_tiles.pop(0)
+    mask_raster = raster_tiles.pop(0)
     output_raster = kwargs['output_array'][0]
 
     # Set mosaic location and name
-    mosaic_location, mosaic_name = os.path.split(output_raster)
+    mosaic_raster = os.path.splitext(output_raster)[0] + '_mosaic.tif'
+    mosaic_location, mosaic_name = os.path.split(mosaic_raster)
 
     # Set overwrite option
     arcpy.env.overwriteOutput = True
-
     # Set workspace and snap raster
     arcpy.env.workspace = work_geodatabase
     # Set snap raster
-    arcpy.env.snapRaster = snap_raster
+    arcpy.env.snapRaster = mask_raster
+    # Set processing extent
+    arcpy.env.extent = Raster(mask_raster).extent
+    # Use two thirds of cores on processes that can be split.
+    arcpy.env.parallelProcessingFactor = "75%"
 
     # Set output projection
     composite_projection = arcpy.SpatialReference(output_projection)
@@ -61,6 +67,34 @@ def postprocess_abundance(**kwargs):
                                        'LAST',
                                        'LAST'
                                        )
+    # End timing
+    iteration_end = time.time()
+    iteration_elapsed = int(iteration_end - iteration_start)
+    iteration_success_time = datetime.datetime.now()
+    # Report success
+    print(f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
+    print('\t----------')
+
+    # Extract mosaic raster to mask raster and export as new raster
+    print('\tExtracting raster to mask...')
+    iteration_start = time.time()
+    extract_raster = ExtractByMask(mosaic_raster, mask_raster)
+    print('\tExporting to new raster...')
+    arcpy.CopyRaster_management(extract_raster,
+                                output_raster,
+                                '',
+                                '',
+                                '-128',
+                                'NONE',
+                                'NONE',
+                                '8_BIT_SIGNED',
+                                'NONE',
+                                'NONE',
+                                'TIFF',
+                                'NONE')
+    # Delete mosaic raster
+    if arcpy.Exists(mosaic_raster) == 1:
+        arcpy.Delete_management(mosaic_raster)
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)

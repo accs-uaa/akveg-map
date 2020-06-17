@@ -43,7 +43,7 @@ vegetation_maps = [['nlcd'], ['coarse'], ['fine']]
 regions = ['Statewide', 'Arctic', 'Southwest', 'Interior']
 
 # Define output variables
-output_variables = ['mapClass', 'region', 'vegMap', 'mean', 'median', 'r2', 'mae', 'rmse']
+output_variables = ['mapClass', 'region', 'vegMap', 'r2', 'std_mae']
 
 # Create empty data frame
 categorical_performance = pd.DataFrame(columns = output_variables)
@@ -74,7 +74,6 @@ for class_folder in class_folders:
         # Calculate mean and median value of presences
         presence_data = input_data[input_data['regress'] == 1]
         mean_cover = presence_data['coverTotal'].mean()
-        median_cover = presence_data['coverTotal'].median()
 
         # Loop through categorical maps
         for map in vegetation_maps:
@@ -146,11 +145,9 @@ for class_folder in class_folders:
             iteration_results = pd.DataFrame([[class_folder,
                                                region,
                                                map[0],
-                                               round(mean_cover, 1),
-                                               round(median_cover, 1),
                                                round(r_score, 2),
-                                               round(mae, 1),
-                                               round(rmse, 1)]],
+                                               round((mae / mean_cover), 2)
+                                               ]],
                                              columns = output_variables)
             categorical_performance = categorical_performance.append(iteration_results, ignore_index=True)
 

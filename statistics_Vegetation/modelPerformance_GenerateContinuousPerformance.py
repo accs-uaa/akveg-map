@@ -2,9 +2,9 @@
 # ---------------------------------------------------------------------------
 # Generate Continuous Performance
 # Author: Timm Nawrocki
-# Created on: 2020-06-06
-# Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Generate Continuous Performance" calculates the auc, accuracy, r squared, mean absolute error, and root mean squared error of the continuous vegetation maps.
+# Created on: 2020-06-11
+# Usage: Must be executed in an Anaconda Python 3.7 installation.
+# Description: "Generate Continuous Performance" calculates the r squared, standardized mean absolute error, auc, and percentage distribution accuracy of the continuous vegetation maps at the native map resolution.
 # ---------------------------------------------------------------------------
 
 # Import packages for file manipulation, data manipulation, and plotting
@@ -37,7 +37,7 @@ class_folders = ['alnus_nmse', 'betshr_nmse', 'bettre_nmse', 'calcan_nmse', 'cla
 regions = ['Statewide', 'Arctic', 'Southwest', 'Interior']
 
 # Define output variables
-output_variables = ['mapClass', 'region', 'vegMap', 'mean', 'median', 'r2', 'mae', 'rmse', 'auc', 'acc']
+output_variables = ['mapClass', 'region', 'vegMap', 'r2', 'std_mae', 'auc', 'acc']
 
 # Create empty data frame
 continuous_performance = pd.DataFrame(columns = output_variables)
@@ -59,11 +59,6 @@ for class_folder in class_folders:
         # Convert values to floats
         input_data[cover[0]] = input_data[cover[0]].astype(float)
         input_data[prediction[0]] = input_data[prediction[0]].astype(float)
-
-        # Calculate mean and median value of presences
-        presence_data = input_data[input_data['regress'] == 1]
-        mean_cover = presence_data['coverTotal'].mean()
-        median_cover = presence_data['coverTotal'].median()
 
         # Partition output results to presence-absence observed and predicted
         y_classify_observed = input_data[zero_variable[0]].astype('int32')
@@ -87,6 +82,10 @@ for class_folder in class_folders:
         # Subset cover data (relevant for Lichens only)
         input_data = input_data[input_data['initialProject'] != 'NPS ARCN Lichen']
 
+        # Calculate mean and median value of presences
+        presence_data = input_data[input_data['regress'] == 1]
+        mean_cover = presence_data['coverTotal'].mean()
+
         # Partition output results to foliar cover observed and predicted
         y_regress_observed = input_data[cover[0]]
         y_regress_predicted = input_data[prediction[0]]
@@ -101,11 +100,8 @@ for class_folder in class_folders:
         region_results = pd.DataFrame([[class_folder,
                                         region,
                                         'continuous',
-                                        round(mean_cover, 1),
-                                        round(median_cover, 1),
                                         round(r_score, 2),
-                                        round(mae, 1),
-                                        round(rmse, 1),
+                                        round((mae / mean_cover), 2),
                                         round(auc, 2),
                                         round(accuracy, 2)
                                         ]],

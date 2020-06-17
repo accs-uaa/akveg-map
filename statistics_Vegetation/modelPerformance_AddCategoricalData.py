@@ -2,9 +2,9 @@
 # ---------------------------------------------------------------------------
 # Add Categorical Map Data to Model Validation Results
 # Author: Timm Nawrocki
-# Created on: 2020-06-06
+# Created on: 2020-06-11
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Add Categorical Map Data to Model Validation Results" extracts categorical map classes to model validation results for the NLCD, the coarse classes of the Alaska Vegetation and Wetland Composite, and the fine classes of the Alaska Vegetation and Wetland Composite.
+# Description: "Add Categorical Map Data to Model Validation Results" extracts categorical map classes to model validation results for the NLCD, the coarse classes of the Alaska Vegetation and Wetland Composite, and the fine classes of the Alaska Vegetation and Wetland Composite. This script also assigns the units for the 10x10 km and landscape scale accuracy assessments.
 # ---------------------------------------------------------------------------
 
 # Import packages
@@ -20,6 +20,12 @@ root_folder = 'ACCS_Work'
 data_folder = os.path.join(drive,
                            root_folder,
                            'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Output/model_results/final')
+aux_folder = os.path.join(drive,
+                          root_folder,
+                          'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/auxiliary_data')
+map_folder = os.path.join(drive,
+                          root_folder,
+                          'Data/biota/vegetation')
 
 # Define work environment
 work_geodatabase = os.path.join(drive,
@@ -27,13 +33,12 @@ work_geodatabase = os.path.join(drive,
                                 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/BeringiaVegetation.gdb')
 
 # Define categorical maps
-map_path = os.path.join(drive,
-                        root_folder,
-                        'Data/biota/vegetation')
-nlcd = os.path.join(map_path, 'Alaska_NationalLandCoverDatabase_2011.img')
-coarse = os.path.join(map_path, 'AlaskaVegetationWetlandComposite_20180412_Coarse.tif')
-fine = os.path.join(map_path, 'AlaskaVegetationWetlandComposite_20180412_Fine.tif')
-categorical_maps = [nlcd, coarse, fine]
+nlcd = os.path.join(map_folder, 'Alaska_NationalLandCoverDatabase_2011.img')
+coarse = os.path.join(map_folder, 'AlaskaVegetationWetlandComposite_20180412_Coarse.tif')
+fine = os.path.join(map_folder, 'AlaskaVegetationWetlandComposite_20180412_Fine.tif')
+minor_grid = os.path.join(aux_folder, 'NorthAmericanBeringia_GridIndex_Minor_10km_Selected.tif')
+ecoregions = os.path.join(aux_folder, 'NorthAmericanBeringia_UnifiedEcoregions.tif')
+categorical_maps = [nlcd, coarse, fine, minor_grid, ecoregions]
 
 # Define model output folders
 class_folders = ['alnus_nmse', 'betshr_nmse', 'bettre_nmse', 'calcan_nmse', 'cladon_nmse', 'dectre_nmse', 'empnig_nmse', 'erivag_nmse', 'picgla_nmse', 'picmar_nmse', 'rhotom_nmse', 'salshr_nmse', 'sphagn_nmse', 'vaculi_nmse', 'vacvit_nmse', 'wetsed_nmse']
