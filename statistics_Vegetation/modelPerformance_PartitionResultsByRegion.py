@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Partition Model Validation Results by Region
 # Author: Timm Nawrocki
-# Created on: 2020-06-06
+# Last Updated: 2020-06-06
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Partition Model Validation Results by Region" extracts a set of predictor raster datasets to a study area to enforce the same extent on all rasters.
 # ---------------------------------------------------------------------------

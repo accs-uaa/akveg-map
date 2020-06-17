@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Extract Predictor Data To Study Area
 # Author: Timm Nawrocki
-# Created on: 2020-05-10
+# Last Updated: 2020-05-10
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Extract Predictor Data to Study Area" extracts a set of predictor raster datasets to a study area to enforce the same extent on all rasters.
 # ---------------------------------------------------------------------------

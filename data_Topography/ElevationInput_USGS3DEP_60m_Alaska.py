@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Create Composite USGS 3DEP 60 m Alaska
 # Author: Timm Nawrocki
-# Created on: 2019-12-03
+# Last Updated: 2019-12-03
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Create Composite USGS 3DEP 60 m Alaska" combines individual DEM tiles, reprojects to NAD 1983 Alaska Albers, and resamples to 10 m.
 # ---------------------------------------------------------------------------

@@ -2,7 +2,7 @@
 ---------------------------------------------------------------------------
 Cloud-reduced Greenest Pixel Composite Sentinel 2 Imagery for August 2015-2019
 Author: Timm Nawrocki, Alaska Center for Conservation Science
-Created on: 2019-03-19
+Last Updated: 2019-03-19
 Usage: Must be executed from the Google Earth Engine code editor.
 Description: This script produces a cloud-reduced greenest pixel composite (based on maximum NDVI) for bands 1-12 plus Enhanced Vegetation Index-2 (EVI2), Normalized Burn Ratio (NBR), Normalized Difference Moisture Index (NDMI), Normalized Difference Snow Index (NDSI), Normalized Difference Vegetation Index (NDVI), Normalized Difference Water Index (NDWI) using the Sentinel2 Top-Of-Atmosphere (TOA) reflectance image collection filtered to the month of August from 2015 through 2018. See Chander et al. 2009 for a description of the TOA reflectance method. The best pixel selection is based on maximum NDVI for all metrics to ensure uniform pixel selection from all bands.
 - EVI-2 was calculated as (Red - Green) / (Red + [2.4 x Green] + 1), where Red is Landsat 8 Band 4 and Green is Landsat 8 Band 3.

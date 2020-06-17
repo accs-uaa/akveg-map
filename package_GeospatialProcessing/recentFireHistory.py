@@ -10,7 +10,7 @@
 # Define a function to extract recent fire history
 def recent_fire_history(**kwargs):
     """
-    Description: calculates mean annual climate properties from a set of month-year climate rasters
+    Description: extracts recent fire history to new feature class
     Inputs: 'work_geodatabase' -- a file geodatabase to use as a workspace
             'year_start' -- a start year in yyyy format
             'year_end' -- an end year in yyyy format

@@ -2,53 +2,47 @@
 # ---------------------------------------------------------------------------
 # Extract Features to Grids
 # Author: Timm Nawrocki
-# Created on: 2020-05-29
+# Last Updated: 2020-06-07
 # Usage: Must be executed in R 4.0.0+.
 # Description: "Extract Features to Grids" extracts data from rasters to prediction grids.
 # ---------------------------------------------------------------------------
 
+# Enter machine number
+machine_number = 1
+
 # Set root directory
-drive = 'N:'
-root_folder = 'ACCS_Work'
+root_folder = '/home/twnawrocki_rstudio'
 
 # Define input grid list
-grid_csv = paste(drive,
-                 root_folder,
-                 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/gridMinor_Selected.csv',
+grid_csv = paste(root_folder,
+                 'meta/gridMinor_selected.csv',
                  sep ='/')
 
 # Define input folders
-grid_folder = paste(drive,
-                    root_folder,
-                    'Data/analyses/gridMinor',
+grid_folder = paste(root_folder,
+                    'rasters/gridMinor',
                     sep = '/')
-topography_folder = paste(drive,
-                          root_folder,
-                          'Data/topography/Composite_10m_Beringia/gridded_select',
+topography_folder = paste(root_folder,
+                          'rasters/topography/gridded_select',
                           sep = '/')
-sentinel1_folder = paste(drive,
-                         root_folder,
-                         'Data/imagery/sentinel-1/gridded_select',
+sentinel1_folder = paste(root_folder,
+                         'rasters/sentinel-1/gridded_select',
                          sep = '/')
-sentinel2_folder = paste(drive,
-                         root_folder,
-                         'Data/imagery/sentinel-2/gridded_select',
+sentinel2_folder = paste(root_folder,
+                         'rasters/sentinel-2/gridded_select',
                          sep = '/')
-modis_folder = paste(drive,
-                     root_folder,
-                     'Data/imagery/modis/gridded_select',
+modis_folder = paste(root_folder,
+                     'rasters/modis/gridded_select',
                      sep = '/')
-climate_folder = paste(drive,
-                       root_folder,
-                       'Data/climatology/SNAP_NorthwestNorthAmerica_10m/gridded_select',
+climate_folder = paste(root_folder,
+                       'rasters/climate/gridded_select',
                        sep = '/')
-output_folder = paste(drive,
-                      root_folder,
-                      'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/grids',
+output_folder = paste(root_folder,
+                      'grids',
                       sep = '/')
 
 # Install required libraries if they are not already installed.
-Required_Packages <- c('dplyr', 'raster', 'rgdal', 'sp', 'stringr', 'tidyr')
+Required_Packages <- c('dplyr', 'raster', 'rgdal', 'sp', 'stringr')
 New_Packages <- Required_Packages[!(Required_Packages %in% installed.packages()[,"Package"])]
 if (length(New_Packages) > 0) {
   install.packages(New_Packages)
@@ -62,31 +56,35 @@ library(stringr)
 
 # Define input grid list
 grid_table = read.csv(grid_csv, encoding = 'UTF-8')
+grid_table = grid_table %>%
+  filter(Major != 'C6')
 grid_list = pull(grid_table, var = 'Minor')
 
 # Subset grid list
-grid_list = grid_list[1:10]
+first = (24 * machine_number) - 23
+last = 24 * machine_number
+grid_list = grid_list[first:last]
 grid_length = length(grid_list)
 
 # Loop through all grids with site data and extract features to sites
 count = 1
 for (grid in grid_list) {
-  
+
   # Define output csv file
   output_csv = paste(output_folder, '/', grid, '.csv', sep = '')
-  
+
   # If output csv file does not already exist, extract features to grid
   if (!file.exists(output_csv)) {
     print(paste('Extracting predictor data to Grid ', grid, ' (', count, ' of ', grid_length, ')...', sep=''))
-  
+
     # Create full path to grid raster
     grid_file = paste(grid_folder, '/', 'Grid_', grid, '.tif', sep = '')
-  
+
     # Convert raster to spatial dataframe of points
     grid_raster = raster(grid_file)
     grid_points = data.frame(rasterToPoints(grid_raster, spatial=FALSE))
     grid_points = grid_points[,1:2]
-  
+
     # Identify grid name and predictor folders
     major_grid = paste('Grid_', substr(grid, start = 1, stop = 2), sep='')
     topography_grid = paste(topography_folder, major_grid, sep = '/')
@@ -94,7 +92,7 @@ for (grid in grid_list) {
     sentinel2_grid = paste(sentinel2_folder, major_grid, sep = '/')
     modis_grid = paste(modis_folder, major_grid, sep = '/')
     climate_grid = paste(climate_folder, major_grid, sep = '/')
-  
+
     # Create a list of all predictor rasters
     predictors_topography = list.files(topography_grid, pattern = 'tif$', full.names = TRUE)
     predictors_sentinel1 = list.files(sentinel1_grid, pattern = 'tif$', full.names = TRUE)
@@ -107,24 +105,24 @@ for (grid in grid_list) {
                       predictors_modis,
                       predictors_climate)
     print(paste('Number of predictor rasters: ', length(predictors_all), sep = ''))
-  
+
     # Generate a stack of all predictor rasters
     print('Creating raster stack...')
     start = proc.time()
     predictor_stack = stack(predictors_all)
     end = proc.time() - start
     print(end[3])
-  
+
     # Read site data and extract features
     print('Extracting features...')
     start = proc.time()
     grid_extracted = data.frame(grid_points, extract(predictor_stack, grid_points))
     end = proc.time() - start
     print(end[3])
-    
+
     # Define major grid name
     grid_name = substr(grid, start = 1, stop = 2)
-  
+
     # Find plot level mean values and convert field names to standard
     grid_extracted = grid_extracted %>%
       rename(aspect = paste('Aspect_Composite_10m_Beringia_AKALB_Grid_', grid_name, sep = '')) %>%
@@ -222,7 +220,7 @@ for (grid in grid_list) {
       rename(lstWarmth = paste('MODIS_LST_WarmthIndex_AKALB_Grid_', grid_name, sep = '')) %>%
       rename(summerWarmth = paste('SummerWarmth_MeanAnnual_AKALB_Grid_', grid_name, sep = '')) %>%
       rename(precip = paste('Precipitation_MeanAnnual_AKALB_Grid_', grid_name, sep = ''))
-  
+
     # Export data as a csv
     write.csv(grid_extracted, file = output_csv, fileEncoding = 'UTF-8')
     print(paste('Finished extracting data to Grid ', grid, '.', sep = ''))
@@ -231,7 +229,7 @@ for (grid in grid_list) {
     print(paste('File for Grid ', grid, ' already exists.', sep = ''))
     print('----------')
   }
-  
+
   # Increase the count by one
   count = count + 1
 }

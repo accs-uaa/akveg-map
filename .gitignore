@@ -29,3 +29,5 @@ Thumbs.db
 #################
 .idea
 .ipynb_checkpoints
+.Rhistory
+.Rdata

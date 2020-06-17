@@ -2,7 +2,7 @@
 ---------------------------------------------------------------------------
 Median Growing-season Composite Sentinel 1 SAR for 2015-2019
 Author: Timm Nawrocki, Alaska Center for Conservation Science
-Created on: 2020-05-22
+Last Updated: 2020-05-22
 Usage: Must be executed from the Google Earth Engine code editor.
 Description: This script produces median composites using ascending orbitals for the VV and VH polarizations from Sentinel-1.
 ---------------------------------------------------------------------------*/

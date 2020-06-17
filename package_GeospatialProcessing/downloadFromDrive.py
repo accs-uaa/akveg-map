@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Download File from Drive
+# Download File from Google Drive
 # Author: Timm Nawrocki
 # Last Updated: 2019-12-03
 # Usage: Must be executed in a Python 3.7 environment with Google Drive API v2.
-# Description: "Download File From Drive" is a function that downloads a file from Google Drive by file id.
+# Description: "Download File From Google Drive" is a function that downloads a file from Google Drive by file id.
 # ---------------------------------------------------------------------------
 
 # Define a function to download data files from Google Drive
@@ -13,6 +13,8 @@ def download_from_drive(service, file_id, file_title, output_file):
     Description: downloads a file from Google Drive by file ID.
     Inputs: file_id -- ID of the file to download.
             output_directory -- directory in which to save the downloaded file.
+    Returned Value: Return a files to local disk for the file on Google Drive
+    Preconditions: files containing imagery tiles must have been exported to Google Drive from Google Earth Engine
     """
 
     # Import packages

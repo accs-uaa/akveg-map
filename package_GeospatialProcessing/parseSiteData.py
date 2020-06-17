@@ -4,10 +4,10 @@
 # Author: Timm Nawrocki
 # Last Updated: 2020-05-07
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Parse Site Data" is a function that extracts a set of sampling points within a polygon.
+# Description: "Parse Site Data" is a function that extracts a set of sampling points within a grid polygon.
 # ---------------------------------------------------------------------------
 
-# Define a function to extract site data to a polygon
+# Define a function to extract site data to a grid polygon
 def parse_site_data(**kwargs):
     """
     Description: clips a set of sampling points to a polygon
