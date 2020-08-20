@@ -11,7 +11,7 @@ Continuous foliar cover maps of vegetation species and aggregates for North Amer
 
 ## Getting Started
 
-These instructions will enable you to run the Beringian Vegetation Ecological Atlas scripts. The scripts integrate multiple systems: Google Earth Engine, Python-based ArcGIS Pro, Python, R, and Google Cloud Compute. The scripts that have dependencies on ArcGIS Pro must be run on windows based machines, all other scripts are platform independent. Reproducing the results will require proper execution of all scripts. Scripts can be modified to apply to other data or study regions. Detailed instructions for each script have been included in this readme file below. Vegetation and soils observation data used for these analyses are stored in and were queried from a public, open-source [vegetation plots database](https://github.com/accs-uaa/vegetation-plots-database).
+These instructions will enable you to run scripts to map continuous foliar cover of vegetation species or aggregates in North American Beringia (or other regions with modification). The scripts integrate multiple systems: Google Earth Engine, Python-based ArcGIS Pro, Python, R, and Google Cloud Compute. The scripts that have dependencies on ArcGIS Pro must be run on windows based machines, all other scripts are platform independent. Reproducing the results will require proper execution of all scripts. Scripts can be modified to apply to other data or study regions. Detailed instructions for each script have been included in this readme file below. Vegetation and soils observation data used for these analyses are stored in and were queried from a public, open-source [vegetation plots database](https://github.com/accs-uaa/vegetation-plots-database).
 
 ### Prerequisites
 
