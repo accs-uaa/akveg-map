@@ -37,7 +37,7 @@ class_folders = ['alnus_nmse', 'betshr_nmse', 'bettre_nmse', 'calcan_nmse', 'cla
 regions = ['Statewide', 'Arctic', 'Southwest', 'Interior']
 
 # Define output variables
-output_variables = ['mapClass', 'region', 'vegMap', 'r2', 'std_mae', 'auc', 'acc']
+output_variables = ['mapClass', 'region', 'vegMap', 'r2', 'mae', 'std_mae', 'auc', 'acc']
 
 # Create empty data frame
 continuous_performance = pd.DataFrame(columns = output_variables)
@@ -101,6 +101,7 @@ for class_folder in class_folders:
                                         region,
                                         'continuous',
                                         round(r_score, 2),
+                                        round(mae, 2),
                                         round((mae / mean_cover), 2),
                                         round(auc, 2),
                                         round(accuracy, 2)

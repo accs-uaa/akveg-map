@@ -1,13 +1,13 @@
-# Beringian Vegetation Ecological Atlas
-Ecological atlas of quantitative vegetation and soils patterns for North American Beringia.
+# Vegetation Foliar Cover Maps for North American Beringia
+Continuous foliar cover maps of vegetation species and aggregates for North American Beringia (arctic and boreal Alaska and Yukon).
 
 *Author*: Timm Nawrocki, Alaska Center for Conservation Science, University of Alaska Anchorage
 
 *Created On*: 2019-10-22
 
-*Last Updated*: 2020-01-09
+*Last Updated*: 2020-08-19
 
-*Description*: Scripts for the data acquisition, data manipulation, statistical modeling, results post-processing, and accuracy assessment for the quantitative mapping of vegetation and soils properties in North American Beringia.
+*Description*: Scripts for data acquisition, data manipulation, statistical modeling, results post-processing, and accuracy assessment for the quantitative mapping of vegetation in North American Beringia.
 
 ## Getting Started
 
