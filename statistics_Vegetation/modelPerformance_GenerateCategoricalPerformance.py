@@ -59,7 +59,7 @@ outer_cv_splits = KFold(n_splits=10, shuffle=True, random_state=314)
 count = 1
 for class_folder in class_folders:
     for region in regions:
-        # Read input data file and subset cover data (relevant for Lichens only)
+        # Read input data file
         input_file = os.path.join(data_folder, class_folder, 'mapRegion_' + region + '.csv')
         input_data = pd.read_csv(input_file)
         # Convert values to floats
