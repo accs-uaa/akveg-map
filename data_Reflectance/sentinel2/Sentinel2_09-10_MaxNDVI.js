@@ -1,10 +1,10 @@
 /* -*- coding: utf-8 -*-
 ---------------------------------------------------------------------------
-Cloud-reduced Maximum NDVI Composite of Sentinel 2 Imagery for October 2015-2020
+Cloud-reduced Maximum NDVI Composite of Sentinel 2 Imagery for September-October 2015-2020
 Author: Timm Nawrocki, Alaska Center for Conservation Science
-Last Updated: 2020-10-04
+Last Updated: 2020-11-02
 Usage: Must be executed from the Google Earth Engine code editor.
-Description: This script produces a cloud-reduced maximum NDVI composite for bands 1-12 plus Enhanced Vegetation Index-2 (EVI2), Normalized Burn Ratio (NBR), Normalized Difference Moisture Index (NDMI), Normalized Difference Snow Index (NDSI), Normalized Difference Vegetation Index (NDVI), Normalized Difference Water Index (NDWI) using the Sentinel-2 Top-Of-Atmosphere image collection filtered to the month of October from 2015 through 2020.
+Description: This script produces a cloud-reduced maximum NDVI composite for bands 1-12 plus Enhanced Vegetation Index-2 (EVI2), Normalized Burn Ratio (NBR), Normalized Difference Moisture Index (NDMI), Normalized Difference Snow Index (NDSI), Normalized Difference Vegetation Index (NDVI), Normalized Difference Water Index (NDWI) using the Sentinel-2 Top-Of-Atmosphere image collection filtered to September 10 through end of October from 2015 through 2020.
 - EVI-2 was calculated as (Red - Green) / (Red + [2.4 x Green] + 1), where Red is Sentinel-2 Band 4 and Green is Sentinel-2 Band 3.
 - NBR was calculated as (NIR - SWIR2) / (NIR + SWIR2), where NIR (near infrared) is Sentinel-2 Band 8 and SWIR2 (short-wave infrared 2) is Sentinel-2 Band 12, using the Google Earth Engine normalized difference algorithm.
 - NDMI was calculated as (NIR - SWIR1)/(NIR + SWIR1), where NIR (near infrared) is Sentinel-2 Band 8 and SWIR1 (short-wave infrared 1) is Sentinel-2 Band 11, using the Google Earth Engine normalized difference algorithm.
@@ -33,12 +33,22 @@ var areaOfInterest = /* color: #0b4a8b */ee.Geometry.Polygon(
           [-134.58877239675192, 65.97383322118833],
           [-135.1531950041738, 69.83531851993344]]]);
 
+// Create filters
+var filter_1 = ee.Filter.date('2015-09-10', '2015-10-30')
+var filter_2 = ee.Filter.date('2016-09-10', '2016-10-30')
+var filter_3 = ee.Filter.date('2017-09-10', '2017-10-30')
+var filter_4 = ee.Filter.date('2018-09-10', '2018-10-30')
+var filter_5 = ee.Filter.date('2019-09-10', '2019-10-30')
+var filter_6 = ee.Filter.date('2020-09-10', '2020-10-30')
+
+// Create a combined filter
+var filter_all = ee.Filter.or(filter_1, filter_2, filter_3, filter_4, filter_5, filter_6)
+
 // Import Sentinel 2 Top-Of-Atmosphere Reflectance within study area, date range, and cloud percentage.
 var s2 = ee.ImageCollection('COPERNICUS/S2')
-							.filterBounds(areaOfInterest)
-							.filter(ee.Filter.calendarRange(2015, 2020, 'year'))
-							.filter(ee.Filter.calendarRange(10, 10, 'month'))
-							.filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 40));
+              .filterBounds(areaOfInterest)
+          		.filter(filter_all)
+          		.filter(ee.Filter.lt('CLOUDY_PIXEL_PERCENTAGE', 40));
 
 // Define a function to quality control clouds and cirrus
 function maskS2clouds(image) {
@@ -147,7 +157,7 @@ var ndwi = ee.Image(composite).select(['NDWI']);
 Export.image.toDrive({
   image: band_2_blue,
   description: 'Sent2_10_2_blue',
-  folder: 'Beringia_Sentinel-2',
+  folder: 'Beringia_Sentinel-2_October',
   scale: 10,
   region: areaOfInterest,
   maxPixels: 1e12
@@ -155,7 +165,7 @@ Export.image.toDrive({
 Export.image.toDrive({
   image: band_3_green,
   description: 'Sent2_10_3_green',
-  folder: 'Beringia_Sentinel-2',
+  folder: 'Beringia_Sentinel-2_October',
   scale: 10,
   region: areaOfInterest,
   maxPixels: 1e12
@@ -163,7 +173,7 @@ Export.image.toDrive({
 Export.image.toDrive({
   image: band_4_red,
   description: 'Sent2_10_4_red',
-  folder: 'Beringia_Sentinel-2',
+  folder: 'Beringia_Sentinel-2_October',
   scale: 10,
   region: areaOfInterest,
   maxPixels: 1e12
@@ -171,7 +181,7 @@ Export.image.toDrive({
 Export.image.toDrive({
   image: band_5_redEdge1,
   description: 'Sent2_10_5_redEdge1',
-  folder: 'Beringia_Sentinel-2',
+  folder: 'Beringia_Sentinel-2_October',
   scale: 20,
   region: areaOfInterest,
   maxPixels: 1e12
@@ -179,7 +189,7 @@ Export.image.toDrive({
 Export.image.toDrive({
   image: band_6_redEdge2,
   description: 'Sent2_10_6_redEdge2',
-  folder: 'Beringia_Sentinel-2',
+  folder: 'Beringia_Sentinel-2_October',
   scale: 20,
   region: areaOfInterest,
   maxPixels: 1e12
@@ -187,7 +197,7 @@ Export.image.toDrive({
 Export.image.toDrive({
   image: band_7_redEdge3,
   description: 'Sent2_10_7_redEdge3',
-  folder: 'Beringia_Sentinel-2',
+  folder: 'Beringia_Sentinel-2_October',
   scale: 20,
   region: areaOfInterest,
   maxPixels: 1e12
@@ -195,7 +205,7 @@ Export.image.toDrive({
 Export.image.toDrive({
   image: band_8_nearInfrared,
   description: 'Sent2_10_8_nearInfrared',
-  folder: 'Beringia_Sentinel-2',
+  folder: 'Beringia_Sentinel-2_October',
   scale: 10,
   region: areaOfInterest,
   maxPixels: 1e12
@@ -203,7 +213,7 @@ Export.image.toDrive({
 Export.image.toDrive({
   image: band_8a_redEdge4,
   description: 'Sent2_10_8a_redEdge4',
-  folder: 'Beringia_Sentinel-2',
+  folder: 'Beringia_Sentinel-2_October',
   scale: 20,
   region: areaOfInterest,
   maxPixels: 1e12
@@ -211,7 +221,7 @@ Export.image.toDrive({
 Export.image.toDrive({
   image: band_11_shortInfrared1,
   description: 'Sent2_10_11_shortInfrared1',
-  folder: 'Beringia_Sentinel-2',
+  folder: 'Beringia_Sentinel-2_October',
   scale: 20,
   region: areaOfInterest,
   maxPixels: 1e12
@@ -219,7 +229,7 @@ Export.image.toDrive({
 Export.image.toDrive({
   image: band_12_shortInfrared2,
   description: 'Sent2_10_12_shortInfrared2',
-  folder: 'Beringia_Sentinel-2',
+  folder: 'Beringia_Sentinel-2_October',
   scale: 20,
   region: areaOfInterest,
   maxPixels: 1e12
@@ -227,7 +237,7 @@ Export.image.toDrive({
 Export.image.toDrive({
   image: evi2,
   description: 'Sent2_10_evi2',
-  folder: 'Beringia_Sentinel-2',
+  folder: 'Beringia_Sentinel-2_October',
   scale: 10,
   region: areaOfInterest,
   maxPixels: 1e12
@@ -235,7 +245,7 @@ Export.image.toDrive({
 Export.image.toDrive({
   image: nbr,
   description: 'Sent2_10_nbr',
-  folder: 'Beringia_Sentinel-2',
+  folder: 'Beringia_Sentinel-2_October',
   scale: 20,
   region: areaOfInterest,
   maxPixels: 1e12
@@ -243,7 +253,7 @@ Export.image.toDrive({
 Export.image.toDrive({
   image: ndmi,
   description: 'Sent2_10_ndmi',
-  folder: 'Beringia_Sentinel-2',
+  folder: 'Beringia_Sentinel-2_October',
   scale: 20,
   region: areaOfInterest,
   maxPixels: 1e12
@@ -251,7 +261,7 @@ Export.image.toDrive({
 Export.image.toDrive({
   image: ndsi,
   description: 'Sent2_10_ndsi',
-  folder: 'Beringia_Sentinel-2',
+  folder: 'Beringia_Sentinel-2_October',
   scale: 20,
   region: areaOfInterest,
   maxPixels: 1e12
@@ -259,7 +269,7 @@ Export.image.toDrive({
 Export.image.toDrive({
   image: ndvi,
   description: 'Sent2_10_ndvi',
-  folder: 'Beringia_Sentinel-2',
+  folder: 'Beringia_Sentinel-2_October',
   scale: 10,
   region: areaOfInterest,
   maxPixels: 1e12
@@ -267,7 +277,7 @@ Export.image.toDrive({
 Export.image.toDrive({
   image: ndwi,
   description: 'Sent2_10_ndwi',
-  folder: 'Beringia_Sentinel-2',
+  folder: 'Beringia_Sentinel-2_October',
   scale: 10,
   region: areaOfInterest,
   maxPixels: 1e12
