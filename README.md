@@ -783,7 +783,7 @@ Script is located in (../geospatial_AnalyticGrids)
 
 # Packages
 
-This section describes the packages and functions designed for the analysis of Beringian vegetation and soils. The scripts included in this section cannot be run directly. Input and output parameters are for running scripts are described in the "Usage" section above.
+This section describes the packages and functions designed for the analysis of Beringian vegetation and soils. The scripts included in this section cannot be run directly. Input and output parameters for running scripts are described in the "Usage" section above.
 
 ### 1. Geomorphometry
 

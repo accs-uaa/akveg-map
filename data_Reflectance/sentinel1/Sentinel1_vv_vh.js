@@ -54,7 +54,7 @@ Map.addLayer(vh, {min: -30, max: 0}, 'vh');
 Export.image.toDrive({
     image: vv,
     description: 'Sent1_vv',
-    folder: 'Beringia_Sentinel1',
+    folder: 'Beringia_Sentinel-1',
     scale: 10,
     region: areaOfInterest,
     maxPixels: 1e12
@@ -62,7 +62,7 @@ Export.image.toDrive({
 Export.image.toDrive({
     image: vh,
     description: 'Sent1_vh',
-    folder: 'Beringia_Sentinel1',
+    folder: 'Beringia_Sentinel-1',
     scale: 10,
     region: areaOfInterest,
     maxPixels: 1e12
