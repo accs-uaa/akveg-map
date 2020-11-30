@@ -25,7 +25,7 @@ root_folder = 'ACCS_Work'
 # Define data folder
 data_folder = os.path.join(drive,
                            root_folder,
-                           'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Output/model_results/final')
+                           'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Output/model_results/final')
 
 # Define output csv file
 continuous_csv = os.path.join(data_folder, 'performance_continuous.csv')
