@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Post-process Abundance Rasters
 # Author: Timm Nawrocki
-# Last Updated: 2020-06-10
+# Last Updated: 2020-11-30
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Post-process Abundance Rasters" merges raster tiles and controls for water.
 # ---------------------------------------------------------------------------
@@ -24,7 +24,7 @@ output_name = 'Alnus'
 # Define data folder
 data_folder = os.path.join(drive,
                            root_folder,
-                           'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Output')
+                           'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Output')
 
 # Define input and output raster folders
 input_folder = os.path.join(data_folder, 'predicted_rasters', species_folder)
@@ -33,12 +33,12 @@ output_folder = os.path.join(data_folder, 'rasters_final', species_folder)
 # Define work environment
 work_geodatabase = os.path.join(drive,
                                 root_folder,
-                                'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/BeringiaVegetation.gdb')
+                                'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/BeringiaVegetation.gdb')
 
 # Define input datasets
 mask_raster = os.path.join(drive,
                            root_folder,
-                           'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/auxiliary_data/NorthAmericanBeringia_Bristol_Mask.tif')
+                           'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/NorthAmericanBeringia_ModelArea.tif')
 
 # Add species tile rasters to list
 tile_list = []

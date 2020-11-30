@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Add Categorical Map Data to Model Validation Results
 # Author: Timm Nawrocki
-# Last Updated: 2020-06-11
+# Last Updated: 2020-11-30
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Add Categorical Map Data to Model Validation Results" extracts categorical map classes to model validation results for the NLCD, the coarse classes of the Alaska Vegetation and Wetland Composite, and the fine classes of the Alaska Vegetation and Wetland Composite. This script also assigns the units for the 10x10 km and landscape scale accuracy assessments.
 # ---------------------------------------------------------------------------
@@ -19,10 +19,10 @@ root_folder = 'ACCS_Work'
 # Define data folder
 data_folder = os.path.join(drive,
                            root_folder,
-                           'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Output/model_results/final')
+                           'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Output/model_results/final')
 aux_folder = os.path.join(drive,
                           root_folder,
-                          'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/auxiliary_data')
+                          'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/auxiliary_data')
 map_folder = os.path.join(drive,
                           root_folder,
                           'Data/biota/vegetation')
@@ -30,7 +30,7 @@ map_folder = os.path.join(drive,
 # Define work environment
 work_geodatabase = os.path.join(drive,
                                 root_folder,
-                                'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/BeringiaVegetation.gdb')
+                                'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/BeringiaVegetation.gdb')
 
 # Define categorical maps
 nlcd = os.path.join(map_folder, 'Alaska_NationalLandCoverDatabase_2011.img')

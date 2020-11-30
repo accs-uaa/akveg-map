@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Create Sentinel-2 Composite
 # Author: Timm Nawrocki
-# Last Updated: 2019-12-30
+# Last Updated: 2020-11-30
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Create Sentinel-2 Composite" merges Sentinel-2 tiles by month and property per predefined grid.
 # ---------------------------------------------------------------------------
@@ -23,14 +23,14 @@ root_folder = 'ACCS_Work'
 # Define data folder
 data_folder = os.path.join(drive, root_folder, 'Data/imagery/sentinel-2')
 processed_folder = os.path.join(data_folder, 'processed')
-gridded_folder = os.path.join(data_folder, 'gridded_full')
+gridded_folder = os.path.join(data_folder, 'gridded')
 
 # Define input datasets
 grid_major = os.path.join(drive, root_folder, 'Data/analyses/gridMajor')
-snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/northAmericanBeringia_TotalArea.tif')
+snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/northAmericanBeringia_ModelArea.tif')
 
 # Define working geodatabase
-geodatabase = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/BeringiaVegetation.gdb')
+geodatabase = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/BeringiaVegetation.gdb')
 # Set environment workspace
 arcpy.env.workspace = geodatabase
 

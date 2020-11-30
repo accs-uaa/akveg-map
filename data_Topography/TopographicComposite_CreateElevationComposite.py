@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Create Elevation Composite
 # Author: Timm Nawrocki
-# Last Updated: 2019-12-19
+# Last Updated: 2020-11-30
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Create Elevation Composite" creates a composite from multiple source DEMs based on order of priority. All sources must be in the same projection with the same cell size and grid. The grid tiles must be predefined as rasters.
 # ---------------------------------------------------------------------------
@@ -24,7 +24,7 @@ data_folder = os.path.join(drive, root_folder, 'Data/topography')
 
 # Define input datasets
 grid_major = os.path.join(drive, root_folder, 'Data/analyses/gridMajor')
-snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/northAmericanBeringia_TotalArea.tif')
+snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/northAmericanBeringia_TotalArea.tif')
 
 # Define source_rasters
 source_USGS_5m = os.path.join(data_folder, 'USGS3DEP_5m_Alaska/Elevation_USGS3DEP_5m_Alaska_AKALB.tif')

@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Process Sentinel-1 Tiles
 # Author: Timm Nawrocki
-# Last Updated: 2020-05-27
+# Last Updated: 2020-11-30
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Process Sentinel-1 Tiles" reprojects tiles and converts to integer.
 # ---------------------------------------------------------------------------
@@ -25,10 +25,10 @@ unprocessed_folder = os.path.join(data_folder, 'unprocessed')
 processed_folder = os.path.join(data_folder, 'processed')
 
 # Define input datasets
-snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/northAmericanBeringia_TotalArea.tif')
+snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/northAmericanBeringia_ModelArea.tif')
 
 # Define working geodatabase
-geodatabase = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/BeringiaVegetation.gdb')
+geodatabase = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/BeringiaVegetation.gdb')
 
 # Set overwrite option
 arcpy.env.overwriteOutput = True

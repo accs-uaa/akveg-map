@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Generate Continuous Performance
 # Author: Timm Nawrocki
-# Last Updated: 2020-06-11
+# Last Updated: 2020-11-30
 # Usage: Must be executed in an Anaconda Python 3.7 installation.
 # Description: "Generate Continuous Performance" calculates the r squared, standardized mean absolute error, auc, and percentage distribution accuracy of the continuous vegetation maps at the native map resolution.
 # ---------------------------------------------------------------------------

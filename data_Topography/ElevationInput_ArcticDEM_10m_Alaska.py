@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Create Composite Arctic DEM 10 m Alaska
 # Author: Timm Nawrocki
-# Last Updated: 2019-12-03
+# Last Updated: 2020-11-30
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Create Composite Arctic DEM 10 m Alaska" combines individual DEM tiles, reprojects to NAD 1983 Alaska Albers, and resamples to 10 m.
 # ---------------------------------------------------------------------------
@@ -21,12 +21,12 @@ root_folder = 'ACCS_Work'
 data_folder = os.path.join(drive, root_folder, 'Data/topography/ArcticDEM_10m_Alaska')
 
 # Set arcpy working environment
-arcpy.env.workspace = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/BeringiaVegetation.gdb')
+arcpy.env.workspace = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/BeringiaVegetation.gdb')
 
 # Define input datasets
 tile_folder = os.path.join(data_folder, 'tiles')
 projected_folder = os.path.join(data_folder, 'tiles_projected')
-snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/northAmericanBeringia_TotalArea.tif')
+snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/northAmericanBeringia_TotalArea.tif')
 
 # Define output raster
 arctic10m_composite = os.path.join(data_folder, 'Elevation_ArcticDEM_10m_Alaska_AKALB.tif')

@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Create Analysis Grids
 # Author: Timm Nawrocki
-# Last Updated: 2020-06-06
+# Last Updated: 2020-11-30
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Create Analysis Grids" creates major and minor grid indices and overlapping grid tiles from a manually-generated study area polygon.
 # ---------------------------------------------------------------------------
@@ -20,7 +20,7 @@ root_folder = os.path.join(drive, 'ACCS_Work')
 
 # Set data folder
 data_folder = os.path.join(root_folder, 'Data/analyses')
-project_folder = os.path.join(root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS')
+project_folder = os.path.join(root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data')
 
 # Set arcpy working environment
 arcpy.env.workspace = os.path.join(project_folder, 'BeringiaVegetation.gdb')
@@ -32,7 +32,7 @@ snap_raster = os.path.join(project_folder, 'Data_Input/northAmericanBeringia_Tot
 # Define grid datasets
 major_grid = os.path.join(arcpy.env.workspace, 'NorthAmericanBeringia_GridIndex_Major_400km')
 minor_grid = os.path.join(arcpy.env.workspace, 'NorthAmericanBeringia_GridIndex_Minor_10km')
-minor_selected = os.path.join(arcpy.env.workspace, 'NorthAmericanBeringia_GridIndex_Minor_10km_Bristol')
+minor_selected = os.path.join(arcpy.env.workspace, 'NorthAmericanBeringia_GridIndex_Minor_10km')
 
 # Define input and output arrays
 grid_inputs = [total_area]

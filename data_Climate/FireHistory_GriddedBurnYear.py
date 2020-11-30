@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Convert Fire History To Gridded Burn Year
 # Author: Timm Nawrocki
-# Last Updated: 2020-06-02
+# Last Updated: 2020-11-30
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Convert Fire History To Gridded Burn Year" converts the Fire History polygons from 2000-2019 to a raster with most recent burn year as the value per major grid.
 # ---------------------------------------------------------------------------
@@ -34,7 +34,7 @@ recent_fire = os.path.join(input_fire, 'AlaskaFireHistory_Polygons.gdb/FirePerim
 # Define work environment
 work_geodatabase = os.path.join(drive,
                                 root_folder,
-                                'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/BeringiaVegetation.gdb')
+                                'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/BeringiaVegetation.gdb')
 
 # Identify target major grids
 grid_list = ['A5', 'A6', 'A7', 'A8',
@@ -45,7 +45,7 @@ grid_list = ['A5', 'A6', 'A7', 'A8',
 # Define input datasets
 study_area = os.path.join(drive,
                           root_folder,
-                          'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/northAmericanBeringia_ModelArea.tif')
+                          'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/northAmericanBeringia_ModelArea.tif')
 
 # Create recent fire history polygon if it does not already exist
 if arcpy.Exists(recent_fire) == 0:

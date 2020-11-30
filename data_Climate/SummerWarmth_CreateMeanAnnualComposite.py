@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Create Mean Annual Summer Warmth Index Composite for 2000-2015
 # Author: Timm Nawrocki
-# Last Updated: 2020-05-28
+# Last Updated: 2020-11-30
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Create Mean Annual Summer Warmth Index Composite for 2000-2015" calculates the mean annual summer warmth index from May-September for years 2000-2015. The primary data are the SNAP Alaska-Yukon 2km data. The SNAP Alaska-Canada 10 minute data fill in the included portion of Northwest Territories.
 # ---------------------------------------------------------------------------
@@ -32,7 +32,7 @@ gridded_folder = os.path.join(data_10m, 'gridded_full')
 
 # Define input datasets
 grid_major = os.path.join(drive, root_folder, 'Data/analyses/gridMajor')
-snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/northAmericanBeringia_TotalArea.tif')
+snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/northAmericanBeringia_ModelArea.tif')
 
 # Define output datasets
 warmth_2km = os.path.join(processed_2km, 'SummerWarmth_MeanAnnual_2km_2000-2015.tif')
@@ -40,7 +40,7 @@ warmth_15km = os.path.join(processed_15km, 'SummerWarmth_MeanAnnual_15km_2000-20
 warmth_combined = os.path.join(data_10m, 'unprocessed/SummerWarmth_MeanAnnual_2000-2015.tif')
 
 # Define working geodatabase
-geodatabase = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/BeringiaVegetation.gdb')
+geodatabase = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/BeringiaVegetation.gdb')
 # Set environment workspace
 arcpy.env.workspace = geodatabase
 

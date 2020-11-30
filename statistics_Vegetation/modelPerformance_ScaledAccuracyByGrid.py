@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Generate Scaled Performance
 # Author: Timm Nawrocki
-# Created on: 2020-06-11
+# Created on: 2020-11-30
 # Usage: Must be executed in an Anaconda Python 3.7 installation.
 # Description: "Generate Scaled Performance by Minor Grid" calculates the R squared and standardized mean absolute error of the continuous vegetation maps at the minor grid (10 x 10 km) resolution and the ecoregion scale.
 # ---------------------------------------------------------------------------
@@ -23,7 +23,7 @@ root_folder = 'ACCS_Work'
 # Define data folder
 data_folder = os.path.join(drive,
                            root_folder,
-                           'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Output/model_results/final')
+                           'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Output/model_results/final')
 
 # Define output csv file
 scaled_csv = os.path.join(data_folder, 'performance_scaled.csv')

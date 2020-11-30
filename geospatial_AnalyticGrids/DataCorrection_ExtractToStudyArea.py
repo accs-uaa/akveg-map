@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Extract Predictor Data To Study Area
 # Author: Timm Nawrocki
-# Last Updated: 2020-05-10
+# Last Updated: 2020-11-30
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Extract Predictor Data to Study Area" extracts a set of predictor raster datasets to a study area to enforce the same extent on all rasters.
 # ---------------------------------------------------------------------------
@@ -31,7 +31,7 @@ input_grids = os.path.join(data_folder, 'analyses/GridMajor')
 # Define work environment
 work_geodatabase = os.path.join(drive,
                                 root_folder,
-                                'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/BeringiaVegetation.gdb')
+                                'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/BeringiaVegetation.gdb')
 
 # Identify target major grids
 grid_list = ['A5', 'A6', 'A7', 'A8',
@@ -42,7 +42,7 @@ grid_list = ['A5', 'A6', 'A7', 'A8',
 # Define input datasets
 study_area = os.path.join(drive,
                           root_folder,
-                          'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/northAmericanBeringia_ModelArea.tif')
+                          'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/northAmericanBeringia_ModelArea.tif')
 
 # Loop through each grid in list and extract all predictors to study area
 for grid in grid_list:

@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Generate Categorical Performance
 # Author: Timm Nawrocki
-# Last Updated: 2020-06-06
+# Last Updated: 2020-11-30
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Generate Categorical Performance" calculates the r squared, mean absolute error, and root mean squared error of the categorical vegetation maps.
 # ---------------------------------------------------------------------------
@@ -30,7 +30,7 @@ root_folder = 'ACCS_Work'
 # Define data folder
 data_folder = os.path.join(drive,
                            root_folder,
-                           'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Output/model_results/final')
+                           'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Output/model_results/final')
 
 # Define output csv file
 categorical_csv = os.path.join(data_folder, 'performance_categorical.csv')

@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Format MODIS Land Surface Temperature Summer Warmth Index
 # Author: Timm Nawrocki
-# Last Updated: 2020-05-28
+# Last Updated: 2020-11-30
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Format MODIS Land Surface Temperature Summer Warmth Index" sums LST values from May-September, reprojects the LST data, and extracts to predefined grids.
 # ---------------------------------------------------------------------------
@@ -24,17 +24,17 @@ root_folder = 'ACCS_Work'
 data_folder = os.path.join(drive, root_folder, 'Data/imagery/modis')
 unprocessed_folder = os.path.join(data_folder, 'unprocessed')
 processed_folder = os.path.join(data_folder, 'processed')
-gridded_folder = os.path.join(data_folder, 'gridded_full')
+gridded_folder = os.path.join(data_folder, 'gridded')
 
 # Define input datasets
 grid_major = os.path.join(drive, root_folder, 'Data/analyses/gridMajor')
-snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/northAmericanBeringia_TotalArea.tif')
+snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/northAmericanBeringia_ModelArea.tif')
 
 # Define output datasets
 lst_warmthindex = os.path.join(processed_folder, 'MODIS_LSTWarmthIndex_2010s.tif')
 
 # Define working geodatabase
-geodatabase = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/BeringiaVegetation.gdb')
+geodatabase = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/BeringiaVegetation.gdb')
 # Set environment workspace
 arcpy.env.workspace = geodatabase
 
