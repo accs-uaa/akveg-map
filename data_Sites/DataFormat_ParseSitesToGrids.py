@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Parse Sites to Grids
 # Author: Timm Nawrocki
-# Last Updated: 2020-05-06
+# Last Updated: 2020-11-30
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Parse Sites to Grids" prepares a table of point data for feature extraction by selecting appropriate raster cells based on cell size and splits raster points by major grids.
 # ---------------------------------------------------------------------------
@@ -19,7 +19,7 @@ drive = 'N:/'
 root_folder = 'ACCS_Work'
 
 # Define data folder
-data_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input')
+data_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input')
 
 # Create parsed folder within data folder if it does not already exist
 parsed_folder = os.path.join(data_folder, 'sites/parsed')
@@ -27,13 +27,13 @@ if os.path.exists(parsed_folder) == 0:
     os.mkdir(parsed_folder)
 
 # Define work environment
-work_geodatabase = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/BeringiaVegetation.gdb')
+work_geodatabase = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/BeringiaVegetation.gdb')
 
 # Define input datasets
 site_table = os.path.join(data_folder, 'sites/sites_all.csv')
 study_area = os.path.join(work_geodatabase, 'NorthAmericanBeringia_ModelArea')
 grid_major = os.path.join(drive, root_folder, 'Data/analyses/NorthAmericanBeringia_GridIndex_Major_400km_Selected.shp')
-snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/northAmericanBeringia_TotalArea.tif')
+snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/northAmericanBeringia_ModelArea.tif')
 
 # Define output point feature class
 sites_formatted = os.path.join(work_geodatabase, 'sites_formatted')

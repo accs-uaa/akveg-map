@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Calculate Topographic Properties
 # Author: Timm Nawrocki
-# Last Updated: 2019-12-07
+# Last Updated: 2020-11-30
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Calculate Topographic Properties" creates a composite from multiple sources based on order of priority. All sources must be in the same projection with the same cell size and grid. The grid tiles must be predefined as rasters.
 # ---------------------------------------------------------------------------
@@ -24,7 +24,7 @@ data_folder = os.path.join(drive, root_folder, 'Data/topography/Composite_10m_Be
 
 # Define input datasets
 grid_major = os.path.join(drive, root_folder, 'Data/analyses/gridMajor')
-snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/northAmericanBeringia_TotalArea.tif')
+snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/northAmericanBeringia_TotalArea.tif')
 
 # Define root input name
 elevation_name_root = 'Elevation_Composite_10m_Beringia_AKALB_'

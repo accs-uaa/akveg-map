@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Prepare Class Data - Picea glauca
 # Author: Timm Nawrocki
-# Last Updated: 2020-06-05
+# Last Updated: 2020-11-30
 # Usage: Must be executed in R 4.0.0+.
 # Description: "Prepare Class Data - Picea glauca" prepares the map class data for statistical modeling.
 # ---------------------------------------------------------------------------
@@ -14,7 +14,7 @@ root_folder = 'ACCS_Work'
 # Define input folders
 data_folder = paste(drive,
                     root_folder,
-                    'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input',
+                    'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input',
                     sep = '/')
 
 # Define input site and species data files

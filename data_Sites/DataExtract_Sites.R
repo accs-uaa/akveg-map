@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Extract Features to Sites
 # Author: Timm Nawrocki
-# Last Updated: 2020-05-07
+# Last Updated: 2020-11-30
 # Usage: Must be executed in R 4.0.0+.
 # Description: "Extract Features to Sites" extracts data from rasters to points representing plot locations and collapses multi-point plots into single points with plot-level means.
 # ---------------------------------------------------------------------------
@@ -14,7 +14,7 @@ root_folder = 'ACCS_Work'
 # Define input folders
 site_folder = paste(drive,
                     root_folder,
-                    'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/sites',
+                    'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/sites',
                     sep = '/')
 parsed_folder = paste(site_folder,
                       'parsed',

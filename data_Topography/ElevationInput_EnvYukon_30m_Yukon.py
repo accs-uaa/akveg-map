@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Reproject EnvYukon 30 m Yukon DEM
 # Author: Timm Nawrocki
-# Last Updated: 2019-12-03
+# Last Updated: 2020-11-30
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Reproject EnvYukon 30 m Yukon DEM" reprojects to NAD 1983 Alaska Albers and resamples to 10 m.
 # ---------------------------------------------------------------------------
@@ -21,11 +21,11 @@ root_folder = 'ACCS_Work'
 data_folder = os.path.join(drive, root_folder, 'Data/topography/EnvYukon_30m_Yukon')
 
 # Set arcpy working environment
-arcpy.env.workspace = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/BeringiaVegetation.gdb')
+arcpy.env.workspace = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/BeringiaVegetation.gdb')
 
 # Define input datasets
 input_raster = os.path.join(data_folder, 'original/yt_30m_dem.tif')
-snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/Data_Input/northAmericanBeringia_TotalArea.tif')
+snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/northAmericanBeringia_TotalArea.tif')
 
 # Define output raster
 output_raster = os.path.join(data_folder, 'Elevation_EnvYukon_30m_Yukon_AKALB.tif')
