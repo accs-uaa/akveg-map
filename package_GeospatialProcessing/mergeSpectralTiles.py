@@ -24,6 +24,7 @@ def merge_spectral_tiles(**kwargs):
     from arcpy.sa import ExtractByMask
     from arcpy.sa import IsNull
     from arcpy.sa import Nibble
+    from arcpy.sa import Raster
     from arcpy.sa import SetNull
     import datetime
     import os
