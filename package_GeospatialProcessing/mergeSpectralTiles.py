@@ -13,7 +13,7 @@ def merge_spectral_tiles(**kwargs):
     Description: extracts spectral tiles to an area and mosaics extracted tiles with first data priority
     Inputs: 'cell_size' -- a cell size for the output spectral raster
             'output_projection' -- the machine number for the output projection
-            'input_array' -- an array containing the grid raster (must be first) and the list of spectral tiles
+            'input_array' -- an array containing the grid raster (must be first), the study area raster (must be second), and the list of spectral tiles
             'output_array' -- an array containing the output spectral grid raster
     Returned Value: Returns a raster dataset on disk containing the merged spectral grid raster
     Preconditions: requires processed source spectral tiles and predefined grid
@@ -21,16 +21,21 @@ def merge_spectral_tiles(**kwargs):
 
     # Import packages
     import arcpy
-    from arcpy.sa import Con
     from arcpy.sa import ExtractByMask
-    from arcpy.sa import FocalStatistics
     from arcpy.sa import IsNull
-    from arcpy.sa import NbrCircle
     from arcpy.sa import Nibble
     from arcpy.sa import SetNull
     import datetime
     import os
     import time
+
+    # Parse key word argument inputs
+    cell_size = kwargs['cell_size']
+    output_projection = kwargs['output_projection']
+    tile_inputs = kwargs['input_array']
+    grid_raster = tile_inputs.pop(0)
+    study_area = tile_inputs.pop(0)
+    spectral_grid = kwargs['output_array'][0]
 
     # Set overwrite option
     arcpy.env.overwriteOutput = True
@@ -38,21 +43,15 @@ def merge_spectral_tiles(**kwargs):
     # Use two thirds of cores on processes that can be split.
     arcpy.env.parallelProcessingFactor = "66%"
 
-    # Parse key word argument inputs
-    cell_size = kwargs['cell_size']
-    output_projection = kwargs['output_projection']
-    tile_inputs = kwargs['input_array']
-    grid_raster = tile_inputs.pop(0)
-    spectral_grid = kwargs['output_array'][0]
-
-    # Define intermediate datasets
-    mosaic_raster = os.path.splitext(spectral_grid)[0] + '_mosaic.tif'
-
-    # Set snap raster
-    arcpy.env.snapRaster = grid_raster
+    # Set snap raster and extent
+    arcpy.env.snapRaster = study_area
+    arcpy.env.extent = Raster(grid_raster).extent
 
     # Define the target projection
     composite_projection = arcpy.SpatialReference(output_projection)
+
+    # Define intermediate datasets
+    mosaic_raster = os.path.splitext(spectral_grid)[0] + '_mosaic.tif'
 
     # Define folder structure
     grid_title = os.path.splitext(os.path.split(grid_raster)[1])[0]
@@ -63,7 +62,7 @@ def merge_spectral_tiles(**kwargs):
     if os.path.exists(source_folder) == 0:
         os.mkdir(source_folder)
 
-    # Create an empty list to store existing extracted source rasters for the area of interest
+    # Create an empty list to store existing extracted source rasters for the grid
     input_length = len(tile_inputs)
     input_rasters = []
     count = 1
@@ -130,23 +129,10 @@ def merge_spectral_tiles(**kwargs):
         f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
     print('\t----------')
 
-    # Calculate a focal mean that can be used to fill missing data
-    print('\tCalculating gap edge mean values...')
-    iteration_start = time.time()
-    raster_focal = FocalStatistics(mosaic_raster, NbrCircle(100, 'CELL'), 'MEAN', 'DATA')
-    # End timing
-    iteration_end = time.time()
-    iteration_elapsed = int(iteration_end - iteration_start)
-    iteration_success_time = datetime.datetime.now()
-    # Report success
-    print(
-        f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
-    print('\t----------')
-
     # Calculate the missing area
     print('\tCalculating null space...')
     iteration_start = time.time()
-    raster_null = SetNull(IsNull(raster_focal), 1, 'VALUE = 1')
+    raster_null = SetNull(IsNull(Raster(mosaic_raster)), 1, 'VALUE = 1')
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)
@@ -157,9 +143,9 @@ def merge_spectral_tiles(**kwargs):
     print('\t----------')
 
     # Impute missing data by nibbling the NoData from the focal mean
-    print('\tImputing missing values by nearest neighbor...')
+    print('\tImputing missing values by geographic nearest neighbor...')
     iteration_start = time.time()
-    raster_nibble = Nibble(raster_focal, raster_null, 'DATA_ONLY', 'PROCESS_NODATA', '')
+    raster_nibble = Nibble(Raster(mosaic_raster), raster_null, 'DATA_ONLY', 'PROCESS_NODATA', '')
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)
@@ -169,36 +155,11 @@ def merge_spectral_tiles(**kwargs):
         f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
     print('\t----------')
 
-    # Smooth the imputed data by calculating a second focal mean with the same parameters
-    print('\tSmoothing imputed values...')
-    iteration_start = time.time()
-    raster_smoothed = FocalStatistics(raster_nibble, NbrCircle(100, 'CELL'), 'MEAN', 'DATA')
-    # End timing
-    iteration_end = time.time()
-    iteration_elapsed = int(iteration_end - iteration_start)
-    iteration_success_time = datetime.datetime.now()
-    # Report success
-    print(
-        f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
-    print('\t----------')
-
-    # Fill missing values in the original data with the smoothed imputed values
-    print('\tFilling missing values with smoothed imputed values...')
-    iteration_start = time.time()
-    raster_filled = Con(IsNull(mosaic_raster), raster_smoothed, mosaic_raster, 'VALUE = 1')
-    # End timing
-    iteration_end = time.time()
-    iteration_elapsed = int(iteration_end - iteration_start)
-    iteration_success_time = datetime.datetime.now()
-    # Report success
-    print(
-        f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
-    print('\t----------')
-
-    # Remove overflow fill from the grid
+    # Remove overflow fill from the grid and the study area
     print('\tRemoving overflow fill...')
     iteration_start = time.time()
-    raster_final = ExtractByMask(raster_filled, grid_raster)
+    raster_preliminary = ExtractByMask(raster_nibble, study_area)
+    raster_final = ExtractByMask(raster_preliminary, grid_raster)
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)

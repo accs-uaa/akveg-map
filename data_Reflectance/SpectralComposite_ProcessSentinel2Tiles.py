@@ -16,7 +16,7 @@ from package_GeospatialProcessing import reproject_integer
 import time
 
 # Set root directory
-drive = 'N:/'
+drive = 'K:/'
 root_folder = 'ACCS_Work'
 
 # Define data folder

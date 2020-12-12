@@ -13,11 +13,11 @@ import datetime
 import glob
 import os
 from package_GeospatialProcessing import arcpy_geoprocessing
-from package_GeospatialProcessing import merge_sentinel1_tiles
+from package_GeospatialProcessing import merge_spectral_tiles
 import time
 
 # Set root directory
-drive = 'N:/'
+drive = 'K:/'
 root_folder = 'ACCS_Work'
 
 # Define data folder
@@ -27,7 +27,7 @@ gridded_folder = os.path.join(data_folder, 'gridded')
 
 # Define input datasets
 grid_major = os.path.join(drive, root_folder, 'Data/analyses/gridMajor')
-snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/northAmericanBeringia_ModelArea.tif')
+study_area = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/northAmericanBeringia_ModelArea.tif')
 
 # Define working geodatabase
 geodatabase = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/BeringiaVegetation.gdb')
@@ -49,7 +49,7 @@ grid_list = ['A5', 'A6', 'A7', 'A8',
              'B4', 'B5', 'B6', 'B7', 'B8',
              'C4', 'C5', 'C6', 'C7', 'C8',
              'D4', 'D5', 'D6',
-             'E5', 'E6']
+             'E4', 'E5', 'E6']
 # Append file names to rasters in list
 grids = []
 for grid in grid_list:
@@ -92,7 +92,7 @@ for property in properties:
             print(f'Processing {property} grid {grid_count} of {grids_length}...')
 
             # Define input and output arrays
-            merge_inputs = [grid] + metric_tiles
+            merge_inputs = [grid, study_area] + metric_tiles
             merge_outputs = [spectral_grid]
 
             # Create key word arguments
@@ -103,7 +103,7 @@ for property in properties:
                             }
 
             # Process the reproject integer function
-            arcpy_geoprocessing(merge_sentinel1_tiles, **merge_kwargs)
+            arcpy_geoprocessing(merge_spectral_tiles, **merge_kwargs)
             print('----------')
 
         else:

@@ -17,7 +17,7 @@ from package_GeospatialProcessing import merge_spectral_tiles
 import time
 
 # Set root directory
-drive = 'N:/'
+drive = 'K:/'
 root_folder = 'ACCS_Work'
 
 # Define data folder
@@ -27,7 +27,7 @@ gridded_folder = os.path.join(data_folder, 'gridded')
 
 # Define input datasets
 grid_major = os.path.join(drive, root_folder, 'Data/analyses/gridMajor')
-snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/northAmericanBeringia_ModelArea.tif')
+study_area = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/northAmericanBeringia_ModelArea.tif')
 
 # Define working geodatabase
 geodatabase = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/BeringiaVegetation.gdb')
@@ -38,11 +38,8 @@ arcpy.env.workspace = geodatabase
 arcpy.env.overwriteOutput = True
 
 # Define month and property values
-months = ['05May',
-          '06June',
-          '07July',
-          '08August',
-          '09September'
+months = ['06',
+          '07'
           ]
 properties = ['2_blue',
               '3_green',
@@ -75,11 +72,11 @@ print('Searching for grid rasters...')
 # Start timing function
 iteration_start = time.time()
 # Create a list of included grids
-grid_list = ['A5', 'A6', 'A7', 'A8', 'A9',
-             'B4', 'B5', 'B6', 'B7', 'B8', 'B9', 'B10',
-             'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'C10',
+grid_list = ['A5', 'A6', 'A7', 'A8',
+             'B4', 'B5', 'B6', 'B7', 'B8',
+             'C4', 'C5', 'C6', 'C7', 'C8',
              'D4', 'D5', 'D6',
-             'E5']
+             'E4', 'E5', 'E6']
 # Append file names to rasters in list
 grids = []
 for grid in grid_list:
@@ -122,7 +119,7 @@ for metric in metrics_list:
             print(f'Processing {metric} grid {grid_count} of {grids_length}...')
 
             # Define input and output arrays
-            merge_inputs = [grid] + metric_tiles
+            merge_inputs = [grid, study_area] + metric_tiles
             merge_outputs = [spectral_grid]
 
             # Create key word arguments
