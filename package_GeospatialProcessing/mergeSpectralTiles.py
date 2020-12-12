@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Merge Spectral Tiles
 # Author: Timm Nawrocki
-# Last Updated: 2019-12-30
+# Last Updated: 2020-12-12
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Merge spectral tiles" is a function that merges tiles of a spectral metric within a predefined grid.
 # ---------------------------------------------------------------------------
