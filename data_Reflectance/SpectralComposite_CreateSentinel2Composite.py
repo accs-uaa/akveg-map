@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Create Sentinel-2 Composite
 # Author: Timm Nawrocki
-# Last Updated: 2020-12-12
+# Last Updated: 2020-12-13
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Create Sentinel-2 Composite" merges Sentinel-2 tiles by month and property per predefined grid.
 # ---------------------------------------------------------------------------
@@ -125,14 +125,16 @@ for metric in metrics_list:
             # Create key word arguments
             merge_kwargs = {'cell_size': 10,
                             'output_projection': 3338,
+                            'work_geodatabase': geodatabase,
                             'input_array': merge_inputs,
                             'output_array': merge_outputs
                             }
 
-            # Process the reproject integer function
+            # Process the merge tiles function
             arcpy_geoprocessing(merge_spectral_tiles, **merge_kwargs)
             print('----------')
 
+        # If output already exists then report message
         else:
             print(f'Spectral grid {grid_count} of {grids_length} for {metric} already exists.')
             print('----------')
