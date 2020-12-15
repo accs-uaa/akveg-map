@@ -44,7 +44,7 @@ def merge_spectral_tiles(**kwargs):
     arcpy.env.overwriteOutput = True
 
     # Use two thirds of cores on processes that can be split.
-    arcpy.env.parallelProcessingFactor = "66%"
+    arcpy.env.parallelProcessingFactor = "75%"
 
     # Set snap raster and extent
     arcpy.env.snapRaster = study_area
@@ -129,7 +129,7 @@ def merge_spectral_tiles(**kwargs):
                 arcpy.CopyRaster_management(extract_raster,
                                             output_raster,
                                             '',
-                                            '',
+                                            '0',
                                             '-32768',
                                             'NONE',
                                             'NONE',
@@ -182,7 +182,7 @@ def merge_spectral_tiles(**kwargs):
                                        '16_BIT_SIGNED',
                                        cell_size,
                                        '1',
-                                       'FIRST',
+                                       'MAXIMUM',
                                        'FIRST')
     # Enforce correct projection
     arcpy.DefineProjection_management(mosaic_raster, composite_projection)
@@ -217,7 +217,7 @@ def merge_spectral_tiles(**kwargs):
     arcpy.CopyRaster_management(raster_filled,
                                 nibble_raster,
                                 '',
-                                '',
+                                '0',
                                 '-32768',
                                 'NONE',
                                 'NONE',
@@ -245,7 +245,7 @@ def merge_spectral_tiles(**kwargs):
     arcpy.CopyRaster_management(raster_preliminary,
                                 spectral_area,
                                 '',
-                                '',
+                                '0',
                                 '-32768',
                                 'NONE',
                                 'NONE',
@@ -262,7 +262,7 @@ def merge_spectral_tiles(**kwargs):
     arcpy.CopyRaster_management(raster_final,
                                 spectral_grid,
                                 '',
-                                '',
+                                '0',
                                 '-32768',
                                 'NONE',
                                 'NONE',
