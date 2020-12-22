@@ -44,12 +44,12 @@ def extract_to_study_area(**kwargs):
 
     # Extract raster to study area
     iteration_start = time.time()
-    extracted_raster = ExtractByMask(input_raster, study_area)
-    arcpy.CopyRaster_management(extracted_raster,
+    extract_raster = ExtractByMask(input_raster, study_area)
+    arcpy.CopyRaster_management(extract_raster,
                                 output_raster,
                                 '',
-                                '',
-                                -32768,
+                                '0',
+                                '-32768',
                                 'NONE',
                                 'NONE',
                                 '16_BIT_SIGNED',
@@ -58,8 +58,7 @@ def extract_to_study_area(**kwargs):
                                 'TIFF',
                                 'NONE',
                                 'CURRENT_SLICE',
-                                'NO_TRANSPOSE'
-                                )
+                                'NO_TRANSPOSE')
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)

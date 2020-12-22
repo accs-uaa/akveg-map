@@ -2,9 +2,9 @@
 # ---------------------------------------------------------------------------
 # Extract Predictor Data To Study Area
 # Author: Timm Nawrocki
-# Last Updated: 2020-11-30
+# Last Updated: 2020-12-15
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Extract Predictor Data to Study Area" extracts a set of predictor raster datasets to a study area to enforce the same extent on all rasters.
+# Description: "Extract Predictor Data to Study Area" extracts a set of topographic predictor raster datasets to a study area to enforce the same extent on all rasters.
 # ---------------------------------------------------------------------------
 
 # Import packages
@@ -22,10 +22,6 @@ data_folder = os.path.join(drive, root_folder, 'Data')
 
 # Create gridded_select folders in each data directory if they do not already exist
 input_topography = os.path.join(data_folder, 'topography/Composite_10m_Beringia/gridded_full')
-input_climate = os.path.join(data_folder, 'climatology/SNAP_NorthwestNorthAmerica_10m/gridded_full')
-input_modis = os.path.join(data_folder, 'imagery/modis/gridded_full')
-input_sentinel1 = os.path.join(data_folder, 'imagery/sentinel-1/gridded_full')
-input_sentinel2 = os.path.join(data_folder, 'imagery/sentinel-2/gridded_full')
 input_grids = os.path.join(data_folder, 'analyses/GridMajor')
 
 # Define work environment
@@ -35,9 +31,10 @@ work_geodatabase = os.path.join(drive,
 
 # Identify target major grids
 grid_list = ['A5', 'A6', 'A7', 'A8',
-             'B4', 'B5', 'B8',
+             'B4', 'B5', 'B6', 'B7', 'B8',
              'C4', 'C5', 'C6', 'C7', 'C8',
-             'D4', 'D5', 'D6']
+             'D4', 'D5', 'D6',
+             'E4', 'E5', 'E6']
 
 # Define input datasets
 study_area = os.path.join(drive,
@@ -57,26 +54,6 @@ for grid in grid_list:
     arcpy.env.workspace = os.path.join(input_topography, 'Grid_' + grid)
     topo_rasters = arcpy.ListRasters('', 'TIF')
     for raster in topo_rasters:
-        raster_list.append(os.path.join(arcpy.env.workspace, raster))
-    # Add climate rasters
-    arcpy.env.workspace = os.path.join(input_climate, 'Grid_' + grid)
-    climate_rasters = arcpy.ListRasters('', 'TIF')
-    for raster in climate_rasters:
-        raster_list.append(os.path.join(arcpy.env.workspace, raster))
-    # Add MODIS rasters
-    arcpy.env.workspace = os.path.join(input_modis, 'Grid_' + grid)
-    modis_rasters = arcpy.ListRasters('', 'TIF')
-    for raster in modis_rasters:
-        raster_list.append(os.path.join(arcpy.env.workspace, raster))
-    # Add Sentinel-1 rasters
-    arcpy.env.workspace = os.path.join(input_sentinel1, 'Grid_' + grid)
-    sentinel1_rasters = arcpy.ListRasters('', 'TIF')
-    for raster in sentinel1_rasters:
-        raster_list.append(os.path.join(arcpy.env.workspace, raster))
-    # Add Sentinel-2 rasters
-    arcpy.env.workspace = os.path.join(input_sentinel2, 'Grid_' + grid)
-    sentinel2_rasters = arcpy.ListRasters('', 'TIF')
-    for raster in sentinel2_rasters:
         raster_list.append(os.path.join(arcpy.env.workspace, raster))
 
     # Set arcpy.env.workspace
