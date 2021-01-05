@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Download Files From CSV
 # Author: Timm Nawrocki
-# Last Updated: 2019-10-29
+# Last Updated: 2021-01-04
 # Usage: Can be executed in an Anaconda Python 3.7 distribution or an ArcGIS Pro Python 3.6 distribution.
 # Description: "Download Files From CSV" contacts a server to download a series of files specified in a csv table. The full path to the download must be specified in the table.
 # ---------------------------------------------------------------------------
@@ -24,13 +24,14 @@ def download_from_csv(input_table, url_column, directory):
     import pandas as pd
     import time
     import urllib
+    import urllib.request
 
     # Import a csv file with the download urls for the Arctic DEM tiles
     download_items = pd.read_csv(input_table)
 
     # Initialize download count
     n = len(download_items[url_column])
-    print(f'Beginning download of {n} tiles...')
+    print(f'Beginning download of {n} files...')
     count = 1
 
     # Loop through urls in the downloadURL column and download
@@ -40,7 +41,7 @@ def download_from_csv(input_table, url_column, directory):
             try:
                 # Start timing function
                 iteration_start = time.time()
-                print(f'\tDownloading {count} of {n} tiles...')
+                print(f'\tDownloading {count} of {n} files...')
                 # Download data
                 filedata = urllib.request.urlopen(url)
                 datatowrite = filedata.read()
@@ -55,10 +56,10 @@ def download_from_csv(input_table, url_column, directory):
                 print(f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
                 print('\t----------')
             except:
-                print(f'\tTile {count} of {n} not available for download. Check url.')
+                print(f'\tFile {count} of {n} not available for download. Check url.')
                 print('\t----------')
         else:
-            print(f'\tTile {count} of {n} already exists...')
+            print(f'\tFile {count} of {n} already exists...')
             print('\t----------')
         count += 1
 

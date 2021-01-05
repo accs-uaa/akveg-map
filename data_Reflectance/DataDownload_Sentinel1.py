@@ -26,7 +26,7 @@ root_folder = os.path.join(drive, 'ACCS_Work')
 data_folder = os.path.join(root_folder, 'Data/imagery/sentinel-1/unprocessed')
 
 # Define target Google Drive folder
-google_folder = '1yfNQkTsPlhQltRDEQ9u6ZUQrLS-vSqcy' # Beringia_Sentinel-1
+google_folder = '1S4EknWLWn7ZQr0bsF366sThw2dBMuyB_' # Beringia_Sentinel-1
 
 # Change working directory to credentials folder
 credentials_folder = os.path.join(root_folder, 'Administrative/Credentials')
