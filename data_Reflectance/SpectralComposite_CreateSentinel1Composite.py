@@ -17,7 +17,7 @@ from package_GeospatialProcessing import merge_spectral_tiles
 import time
 
 # Set root directory
-drive = 'K:/'
+drive = 'N:/'
 root_folder = 'ACCS_Work'
 
 # Define data folder

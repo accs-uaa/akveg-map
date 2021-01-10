@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Calculate Land Surface Temperature Summer Warmth Index
 # Author: Timm Nawrocki
-# Last Updated: 2020-03-02
+# Last Updated: 2021-01-07
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Calculate Land Surface Temperature Summer Warmth Index" is a function that sums LST means from May-September and then reprojects them to Alaska Albers Equal Area Conic.
 # ---------------------------------------------------------------------------
@@ -15,7 +15,7 @@ def calculate_lst_warmth_index(**kwargs):
             'input_projection' -- the machine number for the LST input projection
             'output_projection' -- the machine number for the output projection
             'geographic_transform' -- the ESRI code for the necessary geographic transformation (can be blank)
-            'input_array' -- an array containing the snap raster (must be first) and the mean LST rasters for May-September
+            'input_array' -- an array containing the study area raster (must be first) and the mean LST rasters for May-September
             'output_array' -- an array containing the output LST warmth index raster
     Returned Value: Returns a raster dataset on disk containing the reformatted LST
     Preconditions: requires mean decadal monthly LST downloaded from Google Earth Engine
@@ -39,7 +39,7 @@ def calculate_lst_warmth_index(**kwargs):
     output_projection = kwargs['output_projection']
     geographic_transform = kwargs['geographic_transform']
     input_rasters = kwargs['input_array']
-    snap_raster = input_rasters.pop(0)
+    study_area = input_rasters.pop(0)
     lst_processed = kwargs['output_array'][0]
 
     # Define intermediate dataset
@@ -67,7 +67,7 @@ def calculate_lst_warmth_index(**kwargs):
     print('\t----------')
 
     # Set snap raster
-    arcpy.env.snapRaster = snap_raster
+    arcpy.env.snapRaster = study_area
 
     # Reproject and resample LST raster
     print('\tReprojecting LST warmth index to AKALB...')

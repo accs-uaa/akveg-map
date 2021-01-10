@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Create Mean Annual Summer Warmth Index Composite for 2000-2015
+# Create Minimum January Temperature for 2000-2015
 # Author: Timm Nawrocki
 # Last Updated: 2021-01-09
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Create Mean Annual Summer Warmth Index Composite for 2000-2019" calculates the mean annual summer warmth index from May-September for years 2000-2015. The primary data are the SNAP Alaska-Yukon 2km data. The SNAP Alaska-Canada 10 minute data fill in the included portion of Northwest Territories.
+# Description: "Create Minimum January Temperature for 2000-2015" calculates the minimum January temperature mean for years 2000-2015. The primary data are the SNAP Alaska-Yukon 2km data with the included portion of the Northwest Territories interpolated by geographic nearest neighbors.
 # ---------------------------------------------------------------------------
 
 # Import packages
@@ -30,14 +30,16 @@ gridded_folder = os.path.join(data_folder, 'gridded')
 
 # Define input datasets
 grid_major = os.path.join(drive, root_folder, 'Data/analyses/gridMajor')
-study_area = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/northAmericanBeringia_ModelArea.tif')
+study_area = os.path.join(drive, root_folder,
+                          'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/northAmericanBeringia_ModelArea.tif')
 
 # Define output datasets
-raw_2km = os.path.join(processed_2km, 'SummerWarmth_MeanAnnual_Raw_2km_2000-2015.tif')
-interpolated_2km = os.path.join(processed_2km, 'SummerWarmth_MeanAnnual_Interpolated_2km_2000-2015.tif')
+raw_2km = os.path.join(processed_2km, 'January_MinimumTemperature_Raw_2km_2000-2015.tif')
+interpolated_2km = os.path.join(processed_2km, 'January_MinimumTemperature_Interpolated_2km_2000-2015.tif')
 
 # Define working geodatabase
-geodatabase = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/BeringiaVegetation.gdb')
+geodatabase = os.path.join(drive, root_folder,
+                           'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/BeringiaVegetation.gdb')
 # Set environment workspace
 arcpy.env.workspace = geodatabase
 
@@ -45,9 +47,10 @@ arcpy.env.workspace = geodatabase
 arcpy.env.overwriteOutput = True
 
 # Define month and property values
-property_2km = 'tas_mean_C_CRU_TS40_historical'
-months = ['05', '06', '07', '08', '09']
-years = ['2000', '2001', '2002', '2003', '2004', '2005', '2006', '2007', '2008', '2009', '2010', '2011', '2012', '2013', '2014', '2015']
+property_2km = 'tasmin_mean_C_CRU-TS40_historical'
+months = ['01']
+years = ['2000', '2001', '2002', '2003', '2004', '2005', '2006', '2007', '2008', '2009', '2010', '2011', '2012', '2013',
+         '2014', '2015']
 denominator = len(years)
 
 # Create a list of all 2km raster data
@@ -68,11 +71,11 @@ kwargs_2km = {'input_array': inputs_2km,
 
 # Create a composite raster for the 2km data
 if arcpy.Exists(raw_2km) == 0:
-    print('Calculating 2km mean annual summer warmth index...')
+    print('Calculating 2km minimum January temperature...')
     arcpy_geoprocessing(calculate_climate_mean, **kwargs_2km)
     print('----------')
 else:
-    print('Mean annual summer warmth index at 2 km resolution already exists...')
+    print('Raw minimum January temperature at 2 km resolution already exists...')
     print('----------')
 
 # Define input and output arrays to interpolate raster
@@ -114,7 +117,8 @@ iteration_end = time.time()
 iteration_elapsed = int(iteration_end - iteration_start)
 iteration_success_time = datetime.datetime.now()
 # Report success
-print(f'Completed at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
+print(
+    f'Completed at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
 print('----------')
 
 # Set initial grid count
@@ -131,7 +135,7 @@ for grid in grids:
         os.mkdir(grid_folder)
 
     # Define processed grid raster
-    climate_grid = os.path.join(grid_folder, 'SummerWarmth_MeanAnnual' + '_AKALB_' + grid_title + '.tif')
+    climate_grid = os.path.join(grid_folder, 'January_MinimumTemperature' + '_AKALB_' + grid_title + '.tif')
 
     # If climate grid does not exist then create climate grid
     if arcpy.Exists(climate_grid) == 0:

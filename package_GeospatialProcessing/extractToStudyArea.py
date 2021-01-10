@@ -48,7 +48,7 @@ def extract_to_study_area(**kwargs):
     arcpy.CopyRaster_management(extract_raster,
                                 output_raster,
                                 '',
-                                '0',
+                                '',
                                 '-32768',
                                 'NONE',
                                 'NONE',

@@ -26,7 +26,7 @@ root_folder = os.path.join(drive, 'ACCS_Work')
 data_folder = os.path.join(root_folder, 'Data/imagery/modis/unprocessed')
 
 # Define target Google Drive folder
-google_folder = '1fqOnAX4HqfI2beU7OklICxrKdQAIcT1m' # Beringia_MODIS
+google_folder = '1QyyEe4nZkmp8_yte08OB7BKDN7zprTcK' # Beringia_MODIS
 
 # Change working directory to credentials folder
 credentials_folder = os.path.join(root_folder, 'Administrative/Credentials')

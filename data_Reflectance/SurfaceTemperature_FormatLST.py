@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Format MODIS Land Surface Temperature Summer Warmth Index
 # Author: Timm Nawrocki
-# Last Updated: 2020-11-30
+# Last Updated: 2021-01-07
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Format MODIS Land Surface Temperature Summer Warmth Index" sums LST values from May-September, reprojects the LST data, and extracts to predefined grids.
 # ---------------------------------------------------------------------------
@@ -28,7 +28,7 @@ gridded_folder = os.path.join(data_folder, 'gridded')
 
 # Define input datasets
 grid_major = os.path.join(drive, root_folder, 'Data/analyses/gridMajor')
-snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/northAmericanBeringia_ModelArea.tif')
+study_area = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/northAmericanBeringia_ModelArea.tif')
 
 # Define output datasets
 lst_warmthindex = os.path.join(processed_folder, 'MODIS_LSTWarmthIndex_2010s.tif')
@@ -58,7 +58,7 @@ for month in months:
 rasters_length = len(rasters_list)
 
 # Create LST format input and output arrays
-lst_inputs = [snap_raster] + rasters_list
+lst_inputs = [study_area] + rasters_list
 lst_outputs = [lst_warmthindex]
 
 # Create LST format key word arguments
@@ -88,7 +88,7 @@ grid_list = ['A5', 'A6', 'A7', 'A8',
              'B4', 'B5', 'B6', 'B7', 'B8',
              'C4', 'C5', 'C6', 'C7', 'C8',
              'D4', 'D5', 'D6',
-             'E5', 'E6']
+             'E4', 'E5', 'E6']
 # Append file names to rasters in list
 grids = []
 for grid in grid_list:
@@ -125,7 +125,7 @@ for grid in grids:
         print(f'Processing {grid_count} of {grids_length}...')
 
         # Define input and output arrays
-        climate_grid_inputs = [grid, lst_warmthindex]
+        climate_grid_inputs = [study_area, grid, lst_warmthindex]
         climate_grid_outputs = [climate_grid]
 
         # Create key word arguments
