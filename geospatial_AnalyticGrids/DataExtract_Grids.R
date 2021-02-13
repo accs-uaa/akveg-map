@@ -47,7 +47,8 @@ precipitation_folder = paste(data_folder,
 temperature_folder = paste(data_folder,
                            'climatology/temperature/gridded',
                            sep = '/')
-output_folder = paste(root_folder,
+output_folder = paste(drive,
+                      root_folder,
                       'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/grids',
                       sep = '/')
 
@@ -61,7 +62,7 @@ library(stringr)
 
 # Define and subset input grid data
 grid_data = read_excel(grid_table, sheet = 'gridMinor')
-first = (3964 * machine_number) - 2
+first = (3964 * machine_number) - 3693
 last = 3964 * machine_number
 grid_data = slice(grid_data, (first:last))
 major_data = grid_data %>%
