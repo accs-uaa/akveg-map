@@ -8,7 +8,7 @@
 # ---------------------------------------------------------------------------
 
 # Define a wrapper function for arcpy geoprocessing tasks
-def arcpy_geoprocessing(geoprocessing_function, check_output = True, check_input = True, **kwargs):
+def arcpy_geoprocessing(geoprocessing_function, check_output=True, check_input=True, **kwargs):
     """
     Description: wraps arcpy geoprocessing and data access functions for file checks, message reporting, and errors.
     Inputs: geoprocessing function -- any arcpy geoprocessing or data access processing steps defined as a function that receive ** kwargs arguments.

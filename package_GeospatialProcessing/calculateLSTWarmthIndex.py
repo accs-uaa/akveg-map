@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Calculate Land Surface Temperature Summer Warmth Index
 # Author: Timm Nawrocki
-# Last Updated: 2021-01-07
+# Last Updated: 2021-01-13
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Calculate Land Surface Temperature Summer Warmth Index" is a function that sums LST means from May-September and then reprojects them to Alaska Albers Equal Area Conic.
 # ---------------------------------------------------------------------------
@@ -72,7 +72,7 @@ def calculate_lst_warmth_index(**kwargs):
     # Reproject and resample LST raster
     print('\tReprojecting LST warmth index to AKALB...')
     iteration_start = time.time()
-    arcpy.ProjectRaster_management(lst_warmth,
+    arcpy.management.ProjectRaster(lst_warmth,
                                    reprojected_raster,
                                    target_projection,
                                    'BILINEAR',
@@ -105,7 +105,7 @@ def calculate_lst_warmth_index(**kwargs):
     # Export the reprojected raster as a 16 bit unsigned raster
     print('\tExporting the expanded raster...')
     iteration_start = time.time()
-    arcpy.CopyRaster_management(expanded_lst,
+    arcpy.management.CopyRaster(expanded_lst,
                                 lst_processed,
                                 '',
                                 '',
@@ -119,7 +119,7 @@ def calculate_lst_warmth_index(**kwargs):
                                 'NONE')
     # Delete intermediate raster
     if arcpy.Exists(reprojected_raster) == 1:
-        arcpy.Delete_management(reprojected_raster)
+        arcpy.management.Delete(reprojected_raster)
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)

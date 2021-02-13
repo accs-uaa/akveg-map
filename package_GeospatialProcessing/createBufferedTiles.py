@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Create Buffered Tiles
 # Author: Timm Nawrocki
-# Last Updated: 2020-06-07
+# Last Updated: 2021-01-13
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Create Buffered Tiles" is a function that extracts, buffers, and clips a set of grids from a grid index to form individual raster tiles.
 # ---------------------------------------------------------------------------
@@ -10,11 +10,12 @@
 # Define a function to create buffered tiles for a grid index
 def create_buffered_tiles(**kwargs):
     """
-    Description: creates a DEM from individual DEM tiles
+    Description: creates buffered grid rasters
     Inputs: 'tile_name' -- a field name in the grid index that stores the tile name
             'distance' -- a string representing a number and units for buffer distance
+            'work_geodatabase' -- a geodatabase to store temporary results
             'input_array' -- an array containing the input grid index and a clip area
-            'output_geodatabase' -- an empty geodatabase to store the output tiles
+            'output_folder' -- an empty folder to store the output tiles
     Returned Value: Returns a raster dataset for each grid in grid index
     Preconditions: grid index must have been generated using create_grid_indices
     """
@@ -28,19 +29,22 @@ def create_buffered_tiles(**kwargs):
     import os
     import time
 
+    # Parse key word argument inputs
+    tile_name = kwargs['tile_name']
+    distance = kwargs['distance']
+    work_geodatabase = kwargs['work_geodatabase']
+    grid_index = kwargs['input_array'][0]
+    snap_raster = kwargs['input_array'][1]
+    output_folder = kwargs['output_folder']
+
     # Set overwrite option
     arcpy.env.overwriteOutput = True
 
     # Use two thirds of the possible cores on the machine
     arcpy.env.parallelProcessingFactor = '66%'
 
-    # Parse key word argument inputs
-    tile_name = kwargs['tile_name']
-    distance = kwargs['distance']
-    grid_index = kwargs['input_array'][0]
-    snap_raster = kwargs['input_array'][1]
-    output_folder = kwargs['output_folder']
-    arcpy.env.workspace = kwargs['workspace']
+    # Set workspace
+    arcpy.env.workspace = work_geodatabase
 
     # Set the snap raster
     arcpy.env.snapRaster = snap_raster
@@ -66,16 +70,27 @@ def create_buffered_tiles(**kwargs):
                 # Define feature
                 feature = row[0]
                 # Buffer feature by user specified distance
-                arcpy.Buffer_analysis(feature, buffer_feature, distance)
+                arcpy.analysis.Buffer(feature, buffer_feature, distance)
                 # Extract snap raster to buffered tile feature
-                extractRaster = ExtractByMask(snap_raster, buffer_feature)
+                extract_raster = ExtractByMask(snap_raster, buffer_feature)
                 # Reclassify values to 1
-                reclassifyRaster = Reclassify(extractRaster, 'Value', RemapRange([[1,100000,1]]))
+                reclassify_raster = Reclassify(extract_raster, 'Value', RemapRange([[1,100000,1]]))
                 # Copy raster to output
-                arcpy.CopyRaster_management(reclassifyRaster, output_grid, '', '', '0', 'NONE', 'NONE', '1_BIT', 'NONE', 'NONE', 'TIFF', 'None')
+                arcpy.management.CopyRaster(reclassify_raster,
+                                            output_grid,
+                                            '',
+                                            '',
+                                            '0',
+                                            'NONE',
+                                            'NONE',
+                                            '1_BIT',
+                                            'NONE',
+                                            'NONE',
+                                            'TIFF',
+                                            'None')
                 # If temporary feature class exists, then delete it
                 if arcpy.Exists(buffer_feature) == 1:
-                    arcpy.Delete_management(buffer_feature)
+                    arcpy.management.Delete(buffer_feature)
                 # End timing
                 iteration_end = time.time()
                 iteration_elapsed = int(iteration_end - iteration_start)

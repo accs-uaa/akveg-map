@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Convert Fire History to Gridded Raster
 # Author: Timm Nawrocki
-# Last Updated: 2020-06-02
+# Last Updated: 2021-01-13
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Convert Fire History to Gridded Raster" is a function that converts fire history polygons to raster with the fire year as the value and extracts the raster data to a major grid and study area.
 # ---------------------------------------------------------------------------
@@ -52,7 +52,7 @@ def convert_fire_history(**kwargs):
     # Convert fire history feature class to raster
     iteration_start = time.time()
     print('\tConverting feature class to raster within grid...')
-    arcpy.PolygonToRaster_conversion(input_feature, 'YEAR', convert_raster, 'CELL_CENTER', '', 10)
+    arcpy.conversion.PolygonToRaster(input_feature, 'YEAR', convert_raster, 'CELL_CENTER', '', 10)
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)
@@ -82,7 +82,7 @@ def convert_fire_history(**kwargs):
     print(f'\tExtracting raster to study area...')
     extract2_raster = ExtractByMask(extract1_raster, study_area)
     print(f'\tCopying extracted raster to new raster...')
-    arcpy.CopyRaster_management(extract2_raster,
+    arcpy.management.CopyRaster(extract2_raster,
                                 output_raster,
                                 '',
                                 '',

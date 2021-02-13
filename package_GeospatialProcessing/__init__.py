@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Initialization for Geospatial Processing Module
 # Author: Timm Nawrocki
-# Last Updated: 2020-11-30
+# Last Updated: 2021-01-13
 # Usage: Individual functions have varying requirements. All functions that use arcpy must be executed in an ArcGIS Pro Python 3.6 distribution.
 # Description: This initialization file imports modules in the package so that the contents are accessible.
 # ---------------------------------------------------------------------------
@@ -31,3 +31,4 @@ from package_GeospatialProcessing.partitionResults import partition_results
 from package_GeospatialProcessing.postprocessAbundance import postprocess_abundance
 from package_GeospatialProcessing.recentFireHistory import recent_fire_history
 from package_GeospatialProcessing.reprojectInteger import reproject_integer
+from package_GeospatialProcessing.selectLocation import select_location

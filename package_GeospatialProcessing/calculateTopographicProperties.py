@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Calculate Topographic Properties
 # Author: Timm Nawrocki
-# Last Updated: 2019-12-07
+# Last Updated: 2021-01-13
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Calculate Topographic Properties" is a function that calculates multiple topographic properties from an elevation raster using the Geomorphometry and Gradient Metrics Toolbox 2.0.
 # ---------------------------------------------------------------------------
@@ -186,7 +186,7 @@ def calculate_topographic_properties(**kwargs):
         extract_aspect = ExtractByMask(conditional_aspect, grid_raster)
         # Copy extracted raster to output
         print(f'\t\tCreating output raster...')
-        arcpy.CopyRaster_management(extract_aspect,
+        arcpy.management.CopyRaster(extract_aspect,
                                     aspect_output,
                                     '',
                                     '',
@@ -204,7 +204,7 @@ def calculate_topographic_properties(**kwargs):
         iteration_success_time = datetime.datetime.now()
         # Delete intermediate dataset if possible
         try:
-            arcpy.Delete_management(aspect_intermediate)
+            arcpy.management.Delete(aspect_intermediate)
         except:
             print('\t\tCould not delete intermediate dataset...')
         # Report success
@@ -232,7 +232,7 @@ def calculate_topographic_properties(**kwargs):
         integer_compound = Int((Raster(cti_intermediate)*100) + 0.5)
         # Copy extracted raster to output
         print(f'\t\tCreating output raster...')
-        arcpy.CopyRaster_management(integer_compound,
+        arcpy.management.CopyRaster(integer_compound,
                                     cti_output,
                                     '',
                                     '',
@@ -250,7 +250,7 @@ def calculate_topographic_properties(**kwargs):
         iteration_success_time = datetime.datetime.now()
         # Delete intermediate dataset if possible
         try:
-            arcpy.Delete_management(cti_intermediate)
+            arcpy.management.Delete(cti_intermediate)
         except:
             print('\t\tCould not delete intermediate dataset...')
         # Report success
@@ -276,7 +276,7 @@ def calculate_topographic_properties(**kwargs):
         integer_roughness = Int(Raster(roughness_intermediate) + 0.5)
         # Copy extracted raster to output
         print(f'\t\tCreating output raster...')
-        arcpy.CopyRaster_management(integer_roughness,
+        arcpy.management.CopyRaster(integer_roughness,
                                     roughness_output,
                                     '',
                                     '',
@@ -294,7 +294,7 @@ def calculate_topographic_properties(**kwargs):
         iteration_success_time = datetime.datetime.now()
         # Delete intermediate dataset if possible
         try:
-            arcpy.Delete_management(roughness_intermediate)
+            arcpy.management.Delete(roughness_intermediate)
         except:
             print('\t\tCould not delete intermediate dataset...')
         # Report success
@@ -322,7 +322,7 @@ def calculate_topographic_properties(**kwargs):
         integer_exposure = Int((Raster(exposure_intermediate) * 100) + 0.5)
         # Copy extracted raster to output
         print(f'\t\tCreating output raster...')
-        arcpy.CopyRaster_management(integer_exposure,
+        arcpy.management.CopyRaster(integer_exposure,
                                     exposure_output,
                                     '',
                                     '',
@@ -340,7 +340,7 @@ def calculate_topographic_properties(**kwargs):
         iteration_success_time = datetime.datetime.now()
         # Delete intermediate dataset if possible
         try:
-            arcpy.Delete_management(exposure_intermediate)
+            arcpy.management.Delete(exposure_intermediate)
         except:
             print('\t\tCould not delete intermediate dataset...')
         # Report success
@@ -367,7 +367,7 @@ def calculate_topographic_properties(**kwargs):
         integer_slope = Int(Raster(slope_intermediate) + 0.5)
         # Copy extracted raster to output
         print(f'\t\tCreating output raster...')
-        arcpy.CopyRaster_management(integer_slope,
+        arcpy.management.CopyRaster(integer_slope,
                                     slope_output,
                                     '',
                                     '',
@@ -385,7 +385,7 @@ def calculate_topographic_properties(**kwargs):
         iteration_success_time = datetime.datetime.now()
         # Delete intermediate dataset if possible
         try:
-            arcpy.Delete_management(slope_intermediate)
+            arcpy.management.Delete(slope_intermediate)
         except:
             print('\t\tCould not delete intermediate dataset...')
         # Report success
@@ -412,7 +412,7 @@ def calculate_topographic_properties(**kwargs):
         integer_area = Int((Raster(area_intermediate) * 10) + 0.5)
         # Copy extracted raster to output
         print(f'\t\tCreating output raster...')
-        arcpy.CopyRaster_management(integer_area,
+        arcpy.management.CopyRaster(integer_area,
                                     area_output,
                                     '',
                                     '',
@@ -430,7 +430,7 @@ def calculate_topographic_properties(**kwargs):
         iteration_success_time = datetime.datetime.now()
         # Delete intermediate dataset if possible
         try:
-            arcpy.Delete_management(area_intermediate)
+            arcpy.management.Delete(area_intermediate)
         except:
             print('\t\tCould not delete intermediate dataset...')
         # Report success
@@ -457,7 +457,7 @@ def calculate_topographic_properties(**kwargs):
         integer_relief = Int((Raster(relief_intermediate) * 1000) + 0.5)
         # Copy extracted raster to output
         print(f'\t\tCreating output raster...')
-        arcpy.CopyRaster_management(integer_relief,
+        arcpy.management.CopyRaster(integer_relief,
                                     relief_output,
                                     '',
                                     '',
@@ -475,7 +475,7 @@ def calculate_topographic_properties(**kwargs):
         iteration_success_time = datetime.datetime.now()
         # Delete intermediate dataset if possible
         try:
-            arcpy.Delete_management(relief_intermediate)
+            arcpy.management.Delete(relief_intermediate)
         except:
             print('\t\tCould not delete intermediate dataset...')
         # Report success
@@ -502,7 +502,7 @@ def calculate_topographic_properties(**kwargs):
         integer_position = Int((Raster(position_intermediate) * 100) + 0.5)
         # Copy extracted raster to output
         print(f'\t\tCreating output raster...')
-        arcpy.CopyRaster_management(integer_position,
+        arcpy.management.CopyRaster(integer_position,
                                     position_output,
                                     '',
                                     '',
@@ -520,7 +520,7 @@ def calculate_topographic_properties(**kwargs):
         iteration_success_time = datetime.datetime.now()
         # Delete intermediate dataset if possible
         try:
-            arcpy.Delete_management(position_intermediate)
+            arcpy.management.Delete(position_intermediate)
         except:
             print('\t\tCould not delete intermediate dataset...')
         # Report success
@@ -550,7 +550,7 @@ def calculate_topographic_properties(**kwargs):
         extract_radiation = ExtractByMask(integer_radiation, grid_raster)
         # Copy extracted raster to output
         print(f'\t\tCreating output raster...')
-        arcpy.CopyRaster_management(extract_radiation,
+        arcpy.management.CopyRaster(extract_radiation,
                                     radiation_output,
                                     '',
                                     '',
@@ -568,7 +568,7 @@ def calculate_topographic_properties(**kwargs):
         iteration_success_time = datetime.datetime.now()
         # Delete intermediate dataset if possible
         try:
-            arcpy.Delete_management(radiation_intermediate)
+            arcpy.management.Delete(radiation_intermediate)
         except:
             print('\t\tCould not delete intermediate dataset...')
         # Report success
