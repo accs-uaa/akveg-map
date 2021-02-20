@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Extract Features to Grids
 # Author: Timm Nawrocki
-# Last Updated: 2021-02-13
+# Last Updated: 2021-02-19
 # Usage: Must be executed in R 4.0.0+.
 # Description: "Extract Features to Grids" extracts data from rasters to prediction grids.
 # ---------------------------------------------------------------------------
@@ -29,24 +29,9 @@ grid_table = paste(data_folder,
 grid_folder = paste(data_folder,
                     'analyses/gridMinor',
                     sep = '/')
-topography_folder = paste(data_folder,
-                          'topography/Composite_10m_Beringia/gridded_select',
-                          sep = '/')
-sentinel1_folder = paste(data_folder,
-                         'imagery/sentinel-1/gridded',
-                         sep = '/')
-sentinel2_folder = paste(data_folder,
-                         'imagery/sentinel-2/gridded',
-                         sep = '/')
-modis_folder = paste(data_folder,
-                     'imagery/modis/gridded',
-                     sep = '/')
-precipitation_folder = paste(data_folder,
-                       'climatology/precipitation/gridded',
-                       sep = '/')
-temperature_folder = paste(data_folder,
-                           'climatology/temperature/gridded',
-                           sep = '/')
+raster_folder = paste(data_folder,
+                      'topography/Composite_10m_Beringia/gridded_select',
+                      sep = '/')
 output_folder = paste(drive,
                       root_folder,
                       'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/grids',
@@ -78,26 +63,10 @@ for (major in major_list) {
   
   # Identify grid name and predictor folders
   major_grid = paste('Grid_', major, sep='')
-  topography_grid = paste(topography_folder, major_grid, sep = '/')
-  sentinel1_grid = paste(sentinel1_folder, major_grid, sep = '/')
-  sentinel2_grid = paste(sentinel2_folder, major_grid, sep = '/')
-  modis_grid = paste(modis_folder, major_grid, sep = '/')
-  precipitation_grid = paste(precipitation_folder, major_grid, sep = '/')
-  temperature_grid = paste(temperature_folder, major_grid, sep = '/')
+  raster_grid = paste(raster_folder, major_grid, sep = '/')
   
   # Create a list of all predictor rasters
-  predictors_topography = list.files(topography_grid, pattern = 'tif$', full.names = TRUE)
-  predictors_sentinel1 = list.files(sentinel1_grid, pattern = 'tif$', full.names = TRUE)
-  predictors_sentinel2 = list.files(sentinel2_grid, pattern = 'tif$', full.names = TRUE)
-  predictors_modis = list.files(modis_grid, pattern = 'tif$', full.names = TRUE)
-  predictors_precipitation = list.files(precipitation_grid, pattern = 'tif$', full.names = TRUE)
-  predictors_temperature = list.files(temperature_grid, pattern = 'tif$', full.names = TRUE)
-  predictors_all = c(predictors_topography,
-                     predictors_sentinel1,
-                     predictors_sentinel2,
-                     predictors_modis,
-                     predictors_precipitation,
-                     predictors_temperature)
+  predictors_all = list.files(raster_grid, pattern = 'tif$', full.names = TRUE)
   print(paste('Number of predictor rasters: ', length(predictors_all), sep = ''))
   
   # Generate a stack of all predictor rasters

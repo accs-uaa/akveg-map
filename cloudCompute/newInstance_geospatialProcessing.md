@@ -2,9 +2,9 @@
 
 *Author*: Timm Nawrocki, Alaska Center for Conservation Science
 
-*Last Updated*: 2020-06-07
+*Last Updated*: 2021-02-19
 
-*Description*: Instructions to create a virtual machine (vm) instance on Google Cloud Compute configured with 2 vCPUs, 7.5 GB of CPU memory, a 1000 GB persistent disk, and Ubuntu 18.04 LTS operating system. The machine will be capable of running R scripts from a RStudio Server installation through a web browser. Most of the Google Cloud Compute Engine configuration can be accomplished using the browser interface, which is how configuration steps are explained in this document. If preferred, all of the configuration steps can also be scripted using the Google Cloud SDK. Users should download and install the [Google Cloud SDK](https://cloud.google.com/sdk/) regardless because it is necessary for batch file uploads and downloads.
+*Description*: Instructions to create a virtual machine (vm) instance on Google Cloud Compute configured with 4 vCPUs, 16 GB of CPU memory, a 4 TB persistent disk, and Ubuntu 20.04 LTS operating system. The machine will be capable of running R scripts from a RStudio Server installation through a web browser. Most of the Google Cloud Compute Engine configuration can be accomplished using the browser interface, which is how configuration steps are explained in this document. If preferred, all of the configuration steps can also be scripted using the Google Cloud SDK. Users should download and install the [Google Cloud SDK](https://cloud.google.com/sdk/) regardless because it is necessary for batch file uploads and downloads.
 
 ## 1. Configure project
 Create a new project if necessary and enable API access for Google Cloud Compute Engine.
@@ -59,13 +59,13 @@ The following steps must be followed every time a new instance is provisioned. T
 
 *Zone*: us-west1-b
 
-*Machine Type*: 2 vCPUs (7.5 GB memory)
+*Machine Type*: 4 vCPUs (16 GB memory)
 
-*Boot Disk*: Ubuntu 18.04 LTS
+*Boot Disk*: Ubuntu 20.04 LTS
 
 *Boot Disk Type*: Standard Persistent Disk
 
-*Size (GB)*: 1000
+*Size (GB)*: 4000
 
 *Service Account*: Compute Engine default service account
 
@@ -87,43 +87,54 @@ Launch the terminal in a browser window using ssh.
 
 ### Set up the system environment:
 
-Update the system prior to installing software and then install necessary base packages.
+Update the system prior to installing software and then install necessary dependencies.
 
 ```
 sudo apt-get update
+sudo apt install dirmngr gnupg apt-transport-https ca-certificates software-properties-common
 ```
 
-Install latest R release. The version referenced in the example below may need to be updated. The repository version should match the Ubuntu Linux LTS release version.
+Add the CRAN repository to the system sources list. The version referenced in the example below may need to be updated. The repository version should match the Ubuntu Linux LTS release version.
 
 ```
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
-sudo add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu bionic-cran40/'
-sudo apt update
+sudo add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/'
+```
+
+Install latest R release and check R version.
+
+```
 sudo apt install r-base
+R --version
+```
+
+Install base dependencies for rgdal package and update all.
+
+```
 sudo apt install libgeos-dev libproj-dev libgdal-dev libudunits2-dev
 sudo apt-get update
+```
+
+Start R and install the necessary libraries. To quit R, type `q()`.
+
+```
 sudo -i R
-```
-
-Once R has started in the root directory, install the necessary libraries.
-
-```
 install.packages('dplyr')
 install.packages('raster')
+install.packages('readxl')
 install.packages('rgdal')
 install.packages('sp')
 install.packages('stringr')
+q()
 ```
 
-To quit R, type `q()`.
-
-Install latest R Studio Server.
+Install latest R Studio Server. The version may need to be updated from below.
 
 ```
 sudo apt-get install gdebi-core
-wget https://download2.rstudio.org/server/bionic/amd64/rstudio-server-1.3.959-amd64.deb
-sudo gdebi rstudio-server-1.3.959-amd64.deb
-rm rstudio-server-1.2.5019-amd64.deb
+wget https://download2.rstudio.org/server/bionic/amd64/rstudio-server-1.4.1103-amd64.deb
+sudo gdebi rstudio-server-1.4.1103-amd64.deb
+rm rstudio-server-1.4.1103-amd64.deb
 ```
 
 Once R Studio Server is installed, it will automatically start running.
@@ -152,13 +163,6 @@ To enable RStudio to have read and write access over the new user directory:
 
 ```
 sudo chown -R <username_rstudio> /home/<username_rstudio>/
-sudo chmod -R 770 /home/<username_rstudio>/
-```
-
-Once own/mod priveleges are transferred to the <username_rstudio> user, the <username> user will not be able to access the files. To explore the files as the <username> user, the directory ownership must be changed back to the <username> user.
-
-```
-sudo chown -R <username> /home/<username_rstudio>/
 sudo chmod -R 770 /home/<username_rstudio>/
 ```
 
