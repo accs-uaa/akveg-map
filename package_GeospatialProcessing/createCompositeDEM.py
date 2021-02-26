@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Create Composite DEM
 # Author: Timm Nawrocki
-# Last Updated: 2019-12-03
+# Last Updated: 2021-02-24
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Create Composite DEM" is a function that merges multiple DEM source rasters according to a specified order of priority.
 # ---------------------------------------------------------------------------
@@ -10,7 +10,7 @@
 # Define a function to merge multiple source elevation rasters according to an order of priority
 def create_composite_dem(**kwargs):
     """
-    Description: extracts source rasters to an area and mosaics extracted source rasters with first data priority
+    Description: mosaics extracted source rasters with first data priority and extracts to mask
     Inputs: 'cell_size' -- a cell size for the output DEM
             'output_projection' -- the machine number for the output projection
             'input_array' -- an array containing the grid raster (must be first) and the list of sources DEMs in prioritized order
@@ -22,15 +22,10 @@ def create_composite_dem(**kwargs):
     # Import packages
     import arcpy
     from arcpy.sa import ExtractByMask
+    from arcpy.sa import Raster
     import datetime
     import os
     import time
-
-    # Set overwrite option
-    arcpy.env.overwriteOutput = True
-
-    # Use two thirds of cores on processes that can be split.
-    arcpy.env.parallelProcessingFactor = "66%"
 
     # Parse key word argument inputs
     cell_size = kwargs['cell_size']
@@ -39,8 +34,35 @@ def create_composite_dem(**kwargs):
     grid_raster = elevation_inputs.pop(0)
     composite_raster = kwargs['output_array'][0]
 
-    # Set snap raster
+    # Set overwrite option
+    arcpy.env.overwriteOutput = True
+
+    # Use two thirds of cores on processes that can be split.
+    arcpy.env.parallelProcessingFactor = "75%"
+
+    # Set snap raster and extent
     arcpy.env.snapRaster = grid_raster
+    arcpy.env.extent = Raster(grid_raster).extent
+
+    # Determine input raster value type
+    value_number = arcpy.management.GetRasterProperties(elevation_inputs[0], "VALUETYPE")[0]
+    no_data_value = arcpy.Describe(elevation_inputs[0]).noDataValue
+    value_dictionary = {
+        0: '1_BIT',
+        1: '2_BIT',
+        2: '4_BIT',
+        3: '8_BIT_UNSIGNED',
+        4: '8_BIT_SIGNED',
+        5: '16_BIT_UNSIGNED',
+        6: '16_BIT_SIGNED',
+        7: '32_BIT_UNSIGNED',
+        8: '32_BIT_SIGNED',
+        9: '32_BIT_FLOAT',
+        10: '64_BIT'
+    }
+    value_type = value_dictionary.get(int(value_number))
+    print(f'Output data type will be {value_type}.')
+    print(f'Output no data value will be {no_data_value}.')
 
     # Define the target projection
     composite_projection = arcpy.SpatialReference(output_projection)
@@ -76,10 +98,10 @@ def create_composite_dem(**kwargs):
                                             output_raster,
                                             '',
                                             '',
-                                            '-32768',
+                                            no_data_value,
                                             'NONE',
                                             'NONE',
-                                            '16_BIT_SIGNED',
+                                            value_type,
                                             'NONE',
                                             'NONE',
                                             'TIFF',
@@ -101,6 +123,9 @@ def create_composite_dem(**kwargs):
             input_rasters.append(output_raster)
         count += 1
 
+    # Append the grid raster to the list of input rasters
+    input_rasters.append(grid_raster)
+
     # Report the raster priority order
     raster_order = []
     for raster in input_rasters:
@@ -119,7 +144,7 @@ def create_composite_dem(**kwargs):
                                        mosaic_location,
                                        mosaic_name,
                                        composite_projection,
-                                       '16_BIT_SIGNED',
+                                       value_type,
                                        cell_size,
                                        '1',
                                        'FIRST',

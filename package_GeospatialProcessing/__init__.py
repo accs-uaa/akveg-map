@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Initialization for Geospatial Processing Module
 # Author: Timm Nawrocki
-# Last Updated: 2021-01-13
+# Last Updated: 2021-02-24
 # Usage: Individual functions have varying requirements. All functions that use arcpy must be executed in an ArcGIS Pro Python 3.6 distribution.
 # Description: This initialization file imports modules in the package so that the contents are accessible.
 # ---------------------------------------------------------------------------
@@ -11,6 +11,7 @@
 from package_GeospatialProcessing.arcpyGeoprocessing import arcpy_geoprocessing
 from package_GeospatialProcessing.calculateClimateMean import calculate_climate_mean
 from package_GeospatialProcessing.calculateTopographicProperties import calculate_topographic_properties
+from package_GeospatialProcessing.correctNoData import correct_no_data
 from package_GeospatialProcessing.createBufferedTiles import create_buffered_tiles
 from package_GeospatialProcessing.createCompositeDEM import create_composite_dem
 from package_GeospatialProcessing.createGridIndices import create_grid_indices

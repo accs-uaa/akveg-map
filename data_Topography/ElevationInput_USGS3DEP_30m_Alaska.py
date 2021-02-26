@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Create Composite USGS 3DEP 60 m Alaska
+# Create Composite USGS 3DEP 30 m Alaska
 # Author: Timm Nawrocki
 # Last Updated: 2021-02-20
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Create Composite USGS 3DEP 60 m Alaska" combines individual DEM tiles, reprojects to NAD 1983 Alaska Albers, and resamples to 10 m.
+# Description: "Create Composite USGS 3DEP 30 m Alaska" combines individual DEM tiles, reprojects to NAD 1983 Alaska Albers, and resamples to 10 m.
 # ---------------------------------------------------------------------------
 
 # Import packages
@@ -18,7 +18,7 @@ drive = 'N:/'
 root_folder = 'ACCS_Work'
 
 # Define data folder
-data_folder = os.path.join(drive, root_folder, 'Data/topography/USGS3DEP_60m_Alaska')
+data_folder = os.path.join(drive, root_folder, 'Data/topography/USGS3DEP_30m_Alaska')
 
 # Set arcpy working environment
 work_geodatabase = os.path.join(drive, root_folder,
@@ -31,11 +31,11 @@ snap_raster = os.path.join(drive,
                            'ACCS_Work/Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/northAmericanBeringia_ModelArea.tif')
 
 # Define output raster
-alaska60m_composite = os.path.join(data_folder, 'Elevation_USGS3DEP_60m_Alaska_AKALB.tif')
+alaska30m_composite = os.path.join(data_folder, 'Elevation_USGS3DEP_30m_Alaska_AKALB.tif')
 
 # Define input and output arrays
 merge_tiles_inputs = [snap_raster]
-merge_tiles_outputs = [alaska60m_composite]
+merge_tiles_outputs = [alaska30m_composite]
 
 # Create key word arguments
 merge_tiles_kwargs = {'tile_folder': tile_folder,

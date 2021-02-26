@@ -16,11 +16,11 @@ drive = 'N:/'
 root_folder = 'ACCS_Work'
 
 # Define data folder
-data_folder = os.path.join(drive, root_folder, 'Data/topography/USGS3DEP_30m_Canada')
+data_folder = os.path.join(drive, root_folder, 'Data/topography/USGS3DEP_30m_Alaska')
 directory = os.path.join(data_folder, 'tiles')
 
 # Define input csv table
-input_table = os.path.join(data_folder, 'USGS3DEP_Canada_30m_20210220.csv')
+input_table = os.path.join(data_folder, 'USGS3DEP_30m_Alaska_20210220.csv')
 url_column = 'downloadURL'
 
 # Download files

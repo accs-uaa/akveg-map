@@ -89,9 +89,9 @@ function addNDSI(image) {
 
 // Define a function for NDVI calculation.
 function addNDVI(image) {
-  //Compute the Normalized Burn Ratio (NBR).
+  //Compute the Normalized Difference Vegetation Index (NDVI).
   var ndviCalc = image.normalizedDifference(['B8', 'B4']).rename('NDVI');
-  // Return the masked image with an NBR band.
+  // Return the masked image with an NDVI band.
   return image.addBands(ndviCalc);
 }
 

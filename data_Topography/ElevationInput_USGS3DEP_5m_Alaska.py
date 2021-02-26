@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Create Composite USGS 3DEP 5 m Alaska
 # Author: Timm Nawrocki
-# Last Updated: 2020-11-30
+# Last Updated: 2021-02-20
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Create Composite USGS 3DEP 5 m Alaska" combines individual DEM tiles, reprojects to NAD 1983 Alaska Albers, and resamples to 10 m.
 # ---------------------------------------------------------------------------
@@ -21,12 +21,14 @@ root_folder = 'ACCS_Work'
 data_folder = os.path.join(drive, root_folder, 'Data/topography/USGS3DEP_5m_Alaska')
 
 # Set arcpy working environment
-arcpy.env.workspace = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/BeringiaVegetation.gdb')
+work_geodatabase = os.path.join(drive, root_folder,
+                                   'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/BeringiaVegetation.gdb')
 
 # Define input datasets
 tile_folder = os.path.join(data_folder, 'tiles')
 projected_folder = os.path.join(data_folder, 'tiles_projected')
-snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/northAmericanBeringia_TotalArea.tif')
+snap_raster = os.path.join(drive, root_folder,
+                           'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/northAmericanBeringia_ModelArea.tif')
 
 # Define output raster
 usgs5m_composite = os.path.join(data_folder, 'Elevation_USGS3DEP_5m_Alaska_AKALB.tif')
@@ -37,15 +39,15 @@ merge_tiles_outputs = [usgs5m_composite]
 
 # Create key word arguments
 merge_tiles_kwargs = {'tile_folder': tile_folder,
-                     'projected_folder': projected_folder,
-                     'workspace': arcpy.env.workspace,
-                     'cell_size': 10,
-                     'input_projection': 3338,
-                     'output_projection': 3338,
-                     'geographic_transformation': '',
-                     'input_array': merge_tiles_inputs,
-                     'output_array': merge_tiles_outputs
-                     }
+                      'projected_folder': projected_folder,
+                      'workspace': work_geodatabase,
+                      'cell_size': 10,
+                      'input_projection': 3338,
+                      'output_projection': 3338,
+                      'geographic_transformation': '',
+                      'input_array': merge_tiles_inputs,
+                      'output_array': merge_tiles_outputs
+                      }
 
 # Merge source tiles
 arcpy_geoprocessing(merge_elevation_tiles, **merge_tiles_kwargs)
