@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Convert Fire History To Gridded Burn Year
 # Author: Timm Nawrocki
-# Last Updated: 2020-11-30
+# Last Updated: 2021-03-08
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Convert Fire History To Gridded Burn Year" converts the Fire History polygons from 2000-2019 to a raster with most recent burn year as the value per major grid.
 # ---------------------------------------------------------------------------
@@ -26,10 +26,10 @@ input_fire = os.path.join(data_folder, 'Climatology/Fire')
 input_grids = os.path.join(data_folder, 'analyses/GridMajor')
 
 # Define input datasets
-fire_history = os.path.join(input_fire, 'AlaskaFireHistory_Polygons.gdb/fire_location_polygons')
+fire_history = os.path.join(input_fire, 'unprocessed/AlaskaFireHistoryPerimeters_NWCG_AICC.gdb/AlaskaFireHistoryPerimeters_20201113')
 
 # Define intermediate datasets
-recent_fire = os.path.join(input_fire, 'AlaskaFireHistory_Polygons.gdb/FirePerimeters_2000_2019')
+recent_fire = os.path.join(input_fire, 'unprocessed/AlaskaFireHistoryPerimeters_NWCG_AICC.gdb/AlaskaFireHistoryPerimeters_1990_2020')
 
 # Define work environment
 work_geodatabase = os.path.join(drive,
@@ -40,7 +40,8 @@ work_geodatabase = os.path.join(drive,
 grid_list = ['A5', 'A6', 'A7', 'A8',
              'B4', 'B5', 'B6', 'B7', 'B8',
              'C4', 'C5', 'C6', 'C7', 'C8',
-             'D4', 'D5', 'D6']
+             'D4', 'D5', 'D6',
+             'E4', 'E5', 'E6']
 
 # Define input datasets
 study_area = os.path.join(drive,
@@ -55,12 +56,14 @@ if arcpy.Exists(recent_fire) == 0:
 
     # Create key word arguments
     recent_kwargs = {'work_geodatabase': work_geodatabase,
+                     'year_start': 1990,
+                     'year_end': 2020,
                      'input_array': recent_inputs,
                      'output_array': recent_outputs
                      }
 
     # Extract raster to study area
-    print(f'Extracting fire perimeters for years 2000-2019...')
+    print(f'Extracting fire perimeters for years 1990-2020...')
     arcpy_geoprocessing(recent_fire_history, **recent_kwargs)
     print('----------')
 else:
@@ -74,7 +77,7 @@ for grid in grid_list:
     grid_raster = os.path.join(input_grids, "Grid_" + grid + ".tif")
 
     # Define output raster and path
-    output_path = os.path.join(input_fire, 'gridded_select', 'Grid_' + grid)
+    output_path = os.path.join(input_fire, 'gridded', 'Grid_' + grid)
     output_raster = os.path.join(output_path, 'FireHistory_AKALB_Grid_' + grid + '.tif')
     # Make output directory if it does not already exist
     if os.path.exists(output_path) == 0:

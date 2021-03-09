@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Extract Predictor Data To Study Area
 # Author: Timm Nawrocki
-# Last Updated: 2020-12-15
+# Last Updated: 2021-03-05
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Extract Predictor Data to Study Area" extracts a set of topographic predictor raster datasets to a study area to enforce the same extent on all rasters.
 # ---------------------------------------------------------------------------
@@ -17,11 +17,9 @@ from package_GeospatialProcessing import extract_to_study_area
 drive = 'N:/'
 root_folder = 'ACCS_Work'
 
-# Define data folder
+# Define data folders
 data_folder = os.path.join(drive, root_folder, 'Data')
-
-# Create gridded_select folders in each data directory if they do not already exist
-input_topography = os.path.join(data_folder, 'topography/Composite_10m_Beringia/gridded_full')
+input_topography = os.path.join(data_folder, 'topography/Composite_10m_Beringia/integer/gridded_full')
 input_grids = os.path.join(data_folder, 'analyses/GridMajor')
 
 # Define work environment

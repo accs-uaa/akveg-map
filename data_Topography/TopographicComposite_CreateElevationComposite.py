@@ -23,9 +23,6 @@ root_folder = 'ACCS_Work'
 data_folder = os.path.join(drive, root_folder, 'Data/topography')
 grid_major = os.path.join(drive, root_folder, 'Data/analyses/gridMajor')
 
-# Define work geodatabase
-work_geodatabase = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Project_GIS/BeringiaVegetation.gdb')
-
 # Define source_rasters
 source_USGS_5m = os.path.join(data_folder, 'USGS3DEP_5m_Alaska/Elevation_USGS3DEP_5m_Alaska_AKALB_Corrected.tif')
 source_USGS_10m = os.path.join(data_folder, 'USGS3DEP_10m_Alaska/Elevation_USGS3DEP_10m_Alaska_AKALB.tif')

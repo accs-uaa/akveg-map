@@ -118,12 +118,12 @@ print('Maximum NDVI Composite:', composite);
 
 // Add image to the map.
 Map.centerObject(areaOfInterest);
-var rgbVis = {
-  min: 0.0,
-  max: 0.3,
-  bands: ['B4', 'B3', 'B2'],
+var firVis = {
+  min:0,
+  max: [.3500, .6000, .2000],
+  bands: ['B11','B8','B4']
 };
-Map.addLayer(composite, rgbVis, 'Maximum NDVI Composite');
+Map.addLayer(composite, firVis, 'July Maximum NDVI Composite');
 
 // Create a single band image for Sentinel-2 bands 2-8, 8a, 11-12, and the additional bands calculated above.
 var band_2_blue = ee.Image(composite).select(['B2']);

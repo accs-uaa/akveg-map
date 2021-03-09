@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Calculate Topographic Properties
 # Author: Timm Nawrocki
-# Last Updated: 2021-01-13
+# Last Updated: 2021-02-25
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Calculate Topographic Properties" is a function that calculates multiple topographic properties from an elevation raster using the Geomorphometry and Gradient Metrics Toolbox 2.0.
 # ---------------------------------------------------------------------------
@@ -43,33 +43,38 @@ def calculate_topographic_properties(**kwargs):
     import os
     import time
 
-    # Set overwrite option
-    arcpy.env.overwriteOutput = True
-
-    # Use two thirds of cores on processes that can be split.
-    arcpy.env.parallelProcessingFactor = "66%"
-
     # Parse key word argument inputs
     z_unit = kwargs['z_unit']
     grid_raster = kwargs['input_array'][0]
     elevation_input = kwargs['input_array'][1]
-    aspect_output = kwargs['output_array'][0]
-    cti_output = kwargs['output_array'][1]
-    roughness_output = kwargs['output_array'][2]
-    exposure_output = kwargs['output_array'][3]
-    slope_output = kwargs['output_array'][4]
-    area_output = kwargs['output_array'][5]
-    relief_output = kwargs['output_array'][6]
-    position_output = kwargs['output_array'][7]
-    radiation_output = kwargs['output_array'][8]
+    elevation_output = kwargs['output_array'][0]
+    aspect_output = kwargs['output_array'][1]
+    cti_output = kwargs['output_array'][2]
+    roughness_output = kwargs['output_array'][3]
+    exposure_output = kwargs['output_array'][4]
+    slope_output = kwargs['output_array'][5]
+    area_output = kwargs['output_array'][6]
+    relief_output = kwargs['output_array'][7]
+    position_output = kwargs['output_array'][8]
+    radiation_output = kwargs['output_array'][9]
 
-    # Set snap raster
+    # Set overwrite option
+    arcpy.env.overwriteOutput = True
+
+    # Use two thirds of cores on processes that can be split.
+    arcpy.env.parallelProcessingFactor = "75%"
+
+    # Set snap raster and extent
     arcpy.env.snapRaster = grid_raster
+    arcpy.env.extent = Raster(grid_raster).extent
 
     # Define folder structure
     grid_title = os.path.splitext(os.path.split(grid_raster)[1])[0]
-    raster_folder = os.path.split(elevation_input)[0]
+    raster_folder = os.path.split(elevation_output)[0]
     intermediate_folder = os.path.join(raster_folder, 'intermediate')
+    # Create raster folder if it does not already exist
+    if os.path.exists(raster_folder) == 0:
+        os.mkdir(raster_folder)
     # Create intermediate folder if it does not already exist
     if os.path.exists(intermediate_folder) == 0:
         os.mkdir(intermediate_folder)
@@ -111,7 +116,7 @@ def calculate_topographic_properties(**kwargs):
         iteration_start = time.time()
         # Calculate flow accumulation
         print(f'\tCalculating flow accumulation for {grid_title}...')
-        flow_accumulation = FlowAccumulation(flow_direction, '', 'FLOAT', 'D8')
+        flow_accumulation = FlowAccumulation(flow_direction_raster, '', 'FLOAT', 'D8')
         flow_accumulation.save(flow_accumulation_raster)
         # End timing
         iteration_end = time.time()
@@ -165,10 +170,46 @@ def calculate_topographic_properties(**kwargs):
         print(f'\tRaw aspect already exists for {grid_title}.')
         print('\t----------')
 
+    #### CALCULATE INTEGER ELEVATION
+
+    # Calculate integer elevation if it does not already exist
+    if arcpy.Exists(elevation_output) == 0:
+        print(f'\tCalculating integer elevation for {grid_title}...')
+        # Start timing function
+        iteration_start = time.time()
+        # Round to integer and store as 16 bit signed raster
+        print(f'\t\tConverting values to integers...')
+        integer_elevation = Int(Raster(elevation_input) + 0.5)
+        # Copy extracted raster to output
+        print(f'\t\tCreating output raster...')
+        arcpy.management.CopyRaster(integer_elevation,
+                                    elevation_output,
+                                    '',
+                                    '',
+                                    '-32768',
+                                    'NONE',
+                                    'NONE',
+                                    '16_BIT_SIGNED',
+                                    'NONE',
+                                    'NONE',
+                                    'TIFF',
+                                    'NONE')
+        # End timing
+        iteration_end = time.time()
+        iteration_elapsed = int(iteration_end - iteration_start)
+        iteration_success_time = datetime.datetime.now()
+        # Report success
+        print(
+            f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
+        print('\t----------')
+    else:
+        print(f'\tInteger elevation already exists for {grid_title}.')
+        print('\t----------')
+
     #### CALCULATE LINEAR ASPECT
 
     # Calculate linear aspect if it does not already exist
-    if os.path.exists(aspect_output) == 0:
+    if arcpy.Exists(aspect_output) == 0:
         print(f'\tCalculating linear aspect for {grid_title}...')
         # Start timing function
         iteration_start = time.time()
@@ -217,7 +258,7 @@ def calculate_topographic_properties(**kwargs):
     #### CALCULATE COMPOUND TOPOGRAPHIC INDEX
 
     # Calculate compound topographic index if it does not already exist
-    if os.path.exists(cti_output) == 0:
+    if arcpy.Exists(cti_output) == 0:
         print(f'\tCalculating compound topographic index for {grid_title}...')
         # Start timing function
         iteration_start = time.time()
@@ -263,7 +304,7 @@ def calculate_topographic_properties(**kwargs):
     #### CALCULATE ROUGHNESS
 
     # Calculate roughness if it does not already exist
-    if os.path.exists(roughness_output) == 0:
+    if arcpy.Exists(roughness_output) == 0:
         print(f'\tCalculating roughness for {grid_title}...')
         # Start timing function
         iteration_start = time.time()
@@ -274,9 +315,15 @@ def calculate_topographic_properties(**kwargs):
         # Convert to integer values
         print(f'\t\tConverting values to integers...')
         integer_roughness = Int(Raster(roughness_intermediate) + 0.5)
+        # Fill missing data (no aspect) with values of 0
+        print(f'\t\tFilling values of roughness...')
+        conditional_roughness = Con(IsNull(integer_roughness), 0, integer_roughness)
+        # Extract filled raster to grid mask
+        print(f'\t\tExtracting filled raster to grid...')
+        extract_roughness = ExtractByMask(conditional_roughness, grid_raster)
         # Copy extracted raster to output
         print(f'\t\tCreating output raster...')
-        arcpy.management.CopyRaster(integer_roughness,
+        arcpy.management.CopyRaster(extract_roughness,
                                     roughness_output,
                                     '',
                                     '',
@@ -308,7 +355,7 @@ def calculate_topographic_properties(**kwargs):
     #### CALCULATE SITE EXPOSURE
 
     # Calculate site exposure if it does not already exist
-    if os.path.exists(exposure_output) == 0:
+    if arcpy.Exists(exposure_output) == 0:
         print(f'\tCalculating site exposure for {grid_title}...')
         # Start timing function
         iteration_start = time.time()
@@ -354,7 +401,7 @@ def calculate_topographic_properties(**kwargs):
     #### CALCULATE MEAN SLOPE
 
     # Calculate mean slope if it does not already exist
-    if os.path.exists(slope_output) == 0:
+    if arcpy.Exists(slope_output) == 0:
         print(f'\tCalculating mean slope for {grid_title}...')
         # Start timing function
         iteration_start = time.time()
@@ -444,7 +491,7 @@ def calculate_topographic_properties(**kwargs):
     #### CALCULATE SURFACE RELIEF RATIO
 
     # Calculate surface relief ratio if it does not already exist
-    if os.path.exists(relief_output) == 0:
+    if arcpy.Exists(relief_output) == 0:
         print(f'\tCalculating surface relief ratio for {grid_title}...')
         # Start timing function
         iteration_start = time.time()
@@ -489,7 +536,7 @@ def calculate_topographic_properties(**kwargs):
     #### CALCULATE TOPOGRAPHIC POSITION
 
     # Calculate topographic position if it does not already exist
-    if os.path.exists(position_output) == 0:
+    if arcpy.Exists(position_output) == 0:
         print(f'\tCalculating topographic position for {grid_title}...')
         # Start timing function
         iteration_start = time.time()
@@ -534,20 +581,33 @@ def calculate_topographic_properties(**kwargs):
     #### CALCULATE TOPOGRAPHIC RADIATION
 
     # Calculate topographic radiation if it does not already exist
-    if os.path.exists(radiation_output) == 0:
+    if arcpy.Exists(radiation_output) == 0:
         print(f'\tCalculating topographic radiation for {grid_title}...')
         # Start timing function
         iteration_start = time.time()
         # Create an intermediate topographic position calculation
         radiation_intermediate = os.path.splitext(radiation_output)[0] + '_intermediate.tif'
+        radiation_integer = os.path.splitext(radiation_output)[0] + '_integer.tif'
         topographic_radiation(elevation_input,
                               radiation_intermediate)
         # Convert to integer values
         print(f'\t\tConverting values to integers...')
         integer_radiation = Int((Raster(radiation_intermediate) * 1000) + 0.5)
+        arcpy.management.CopyRaster(integer_radiation,
+                                    radiation_integer,
+                                    '',
+                                    '',
+                                    '-32768',
+                                    'NONE',
+                                    'NONE',
+                                    '16_BIT_SIGNED',
+                                    'NONE',
+                                    'NONE',
+                                    'TIFF',
+                                    'NONE')
         # Extract filled raster to grid mask
         print(f'\t\tExtracting integer raster to grid...')
-        extract_radiation = ExtractByMask(integer_radiation, grid_raster)
+        extract_radiation = ExtractByMask(radiation_integer, grid_raster)
         # Copy extracted raster to output
         print(f'\t\tCreating output raster...')
         arcpy.management.CopyRaster(extract_radiation,
@@ -569,6 +629,7 @@ def calculate_topographic_properties(**kwargs):
         # Delete intermediate dataset if possible
         try:
             arcpy.management.Delete(radiation_intermediate)
+            arcpy.management.Delete(radiation_integer)
         except:
             print('\t\tCould not delete intermediate dataset...')
         # Report success

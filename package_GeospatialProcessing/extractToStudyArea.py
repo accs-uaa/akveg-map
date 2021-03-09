@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Extract to Study Area
 # Author: Timm Nawrocki
-# Last Updated: 2020-05-06
+# Last Updated: 2021-03-05
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Extract to Study Area" is a function that extracts raster data to a smaller study area. This script is intended to ensure that all gridded predictor datasets are within the target study area and have the same extent.
 # ---------------------------------------------------------------------------
@@ -23,6 +23,7 @@ def extract_to_study_area(**kwargs):
     from arcpy.sa import ExtractByMask
     from arcpy.sa import Raster
     import datetime
+    import os
     import time
 
     # Parse key word argument inputs
@@ -42,10 +43,41 @@ def extract_to_study_area(**kwargs):
     arcpy.env.snapRaster = study_area
     arcpy.env.extent = Raster(grid_raster).extent
 
+    # Define intermediate datasets
+    extract_intermediate = os.path.splitext(output_raster)[0] + '_intermediate.tif'
+
+    # Extract raster to grid
+    iteration_start = time.time()
+    print('\t\tPerforming extraction to grid...')
+    intermediate_raster = ExtractByMask(input_raster, grid_raster)
+    arcpy.management.CopyRaster(intermediate_raster,
+                                extract_intermediate,
+                                '',
+                                '',
+                                '-32768',
+                                'NONE',
+                                'NONE',
+                                '16_BIT_SIGNED',
+                                'NONE',
+                                'NONE',
+                                'TIFF',
+                                'NONE',
+                                'CURRENT_SLICE',
+                                'NO_TRANSPOSE')
+    # End timing
+    iteration_end = time.time()
+    iteration_elapsed = int(iteration_end - iteration_start)
+    iteration_success_time = datetime.datetime.now()
+    # Report success
+    print(
+        f'\t\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
+    print('\t\t----------')
+
     # Extract raster to study area
     iteration_start = time.time()
-    extract_raster = ExtractByMask(input_raster, study_area)
-    arcpy.CopyRaster_management(extract_raster,
+    print('\t\tPerforming extraction to study area...')
+    extract_raster = ExtractByMask(extract_intermediate, study_area)
+    arcpy.management.CopyRaster(extract_raster,
                                 output_raster,
                                 '',
                                 '',
@@ -59,6 +91,9 @@ def extract_to_study_area(**kwargs):
                                 'NONE',
                                 'CURRENT_SLICE',
                                 'NO_TRANSPOSE')
+    # Delete intermediate dataset if it exists
+    if arcpy.Exists(extract_intermediate) == 1:
+        arcpy.management.Delete(extract_intermediate)
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)

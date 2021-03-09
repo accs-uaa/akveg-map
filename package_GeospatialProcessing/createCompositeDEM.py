@@ -13,6 +13,7 @@ def create_composite_dem(**kwargs):
     Description: mosaics extracted source rasters with first data priority and extracts to mask
     Inputs: 'cell_size' -- a cell size for the output DEM
             'output_projection' -- the machine number for the output projection
+            'work_geodatabase' -- a geodatabase to store temporary results
             'input_array' -- an array containing the grid raster (must be first) and the list of sources DEMs in prioritized order
             'output_array' -- an array containing the output raster
     Returned Value: Returns a raster dataset on disk containing the merged source DEM
