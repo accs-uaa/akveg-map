@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Calculate Climate Mean
 # Author: Timm Nawrocki
-# Last Updated: 2021-01-13
+# Last Updated: 2021-03-10
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Calculate Climate Mean" is a function that calculates mean annual climate metrics from a set of individual month-year rasters representing a particular climate property. This function is intended to allow the creation of mean total annual precipitation and mean annual summer warmth index.
 # ---------------------------------------------------------------------------
@@ -23,18 +23,17 @@ def calculate_climate_mean(**kwargs):
     from arcpy.sa import CellStatistics
     from arcpy.sa import Int
     import datetime
-    import os
     import time
-
-    # Set overwrite option
-    arcpy.env.overwriteOutput = True
 
     # Parse key word argument inputs
     denominator = kwargs['denominator']
     input_rasters = kwargs['input_array']
     output_raster = kwargs['output_array'][0]
 
-    # Set snap raster and extent
+    # Set overwrite option
+    arcpy.env.overwriteOutput = True
+
+    # Set snap raster
     arcpy.env.snapRaster = input_rasters[0]
 
     # Add all rasters in input array and divide by denominator

@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Create Buffered Tiles
 # Author: Timm Nawrocki
-# Last Updated: 2021-01-13
+# Last Updated: 2021-03-10
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Create Buffered Tiles" is a function that extracts, buffers, and clips a set of grids from a grid index to form individual raster tiles.
 # ---------------------------------------------------------------------------
@@ -62,10 +62,9 @@ def create_buffered_tiles(**kwargs):
             buffer_feature = os.path.join(arcpy.env.workspace, 'Grid_' + row[1] + '_Buffer')
             output_grid = os.path.join(output_folder, 'Grid_' + row[1] + '.tif')
 
-            print(f'\tProcessing grid tile {os.path.split(output_grid)[1]}...')
             # If tile does not exist, then create tile
             if arcpy.Exists(output_grid) == 0:
-                # Start timing function
+                print(f'\tProcessing grid tile {os.path.split(output_grid)[1]}...')
                 iteration_start = time.time()
                 # Define feature
                 feature = row[0]

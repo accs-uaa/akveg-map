@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Partition Results
 # Author: Timm Nawrocki
-# Last Updated: 2020-01-18
+# Last Updated: 2021-03-10
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Partition Results" is a function that spatially partitions model validation results within a region feature class.
 # ---------------------------------------------------------------------------
@@ -25,9 +25,6 @@ def partition_results(**kwargs):
     import os
     import time
 
-    # Set overwrite option
-    arcpy.env.overwriteOutput = True
-
     # Parse key word argument inputs
     work_geodatabase = kwargs['work_geodatabase']
     input_projection = kwargs['input_projection']
@@ -35,30 +32,38 @@ def partition_results(**kwargs):
     input_table = kwargs['input_array'][1]
     output_table = kwargs['output_array'][0]
 
-    # Split output table into location and name
-    output_location, output_name = os.path.split(output_table)
+    # Set overwrite option
+    arcpy.env.overwriteOutput = True
 
     # Set workspace
     arcpy.env.workspace = work_geodatabase
 
-    # Define intermediate dataset
+    # Split output table into location and name
+    output_location, output_name = os.path.split(output_table)
+
+    # Define intermediate datasets
     points_feature = os.path.join(work_geodatabase, 'points_feature')
     clip_feature = os.path.join(work_geodatabase, 'points_clip')
 
-    # Define the initial projection
-    feature_projection = arcpy.SpatialReference(input_projection)
+    # Define the input coordinate system
+    input_system = arcpy.SpatialReference(input_projection)
 
     # Mosaic raster tiles to new raster
     print(f'\tPartitioning points to region...')
     iteration_start = time.time()
-    arcpy.XYTableToPoint_management(input_table, points_feature, 'longitude', 'latitude', '', feature_projection)
-    arcpy.Clip_analysis(points_feature, region, clip_feature)
-    arcpy.TableToTable_conversion(clip_feature, output_location, output_name)
+    arcpy.management.XYTableToPoint(input_table,
+                                    points_feature,
+                                    'longitude',
+                                    'latitude',
+                                    '',
+                                    input_system)
+    arcpy.analysis.Clip(points_feature, region, clip_feature)
+    arcpy.conversion.TableToTable(clip_feature, output_location, output_name)
     # Delete intermediate datasets
     if arcpy.Exists(points_feature) == 1:
-        arcpy.Delete_management(points_feature)
+        arcpy.management.Delete(points_feature)
     if arcpy.Exists(points_feature) == 1:
-        arcpy.Delete_management(clip_feature)
+        arcpy.management.Delete(clip_feature)
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)

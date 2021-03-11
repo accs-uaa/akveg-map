@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Create Composite DEM
 # Author: Timm Nawrocki
-# Last Updated: 2021-02-24
+# Last Updated: 2021-03-10
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Create Composite DEM" is a function that merges multiple DEM source rasters according to a specified order of priority.
 # ---------------------------------------------------------------------------
@@ -84,18 +84,20 @@ def create_composite_dem(**kwargs):
     input_length = len(elevation_inputs)
     input_rasters = []
     count = 1
+    # Iterate through all input rasters to extract to grid and append to input list
     for raster in elevation_inputs:
+        # Define output raster file path
         output_raster = os.path.join(source_folder, os.path.split(raster)[1])
+        # Extract input raster if extracted raster does not already exist
         if os.path.exists(output_raster) == 0:
             try:
-                # Start timing function
-                iteration_start = time.time()
                 print(f'\tExtracting elevation source {count} of {input_length}...')
+                iteration_start = time.time()
                 # Extract raster to mask
                 extract_raster = ExtractByMask(raster, grid_raster)
                 # Copy extracted raster to output
                 print(f'\tSaving elevation source {count} of {input_length}...')
-                arcpy.CopyRaster_management(extract_raster,
+                arcpy.management.CopyRaster(extract_raster,
                                             output_raster,
                                             '',
                                             '',
@@ -120,8 +122,10 @@ def create_composite_dem(**kwargs):
         else:
             print(f'\tExtracted elevation source {count} of {input_length} already exists...')
             print('\t----------')
+        # Append extracted input raster to inputs list
         if os.path.exists(output_raster) == 1:
             input_rasters.append(output_raster)
+        # Increase counter
         count += 1
 
     # Append the grid raster to the list of input rasters
@@ -136,12 +140,13 @@ def create_composite_dem(**kwargs):
     count = 1
     for raster in raster_order:
         print(f'\t\t{count}. {raster}')
+        # Increase the counter
         count += 1
 
     # Mosaic raster tiles to new raster
     print(f'\tMosaicking the input rasters for {grid_title}...')
     iteration_start = time.time()
-    arcpy.MosaicToNewRaster_management(input_rasters,
+    arcpy.management.MosaicToNewRaster(input_rasters,
                                        mosaic_location,
                                        mosaic_name,
                                        composite_projection,
@@ -151,7 +156,7 @@ def create_composite_dem(**kwargs):
                                        'FIRST',
                                        'FIRST')
     # Enforce correct projection
-    arcpy.DefineProjection_management(composite_raster, composite_projection)
+    arcpy.management.DefineProjection(composite_raster, composite_projection)
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)

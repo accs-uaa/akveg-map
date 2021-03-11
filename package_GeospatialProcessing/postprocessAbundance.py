@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Post-process Species Abundance
 # Author: Timm Nawrocki
-# Last Updated: 2020-06-04
+# Last Updated: 2021-03-10
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Post-process Species Abundance" is a function that merges species raster tiles into a single raster.
 # ---------------------------------------------------------------------------
@@ -36,31 +36,33 @@ def postprocess_abundance(**kwargs):
     mask_raster = raster_tiles.pop(0)
     output_raster = kwargs['output_array'][0]
 
+    # Set overwrite option
+    arcpy.env.overwriteOutput = True
+
+    # Set workspace and snap raster
+    arcpy.env.workspace = work_geodatabase
+
+    # Set snap raster and processing extent
+    arcpy.env.snapRaster = mask_raster
+    arcpy.env.extent = Raster(mask_raster).extent
+
+    # Use two thirds of cores on processes that can be split.
+    arcpy.env.parallelProcessingFactor = "75%"
+
     # Set mosaic location and name
     mosaic_raster = os.path.splitext(output_raster)[0] + '_mosaic.tif'
     mosaic_location, mosaic_name = os.path.split(mosaic_raster)
 
-    # Set overwrite option
-    arcpy.env.overwriteOutput = True
-    # Set workspace and snap raster
-    arcpy.env.workspace = work_geodatabase
-    # Set snap raster
-    arcpy.env.snapRaster = mask_raster
-    # Set processing extent
-    arcpy.env.extent = Raster(mask_raster).extent
-    # Use two thirds of cores on processes that can be split.
-    arcpy.env.parallelProcessingFactor = "75%"
-
-    # Set output projection
-    composite_projection = arcpy.SpatialReference(output_projection)
+    # Define output coordinate system
+    output_system = arcpy.SpatialReference(output_projection)
 
     # Mosaic raster tiles to new raster
     print('\tMerging raster tiles...')
     iteration_start = time.time()
-    arcpy.MosaicToNewRaster_management(raster_tiles,
+    arcpy.management.MosaicToNewRaster(raster_tiles,
                                        mosaic_location,
                                        mosaic_name,
-                                       composite_projection,
+                                       output_system,
                                        '8_BIT_SIGNED',
                                        cell_size,
                                        '1',
@@ -80,7 +82,7 @@ def postprocess_abundance(**kwargs):
     iteration_start = time.time()
     extract_raster = ExtractByMask(mosaic_raster, mask_raster)
     print('\tExporting to new raster...')
-    arcpy.CopyRaster_management(extract_raster,
+    arcpy.management.CopyRaster(extract_raster,
                                 output_raster,
                                 '',
                                 '',
@@ -94,7 +96,7 @@ def postprocess_abundance(**kwargs):
                                 'NONE')
     # Delete mosaic raster
     if arcpy.Exists(mosaic_raster) == 1:
-        arcpy.Delete_management(mosaic_raster)
+        arcpy.management.Delete(mosaic_raster)
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)

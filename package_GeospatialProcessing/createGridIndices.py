@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Create Grid Indices
 # Author: Timm Nawrocki
-# Last Updated: 2020-01-13
+# Last Updated: 2020-03-10
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Create Grid Indices" is a function that creates a major and minor grid index from a study area.
 # ---------------------------------------------------------------------------
@@ -49,11 +49,9 @@ def create_grid_indices(**kwargs):
 
     # If major grid does not already exist, then create major grid
     if arcpy.Exists(major_grid) == 0:
-        # Start timing function
-        iteration_start = time.time()
-        # Report initial status
-        print('\tCreating major grid index...')
         # Create major grid
+        print('\tCreating major grid index...')
+        iteration_start = time.time()
         arcpy.cartography.GridIndexFeatures(major_grid, total_area, 'INTERSECTFEATURE', 'NO_USEPAGEUNIT', '', distance_major, distance_major)
         arcpy.management.AddField(major_grid, 'Major', 'TEXT')
         arcpy.management.CalculateField(major_grid, 'Major', '!PageName!')
@@ -70,10 +68,9 @@ def create_grid_indices(**kwargs):
 
     # If minor grid does not already exist, then create minor grid
     if arcpy.Exists(minor_grid) == 0:
-        # Start timing function
-        iteration_start = time.time()
-        # Report initial status
+        # Create minor grid
         print('\tCreating minor grid index...')
+        iteration_start = time.time()
         # Create minor grid
         arcpy.cartography.GridIndexFeatures(minor_grid_full, major_grid, 'INTERSECTFEATURE', 'NO_USEPAGEUNIT', '', distance_minor, distance_minor)
         # Join major grid to minor grid

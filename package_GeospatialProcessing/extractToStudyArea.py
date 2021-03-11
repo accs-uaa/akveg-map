@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Extract to Study Area
 # Author: Timm Nawrocki
-# Last Updated: 2021-03-05
+# Last Updated: 2021-03-10
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Extract to Study Area" is a function that extracts raster data to a smaller study area. This script is intended to ensure that all gridded predictor datasets are within the target study area and have the same extent.
 # ---------------------------------------------------------------------------
@@ -47,8 +47,8 @@ def extract_to_study_area(**kwargs):
     extract_intermediate = os.path.splitext(output_raster)[0] + '_intermediate.tif'
 
     # Extract raster to grid
-    iteration_start = time.time()
     print('\t\tPerforming extraction to grid...')
+    iteration_start = time.time()
     intermediate_raster = ExtractByMask(input_raster, grid_raster)
     arcpy.management.CopyRaster(intermediate_raster,
                                 extract_intermediate,
@@ -74,8 +74,8 @@ def extract_to_study_area(**kwargs):
     print('\t\t----------')
 
     # Extract raster to study area
-    iteration_start = time.time()
     print('\t\tPerforming extraction to study area...')
+    iteration_start = time.time()
     extract_raster = ExtractByMask(extract_intermediate, study_area)
     arcpy.management.CopyRaster(extract_raster,
                                 output_raster,

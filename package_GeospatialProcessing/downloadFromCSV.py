@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Download Files From CSV
 # Author: Timm Nawrocki
-# Last Updated: 2021-01-04
+# Last Updated: 2021-03-10
 # Usage: Can be executed in an Anaconda Python 3.7 distribution or an ArcGIS Pro Python 3.6 distribution.
 # Description: "Download Files From CSV" contacts a server to download a series of files specified in a csv table. The full path to the download must be specified in the table.
 # ---------------------------------------------------------------------------
@@ -23,7 +23,6 @@ def download_from_csv(input_table, url_column, directory):
     import os
     import pandas as pd
     import time
-    import urllib
     import urllib.request
 
     # Import a csv file with the download urls for the Arctic DEM tiles
@@ -37,11 +36,11 @@ def download_from_csv(input_table, url_column, directory):
     # Loop through urls in the downloadURL column and download
     for url in download_items[url_column]:
         target = os.path.join(directory, os.path.split(url)[1])
+        # Download file if it does not already exist on local disk
         if os.path.exists(target) == 0:
             try:
-                # Start timing function
-                iteration_start = time.time()
                 print(f'\tDownloading {count} of {n} files...')
+                iteration_start = time.time()
                 # Download data
                 filedata = urllib.request.urlopen(url)
                 datatowrite = filedata.read()
@@ -61,6 +60,8 @@ def download_from_csv(input_table, url_column, directory):
         else:
             print(f'\tFile {count} of {n} already exists...')
             print('\t----------')
+        # Increase counter
         count += 1
 
+    # Report end status
     print('Finished downloading tiles.')

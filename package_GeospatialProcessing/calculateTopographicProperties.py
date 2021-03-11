@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Calculate Topographic Properties
 # Author: Timm Nawrocki
-# Last Updated: 2021-02-25
+# Last Updated: 2021-03-10
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Calculate Topographic Properties" is a function that calculates multiple topographic properties from an elevation raster using the Geomorphometry and Gradient Metrics Toolbox 2.0.
 # ---------------------------------------------------------------------------
@@ -92,10 +92,9 @@ def calculate_topographic_properties(**kwargs):
 
     # Calculate flow direction if it does not already exist
     if os.path.exists(flow_direction_raster) == 0:
-        # Start timing function
-        iteration_start = time.time()
         # Calculate flow direction
         print(f'\tCalculating flow direction for {grid_title}...')
+        iteration_start = time.time()
         flow_direction = FlowDirection(elevation_input, 'NORMAL', '', 'D8')
         flow_direction.save(flow_direction_raster)
         # End timing
@@ -112,10 +111,9 @@ def calculate_topographic_properties(**kwargs):
 
     # Calculate flow accumulation if it does not already exist
     if os.path.exists(flow_accumulation_raster) == 0:
-        # Start timing function
-        iteration_start = time.time()
         # Calculate flow accumulation
         print(f'\tCalculating flow accumulation for {grid_title}...')
+        iteration_start = time.time()
         flow_accumulation = FlowAccumulation(flow_direction_raster, '', 'FLOAT', 'D8')
         flow_accumulation.save(flow_accumulation_raster)
         # End timing
@@ -132,10 +130,9 @@ def calculate_topographic_properties(**kwargs):
 
     # Calculate raw slope in degrees if it does not already exist
     if os.path.exists(raw_slope_raster) == 0:
-        # Start timing function
-        iteration_start = time.time()
         # Calculate slope
         print(f'\tCalculating raw slope for {grid_title}...')
+        iteration_start = time.time()
         raw_slope = Slope(elevation_input, "DEGREE", zFactor)
         raw_slope.save(raw_slope_raster)
         # End timing
@@ -152,10 +149,9 @@ def calculate_topographic_properties(**kwargs):
 
     # Calculate raw aspect if it does not already exist
     if os.path.exists(raw_aspect_raster) == 0:
-        # Start timing function
-        iteration_start = time.time()
         # Calculate aspect
         print(f'\tCalculating raw aspect for {grid_title}...')
+        iteration_start = time.time()
         raw_aspect = Aspect(elevation_input, 'PLANAR', z_unit)
         raw_aspect.save(raw_aspect_raster)
         # End timing
@@ -175,9 +171,8 @@ def calculate_topographic_properties(**kwargs):
     # Calculate integer elevation if it does not already exist
     if arcpy.Exists(elevation_output) == 0:
         print(f'\tCalculating integer elevation for {grid_title}...')
-        # Start timing function
         iteration_start = time.time()
-        # Round to integer and store as 16 bit signed raster
+        # Round to integer
         print(f'\t\tConverting values to integers...')
         integer_elevation = Int(Raster(elevation_input) + 0.5)
         # Copy extracted raster to output
@@ -211,12 +206,11 @@ def calculate_topographic_properties(**kwargs):
     # Calculate linear aspect if it does not already exist
     if arcpy.Exists(aspect_output) == 0:
         print(f'\tCalculating linear aspect for {grid_title}...')
-        # Start timing function
         iteration_start = time.time()
         # Create an initial linear aspect calculation using the linear aspect function
         aspect_intermediate = os.path.splitext(aspect_output)[0] + '_intermediate.tif'
         linear_aspect(raw_aspect_raster, aspect_intermediate)
-        # Round to integer and store as 16 bit signed raster
+        # Round to integer
         print(f'\t\tConverting values to integers...')
         integer_aspect = Int(Raster(aspect_intermediate) + 0.5)
         # Fill missing data (no aspect) with values of -1
@@ -260,7 +254,6 @@ def calculate_topographic_properties(**kwargs):
     # Calculate compound topographic index if it does not already exist
     if arcpy.Exists(cti_output) == 0:
         print(f'\tCalculating compound topographic index for {grid_title}...')
-        # Start timing function
         iteration_start = time.time()
         # Create an intermediate compound topographic index calculation
         cti_intermediate = os.path.splitext(cti_output)[0] + '_intermediate.tif'
@@ -271,7 +264,7 @@ def calculate_topographic_properties(**kwargs):
         # Convert to integer values
         print(f'\t\tConverting values to integers...')
         integer_compound = Int((Raster(cti_intermediate)*100) + 0.5)
-        # Copy extracted raster to output
+        # Copy integer raster to output
         print(f'\t\tCreating output raster...')
         arcpy.management.CopyRaster(integer_compound,
                                     cti_output,
@@ -306,7 +299,6 @@ def calculate_topographic_properties(**kwargs):
     # Calculate roughness if it does not already exist
     if arcpy.Exists(roughness_output) == 0:
         print(f'\tCalculating roughness for {grid_title}...')
-        # Start timing function
         iteration_start = time.time()
         # Create an intermediate compound topographic index calculation
         roughness_intermediate = os.path.splitext(roughness_output)[0] + '_intermediate.tif'
@@ -357,7 +349,6 @@ def calculate_topographic_properties(**kwargs):
     # Calculate site exposure if it does not already exist
     if arcpy.Exists(exposure_output) == 0:
         print(f'\tCalculating site exposure for {grid_title}...')
-        # Start timing function
         iteration_start = time.time()
         # Create an intermediate compound topographic index calculation
         exposure_intermediate = os.path.splitext(exposure_output)[0] + '_intermediate.tif'
@@ -403,7 +394,6 @@ def calculate_topographic_properties(**kwargs):
     # Calculate mean slope if it does not already exist
     if arcpy.Exists(slope_output) == 0:
         print(f'\tCalculating mean slope for {grid_title}...')
-        # Start timing function
         iteration_start = time.time()
         # Create an intermediate mean slope calculation
         slope_intermediate = os.path.splitext(slope_output)[0] + '_intermediate.tif'
@@ -448,7 +438,6 @@ def calculate_topographic_properties(**kwargs):
     # Calculate surface area ratio if it does not already exist
     if os.path.exists(area_output) == 0:
         print(f'\tCalculating surface area ratio for {grid_title}...')
-        # Start timing function
         iteration_start = time.time()
         # Create an intermediate surface area ratio calculation
         area_intermediate = os.path.splitext(area_output)[0] + '_intermediate.tif'
@@ -493,7 +482,6 @@ def calculate_topographic_properties(**kwargs):
     # Calculate surface relief ratio if it does not already exist
     if arcpy.Exists(relief_output) == 0:
         print(f'\tCalculating surface relief ratio for {grid_title}...')
-        # Start timing function
         iteration_start = time.time()
         # Create an intermediate surface relief ratio calculation
         relief_intermediate = os.path.splitext(relief_output)[0] + '_intermediate.tif'
@@ -538,7 +526,6 @@ def calculate_topographic_properties(**kwargs):
     # Calculate topographic position if it does not already exist
     if arcpy.Exists(position_output) == 0:
         print(f'\tCalculating topographic position for {grid_title}...')
-        # Start timing function
         iteration_start = time.time()
         # Create an intermediate topographic position calculation
         position_intermediate = os.path.splitext(position_output)[0] + '_intermediate.tif'
@@ -583,7 +570,6 @@ def calculate_topographic_properties(**kwargs):
     # Calculate topographic radiation if it does not already exist
     if arcpy.Exists(radiation_output) == 0:
         print(f'\tCalculating topographic radiation for {grid_title}...')
-        # Start timing function
         iteration_start = time.time()
         # Create an intermediate topographic position calculation
         radiation_intermediate = os.path.splitext(radiation_output)[0] + '_intermediate.tif'

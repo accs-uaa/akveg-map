@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Convert Fire History to Gridded Raster
 # Author: Timm Nawrocki
-# Last Updated: 2021-03-08
+# Last Updated: 2021-03-10
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Convert Fire History to Gridded Raster" is a function that converts fire history polygons to raster with the fire year as the value and extracts the raster data to a major grid and study area.
 # ---------------------------------------------------------------------------
@@ -35,9 +35,6 @@ def convert_fire_history(**kwargs):
     grid_raster = kwargs['input_array'][2]
     output_raster = kwargs['output_array'][0]
 
-    # Define intermediate rasters
-    convert_raster = os.path.splitext(output_raster)[0] + '.tif'
-
     # Set overwrite option
     arcpy.env.overwriteOutput = True
 
@@ -49,9 +46,12 @@ def convert_fire_history(**kwargs):
     arcpy.env.extent = Raster(grid_raster).extent
     arcpy.env.cellSize = 'MINOF'
 
+    # Define intermediate rasters
+    convert_raster = os.path.splitext(output_raster)[0] + '.tif'
+
     # Convert fire history feature class to raster
-    iteration_start = time.time()
     print('\tConverting feature class to raster within grid...')
+    iteration_start = time.time()
     arcpy.conversion.PolygonToRaster(input_feature, 'FireYear', convert_raster, 'CELL_CENTER', 'FireYear', 10)
     # End timing
     iteration_end = time.time()
@@ -63,8 +63,8 @@ def convert_fire_history(**kwargs):
     print('\t----------')
 
     # Convert no data values to zero
-    iteration_start = time.time()
     print('\tConverting no data to zero...')
+    iteration_start = time.time()
     zero_raster = Con(IsNull(Raster(convert_raster)), 0, Raster(convert_raster))
     # End timing
     iteration_end = time.time()
@@ -76,8 +76,8 @@ def convert_fire_history(**kwargs):
     print('\t----------')
 
     # Extract raster to study area
-    iteration_start = time.time()
     print(f'\tExtracting raster to grid...')
+    iteration_start = time.time()
     extract1_raster = ExtractByMask(zero_raster, grid_raster)
     print(f'\tExtracting raster to study area...')
     extract2_raster = ExtractByMask(extract1_raster, study_area)
@@ -86,7 +86,7 @@ def convert_fire_history(**kwargs):
                                 output_raster,
                                 '',
                                 '',
-                                -32768,
+                                '-32768',
                                 'NONE',
                                 'NONE',
                                 '16_BIT_SIGNED',

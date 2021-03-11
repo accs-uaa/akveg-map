@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Format Climate Grids
 # Author: Timm Nawrocki
-# Last Updated: 2021-01-07
+# Last Updated: 2021-03-10
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Format Climate Grids" is a function that extracts the combined resolution climate data to the major analysis grids.
 # ---------------------------------------------------------------------------
@@ -24,14 +24,14 @@ def format_climate_grids(**kwargs):
     import datetime
     import time
 
-    # Set overwrite option
-    arcpy.env.overwriteOutput = True
-
     # Parse key word argument inputs
     study_area = kwargs['input_array'][0]
     grid_raster = kwargs['input_array'][1]
     climate_raster = kwargs['input_array'][2]
     output_raster = kwargs['output_array'][0]
+
+    # Set overwrite option
+    arcpy.env.overwriteOutput = True
 
     # Set snap raster and extent
     arcpy.env.snapRaster = study_area
@@ -39,8 +39,8 @@ def format_climate_grids(**kwargs):
     arcpy.env.extent = Raster(grid_raster).extent
 
     # Extract the climate data to the grid raster and study area
-    iteration_start = time.time()
     print(f'\tExtracting climate data to grid...')
+    iteration_start = time.time()
     extract_grid = ExtractByMask(climate_raster, grid_raster)
     extract_area = ExtractByMask(extract_grid, study_area)
     # End timing
@@ -53,8 +53,8 @@ def format_climate_grids(**kwargs):
     print('\t----------')
 
     # Export extracted raster to output raster
-    iteration_start = time.time()
     print(f'\tExporting extracted raster to output raster...')
+    iteration_start = time.time()
     arcpy.CopyRaster_management(extract_area,
                                 output_raster,
                                 '',

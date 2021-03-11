@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Reproject to Integer Raster
 # Author: Timm Nawrocki
-# Last Updated: 2019-10-29
+# Last Updated: 2021-03-10
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Reproject to Integer Raster" is a function that reprojects and resamples a raster and converts the output to 16 bit signed integers with some conversion factor representing the number of decimal points to preserve.
 # ---------------------------------------------------------------------------
@@ -28,9 +28,6 @@ def reproject_integer(**kwargs):
     import os
     import time
 
-    # Set overwrite option
-    arcpy.env.overwriteOutput = True
-
     # Parse key word argument inputs
     cell_size = kwargs['cell_size']
     input_projection = kwargs['input_projection']
@@ -41,27 +38,32 @@ def reproject_integer(**kwargs):
     snap_raster = kwargs['input_array'][1]
     output_raster = kwargs['output_array'][0]
 
-    # Define the initial projection
-    initial_projection = arcpy.SpatialReference(input_projection)
-    # Define the target projection
-    composite_projection = arcpy.SpatialReference(output_projection)
+    # Set overwrite option
+    arcpy.env.overwriteOutput = True
+
     # Set snap raster
     arcpy.env.snapRaster = snap_raster
 
-    # Start timing function
-    iteration_start = time.time()
+    # Define the input and output coordinate systems
+    input_system = arcpy.SpatialReference(input_projection)
+    output_system = arcpy.SpatialReference(output_projection)
+
+    # Project raster to output coordinate system
     print(f'\tReprojecting input raster...')
+    iteration_start = time.time()
     # Define intermediate and output raster
     reprojected_raster = os.path.splitext(input_raster)[0] + '_reprojected.tif'
-    # Define initial projection
-    arcpy.DefineProjection_management(input_raster, initial_projection)
+    # Define initial coordinate system
+    arcpy.management.DefineProjection(input_raster, input_system)
     # Reproject raster
-    arcpy.ProjectRaster_management(input_raster,
+    arcpy.management.ProjectRaster(input_raster,
                                    reprojected_raster,
-                                   composite_projection,
+                                   output_system,
                                    'BILINEAR',
                                    cell_size,
-                                   geographic_transformation)
+                                   geographic_transformation,
+                                   '',
+                                   input_system)
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)
@@ -70,15 +72,24 @@ def reproject_integer(**kwargs):
     print(f'\tProjection completed at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
     print('\t----------')
 
-    # Start timing function
-    iteration_start = time.time()
-    print(f'\tConverting raster to 16 bit integer...')
     # Round to integer and store as 16 bit signed raster
+    print(f'\tConverting raster to 16 bit integer...')
+    iteration_start = time.time()
     integer_raster = Int((Raster(reprojected_raster) * conversion_factor) + 0.5)
-    arcpy.CopyRaster_management(integer_raster, output_raster, '', '', '-32768', 'NONE', 'NONE', '16_BIT_SIGNED',
-                                'NONE', 'NONE', 'TIFF', 'NONE')
+    arcpy.management.CopyRaster(integer_raster,
+                                output_raster,
+                                '',
+                                '',
+                                '-32768',
+                                'NONE',
+                                'NONE',
+                                '16_BIT_SIGNED',
+                                'NONE',
+                                'NONE',
+                                'TIFF',
+                                'NONE')
     # Delete intermediate raster
-    arcpy.Delete_management(reprojected_raster)
+    arcpy.management.Delete(reprojected_raster)
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)

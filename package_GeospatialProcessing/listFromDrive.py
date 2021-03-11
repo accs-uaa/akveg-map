@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # List Files from Google Drive
 # Author: Timm Nawrocki
-# Last Updated: 2019-12-03
+# Last Updated: 2021-03-10
 # Usage: Must be executed in a Python 3.7 environment with Google Drive API v2.
 # Description: "List Files From Google Drive" is a function that creates a list of all files in a Google Drive folder by id.
 # ---------------------------------------------------------------------------

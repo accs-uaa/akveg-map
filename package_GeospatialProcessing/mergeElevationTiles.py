@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Merge Source Elevation Tiles
 # Author: Timm Nawrocki
-# Last Updated: 2021-02-20
+# Last Updated: 2021-03-10
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Merge Source Elevation Tiles" is a function that creates single merged DEM from input tiles of the same source with new projection, snap raster, and cell size.
 # ---------------------------------------------------------------------------
@@ -27,12 +27,6 @@ def merge_elevation_tiles(**kwargs):
     import os
     import time
 
-    # Set overwrite option
-    arcpy.env.overwriteOutput = True
-
-    # Use two thirds of cores on processes that can be split.
-    arcpy.env.parallelProcessingFactor = "75%"
-
     # Parse key word argument inputs
     tile_folder = kwargs['tile_folder']
     projected_folder = kwargs['projected_folder']
@@ -44,13 +38,26 @@ def merge_elevation_tiles(**kwargs):
     snap_raster = kwargs['input_array'][0]
     dem_composite = kwargs['output_array'][0]
 
+    # Set overwrite option
+    arcpy.env.overwriteOutput = True
+
+    # Use two thirds of cores on processes that can be split.
+    arcpy.env.parallelProcessingFactor = "75%"
+
+    # Set snap raster
+    arcpy.env.snapRaster = snap_raster
+
+    # Define input and output coordinate systems
+    input_system = arcpy.SpatialReference(input_projection)
+    # Define the target projection
+    output_system = arcpy.SpatialReference(output_projection)
+
     # Define intermediate datasets
     mosaic_location, mosaic_name = os.path.split(dem_composite)
 
-    # Start timing function
-    iteration_start = time.time()
     # Create a list of DEM raster tiles
     print('Compiling list of raster tiles...')
+    iteration_start = time.time()
     arcpy.env.workspace = tile_folder
     tile_list = arcpy.ListRasters('*', 'ALL')
     # Add file path to raster list
@@ -69,36 +76,31 @@ def merge_elevation_tiles(**kwargs):
     print(f'Completed at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
     print('----------')
 
-    # Define projection and reproject all rasters in list
+    # Reproject all rasters in list
     print(f'Reprojecting {len(tile_rasters)} raster tiles...')
-    # Define the initial projection
-    tile_projection = arcpy.SpatialReference(input_projection)
-    # Define the target projection
-    composite_projection = arcpy.SpatialReference(output_projection)
-    # Set snap raster
-    arcpy.env.snapRaster = snap_raster
     # Set initial counter
     count = 1
-    # Reproject all rasters in list
+    # Iterate through rasters
     for raster in tile_rasters:
-        # Define intermediate and output raster
+        # Define output raster
         output_raster = os.path.join(projected_folder, os.path.splitext(os.path.split(raster)[1])[0] + '.tif')
-        # Check if output raster already exists:
+        # Reproject raster if it does not already exist
         if os.path.exists(output_raster) == 0:
-            # Start timing function
-            iteration_start = time.time()
             print(f'\tReprojecting tile {count} of {len(tile_list)}...')
+            iteration_start = time.time()
             # Define initial projection
-            arcpy.DefineProjection_management(raster, tile_projection)
-            # Reproject tile
-            arcpy.ProjectRaster_management(raster,
+            arcpy.management.DefineProjection(raster, input_system)
+            # Reproject raster
+            arcpy.management.ProjectRaster(raster,
                                            output_raster,
-                                           composite_projection,
+                                           output_system,
                                            'BILINEAR',
                                            cell_size,
-                                           geographic_transformation)
+                                           geographic_transformation,
+                                           '',
+                                           input_system)
             # Enforce new projection
-            arcpy.DefineProjection_management(output_raster, composite_projection)
+            arcpy.management.DefineProjection(output_raster, composite_projection)
             # End timing
             iteration_end = time.time()
             iteration_elapsed = int(iteration_end - iteration_start)
@@ -115,10 +117,9 @@ def merge_elevation_tiles(**kwargs):
     print(f'Defined projection for {len(tile_list)} raster tiles...')
     print('----------')
 
-    # Start timing function
-    iteration_start = time.time()
     # Create a list of projected DEM raster tiles
     print('Compiling list of projected raster tiles...')
+    iteration_start = time.time()
     arcpy.env.workspace = projected_folder
     projected_list = arcpy.ListRasters('*', 'ALL')
     # Add file path to raster list
@@ -137,11 +138,10 @@ def merge_elevation_tiles(**kwargs):
     print(f'Completed at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
     print('----------')
 
-    # Start timing function
-    iteration_start = time.time()
-    print('Creating composite from tiles...')
     # Mosaic raster tiles to new raster
-    arcpy.MosaicToNewRaster_management(projected_rasters,
+    print('Creating composite from tiles...')
+    iteration_start = time.time()
+    arcpy.management.MosaicToNewRaster(projected_rasters,
                                        mosaic_location,
                                        mosaic_name,
                                        composite_projection,
@@ -151,7 +151,7 @@ def merge_elevation_tiles(**kwargs):
                                        'MAXIMUM',
                                        'FIRST')
     # Enforce correct projection
-    arcpy.DefineProjection_management(dem_composite, composite_projection)
+    arcpy.management.DefineProjection(dem_composite, composite_projection)
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)
@@ -160,6 +160,6 @@ def merge_elevation_tiles(**kwargs):
     print(f'Completed at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
     print('----------')
 
-    # Delete intermediate dataset
+    # Report end status
     out_process = 'Successful creating composite DEM.'
     return out_process

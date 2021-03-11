@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Parse Site Data
 # Author: Timm Nawrocki
-# Last Updated: 2020-05-07
+# Last Updated: 2021-03-10
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Parse Site Data" is a function that extracts a set of sampling points within a grid polygon.
 # ---------------------------------------------------------------------------
@@ -22,7 +22,6 @@ def parse_site_data(**kwargs):
     # Import packages
     import arcpy
     import datetime
-    import os
     import time
 
     # Parse key word argument inputs
@@ -42,18 +41,18 @@ def parse_site_data(**kwargs):
     print('\tClipping points to grid polygon...')
     iteration_start = time.time()
     # Create a new feature class of plot locations that will be buffered
-    arcpy.MakeFeatureLayer_management(grid_major,
+    arcpy.management.MakeFeatureLayer(grid_major,
                                       'grid_layer',
                                       f'Major = \'{grid_name}\'')
     # Clip points to selected polygon
-    arcpy.Clip_analysis(sites_formatted,
+    arcpy.analysis.Clip(sites_formatted,
                         'grid_layer',
                         output_shapefile)
     # Check if output is empty
-    feature_count = int(arcpy.GetCount_management(output_shapefile)[0])
+    feature_count = int(arcpy.management.GetCount(output_shapefile)[0])
     print(f'\tGrid {grid_name} contains {str(feature_count)} points...')
     if feature_count == 0:
-        arcpy.Delete_management(output_shapefile)
+        arcpy.management.Delete(output_shapefile)
         print(f'\tRemoved empty feature class for Grid {grid_name}...')
     # End timing
     iteration_end = time.time()

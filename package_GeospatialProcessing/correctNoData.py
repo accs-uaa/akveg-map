@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Correct No Data
 # Author: Timm Nawrocki
-# Last Updated: 2021-02-24
+# Last Updated: 2021-03-10
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Correct No Data" is a function that replaces raster values with No Data.
 # ---------------------------------------------------------------------------
@@ -25,7 +25,6 @@ def correct_no_data(**kwargs):
     from arcpy.sa import Raster
     from arcpy.sa import SetNull
     import datetime
-    import os
     import time
 
     # Parse key word argument inputs
@@ -38,6 +37,9 @@ def correct_no_data(**kwargs):
 
     # Set overwrite option
     arcpy.env.overwriteOutput = True
+
+    # Set workspace
+    arcpy.env.workspace = work_geodatabase
 
     # Use two thirds of cores on processes that can be split.
     arcpy.env.parallelProcessingFactor = "75%"
@@ -65,9 +67,9 @@ def correct_no_data(**kwargs):
     print(f'Output data type will be {value_type}.')
     print(f'Output no data value will be {no_data_value}.')
 
-    # Start timing function
-    iteration_start = time.time()
+    # Correct and export raster values by threshold and direction
     print('Correcting No Data in raster...')
+    iteration_start = time.time()
     # Set values to null based on threshold
     if direction == 'above':
         corrected_raster = SetNull(Raster(input_raster), Raster(input_raster), f'VALUE > {value_threshold}')

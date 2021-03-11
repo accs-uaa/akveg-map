@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Merge Spectral Tiles
 # Author: Timm Nawrocki
-# Last Updated: 2020-12-13
+# Last Updated: 2021-03-10
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Merge spectral tiles" is a function that merges tiles of a spectral metric within a predefined grid.
 # ---------------------------------------------------------------------------
@@ -50,8 +50,8 @@ def merge_spectral_tiles(**kwargs):
     arcpy.env.snapRaster = study_area
     arcpy.env.extent = Raster(grid_raster).extent
 
-    # Define the target projection
-    composite_projection = arcpy.SpatialReference(output_projection)
+    # Define the output coordinate system
+    output_system = arcpy.SpatialReference(output_projection)
 
     # Define intermediate rasters
     mosaic_raster = os.path.splitext(spectral_grid)[0] + '_mosaic.tif'
@@ -84,8 +84,8 @@ def merge_spectral_tiles(**kwargs):
 
     # Save grid polygon
     grid_feature = os.path.join(work_geodatabase, 'grid_polygon')
-    arcpy.CopyFeatures_management(grid_polygon, grid_feature)
-    arcpy.DefineProjection_management(grid_feature, composite_projection)
+    arcpy.management.CopyFeatures(grid_polygon, grid_feature)
+    arcpy.management.DefineProjection(grid_feature, output_system)
 
     # Iterate through all input tiles and extract to grid if they overlap
     count = 1
@@ -105,11 +105,11 @@ def merge_spectral_tiles(**kwargs):
             # Save tile polygon
             tile_feature = os.path.join(work_geodatabase, 'tile_polygon')
             arcpy.CopyFeatures_management(tile_polygon, tile_feature)
-            arcpy.DefineProjection_management(tile_feature, composite_projection)
+            arcpy.DefineProjection_management(tile_feature, output_system)
 
             # Select tile extent with grid extent
             selection = int(arcpy.GetCount_management(
-                arcpy.SelectLayerByLocation_management(tile_feature,
+                arcpy.management.SelectLayerByLocation(tile_feature,
                                                        'INTERSECT',
                                                        grid_feature,
                                                        '',
@@ -119,14 +119,13 @@ def merge_spectral_tiles(**kwargs):
 
             # If tile overlaps grid then perform extraction
             if selection == 1:
-                # Start timing function
-                iteration_start = time.time()
-                print(f'\t\tExtracting spectral tile {count} of {input_length}...')
                 # Extract raster to mask
+                print(f'\t\tExtracting spectral tile {count} of {input_length}...')
+                iteration_start = time.time()
                 extract_raster = ExtractByMask(raster, grid_raster)
                 # Copy extracted raster to output
                 print(f'\t\tSaving spectral tile {count} of {input_length}...')
-                arcpy.CopyRaster_management(extract_raster,
+                arcpy.management.CopyRaster(extract_raster,
                                             output_raster,
                                             '',
                                             '0',
@@ -154,7 +153,7 @@ def merge_spectral_tiles(**kwargs):
 
             # Remove tile feature class
             if arcpy.Exists(tile_feature) == 1:
-                arcpy.Delete_management(tile_feature)
+                arcpy.management.Delete(tile_feature)
 
         # If extracted tile already exists then report message
         else:
@@ -168,24 +167,24 @@ def merge_spectral_tiles(**kwargs):
 
     # Remove grid feature
     if arcpy.Exists(grid_feature) == 1:
-        arcpy.Delete_management(grid_feature)
+        arcpy.management.Delete(grid_feature)
     print(f'\tFinished extracting {input_length} spectral tiles.')
     print('\t----------')
 
     # Mosaic raster tiles to new raster
     print(f'\tMosaicking the input rasters for {grid_title}...')
     iteration_start = time.time()
-    arcpy.MosaicToNewRaster_management(input_rasters,
+    arcpy.management.MosaicToNewRaster(input_rasters,
                                        mosaic_location,
                                        mosaic_name,
-                                       composite_projection,
+                                       output_system,
                                        '16_BIT_SIGNED',
                                        cell_size,
                                        '1',
                                        'MAXIMUM',
                                        'FIRST')
     # Enforce correct projection
-    arcpy.DefineProjection_management(mosaic_raster, composite_projection)
+    arcpy.management.DefineProjection(mosaic_raster, output_system)
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)
@@ -214,7 +213,7 @@ def merge_spectral_tiles(**kwargs):
     raster_filled = Nibble(Raster(mosaic_raster), raster_null, 'DATA_ONLY', 'PROCESS_NODATA', '')
     # Copy nibble raster to output
     print(f'\tSaving filled raster...')
-    arcpy.CopyRaster_management(raster_filled,
+    arcpy.management.CopyRaster(raster_filled,
                                 nibble_raster,
                                 '',
                                 '0',
@@ -237,12 +236,12 @@ def merge_spectral_tiles(**kwargs):
         f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
     print('\t----------')
 
-    # Remove overflow fill from the grid and the study area
-    print('\tRemoving overflow fill...')
+    # Remove overflow fill from the study area
+    print('\tRemoving overflow fill from study area...')
     iteration_start = time.time()
     raster_preliminary = ExtractByMask(nibble_raster, study_area)
-    # Copy nibble raster to output
-    arcpy.CopyRaster_management(raster_preliminary,
+    # Copy preliminary extracted raster to output
+    arcpy.management.CopyRaster(raster_preliminary,
                                 spectral_area,
                                 '',
                                 '0',
@@ -256,10 +255,20 @@ def merge_spectral_tiles(**kwargs):
                                 'NONE',
                                 'CURRENT_SLICE',
                                 'NO_TRANSPOSE')
-    raster_final = ExtractByMask(spectral_area, grid_raster)
-    print(f'\tSaving spectral composite for {grid_title}...')
+    # End timing
+    iteration_end = time.time()
+    iteration_elapsed = int(iteration_end - iteration_start)
+    iteration_success_time = datetime.datetime.now()
+    # Report success
+    print(
+        f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
+    print('\t----------')
+
+    # Remove overflow fill from the grid
+    print('\tRemoving overflow fill from grid...')
     iteration_start = time.time()
-    arcpy.CopyRaster_management(raster_final,
+    raster_final = ExtractByMask(spectral_area, grid_raster)
+    arcpy.management.CopyRaster(raster_final,
                                 spectral_grid,
                                 '',
                                 '0',
@@ -275,11 +284,11 @@ def merge_spectral_tiles(**kwargs):
                                 'NO_TRANSPOSE')
     # Delete intermediate rasters
     if arcpy.Exists(mosaic_raster) == 1:
-        arcpy.Delete_management(mosaic_raster)
+        arcpy.management.Delete(mosaic_raster)
     if arcpy.Exists(nibble_raster) == 1:
-        arcpy.Delete_management(nibble_raster)
+        arcpy.management.Delete(nibble_raster)
     if arcpy.Exists(spectral_area) == 1:
-        arcpy.Delete_management(spectral_area)
+        arcpy.management.Delete(spectral_area)
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)

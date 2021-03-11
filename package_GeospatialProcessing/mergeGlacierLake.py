@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Merge glaciers and lakes
 # Author: Timm Nawrocki
-# Last Updated: 2021-03-08
+# Last Updated: 2021-03-10
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Merge glaciers and lakes" is a function that lakes from the NHD Waterbodies with Glaciers.
 # ---------------------------------------------------------------------------
@@ -52,10 +52,9 @@ def merge_glaciers_lakes(**kwargs):
     # Output message of processing stage
     print(f'\tClipping input datasets to study area...')
 
-    # Start timing function
-    iteration_start = time.time()
     # Clip input waterbodies to study area
     print(f'\t\tClipping input waterbodies...')
+    iteration_start = time.time()
     arcpy.analysis.Clip(waterbodies, study_area, waterbodies_beringia)
     # End timing
     iteration_end = time.time()
@@ -66,10 +65,9 @@ def merge_glaciers_lakes(**kwargs):
         f'\t\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
     print('\t\t----------')
 
-    # Start timing function
-    iteration_start = time.time()
     # Clip input glaciers to study area
     print(f'\t\tClipping input glaciers...')
+    iteration_start = time.time()
     arcpy.analysis.Clip(glaciers, study_area, glaciers_beringia)
     # End timing
     iteration_end = time.time()
@@ -84,10 +82,9 @@ def merge_glaciers_lakes(**kwargs):
     print('\t----------')
     print(f'\tProjecting clipped datasets to AKALB...')
 
-    # Start timing function
-    iteration_start = time.time()
     # Project waterbodies to AKALB
     print('\t\tProjecting waterbodies to AKALB...')
+    iteration_start = time.time()
     arcpy.management.Project(waterbodies_beringia,
                              waterbodies_akalb,
                              akalb_system,
@@ -104,10 +101,9 @@ def merge_glaciers_lakes(**kwargs):
         f'\t\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
     print('\t\t----------')
 
-    # Start timing function
-    iteration_start = time.time()
     # Project glaciers to AKALB
     print('\t\tProjecting glaciers to AKALB...')
+    iteration_start = time.time()
     arcpy.management.Project(glaciers_beringia,
                              glaciers_akalb,
                              akalb_system,
@@ -127,10 +123,9 @@ def merge_glaciers_lakes(**kwargs):
     # End processing stage
     print('\t----------')
 
-    # Start timing function
-    iteration_start = time.time()
     # Select lakes from waterbodies
     print('\tSelecting lakes from waterbodies...')
+    iteration_start = time.time()
     waterbodies_layer = 'waterbodies_layer'
     arcpy.management.MakeFeatureLayer(waterbodies_akalb, waterbodies_layer)
     arcpy.management.SelectLayerByAttribute(waterbodies_layer,
@@ -148,10 +143,9 @@ def merge_glaciers_lakes(**kwargs):
         f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
     print('\t----------')
 
-    # Start timing function
-    iteration_start = time.time()
     # Merge lake and glacier features
     print('\tMerging lake and glacier features...')
+    iteration_start = time.time()
     # Merge lakes and glaciers
     arcpy.management.Merge([lakes_akalb, glaciers_akalb], lake_glacier)
     # End timing

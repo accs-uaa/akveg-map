@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Recent Fire History
 # Author: Timm Nawrocki
-# Last Updated: 2021-03-08
+# Last Updated: 2021-03-10
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Recent Fire History" is a function that extracts fire perimeter polygons from 1990-2020 to a new feature class.
 # ---------------------------------------------------------------------------
@@ -23,11 +23,7 @@ def recent_fire_history(**kwargs):
     # Import packages
     import arcpy
     import datetime
-    import os
     import time
-
-    # Set overwrite option
-    arcpy.env.overwriteOutput = True
 
     # Parse key word argument inputs
     work_geodatabase = kwargs['work_geodatabase']
@@ -36,16 +32,19 @@ def recent_fire_history(**kwargs):
     fire_history = kwargs['input_array'][0]
     recent_fire = kwargs['output_array'][0]
 
+    # Set overwrite option
+    arcpy.env.overwriteOutput = True
+
     # Set workspace
     arcpy.env.workspace = work_geodatabase
 
     # Select years from feature class and export to new feature class
-    iteration_start = time.time()
     print('\tCreating new fire feature class...')
+    iteration_start = time.time()
     fire_layer = 'fire_layer'
-    year_query = f"FireYear >= {year_start} And FireYear <= {year_end}"
-    arcpy.MakeFeatureLayer_management(fire_history, fire_layer, year_query)
-    arcpy.CopyFeatures_management(fire_layer, recent_fire)
+    year_query = f'FireYear >= {year_start} And FireYear <= {year_end}'
+    arcpy.management.MakeFeatureLayer(fire_history, fire_layer, year_query)
+    arcpy.management.CopyFeatures(fire_layer, recent_fire)
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)

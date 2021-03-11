@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Select features by location
 # Author: Timm Nawrocki
-# Last Updated: 2021-01-13
+# Last Updated: 2021-03-10
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Select features by location" selects features by intersection with a polygon feature class and exports the results as a new feature class.
 # ---------------------------------------------------------------------------

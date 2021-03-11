@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Calculate Land Surface Temperature Summer Warmth Index
 # Author: Timm Nawrocki
-# Last Updated: 2021-01-13
+# Last Updated: 2021-03-10
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Calculate Land Surface Temperature Summer Warmth Index" is a function that sums LST means from May-September and then reprojects them to Alaska Albers Equal Area Conic.
 # ---------------------------------------------------------------------------
@@ -30,9 +30,6 @@ def calculate_lst_warmth_index(**kwargs):
     import os
     import time
 
-    # Set overwrite option
-    arcpy.env.overwriteOutput = True
-
     # Parse key word argument inputs
     cell_size = kwargs['cell_size']
     input_projection = kwargs['input_projection']
@@ -42,15 +39,18 @@ def calculate_lst_warmth_index(**kwargs):
     study_area = input_rasters.pop(0)
     lst_processed = kwargs['output_array'][0]
 
-    # Define intermediate dataset
-    reprojected_raster = os.path.splitext(lst_processed)[0] + '_reprojected.tif'
-
-    # Define the original and target projection
-    original_projection = arcpy.SpatialReference(input_projection)
-    target_projection = arcpy.SpatialReference(output_projection)
+    # Set overwrite option
+    arcpy.env.overwriteOutput = True
 
     # Set snap raster
     arcpy.env.snapRaster = input_rasters[0]
+
+    # Define intermediate dataset
+    reprojected_raster = os.path.splitext(lst_processed)[0] + '_reprojected.tif'
+
+    # Define the coordinate systems
+    input_system = arcpy.SpatialReference(input_projection)
+    output_system = arcpy.SpatialReference(output_projection)
 
     # Calculate LST sum
     print('\tCalculating MODIS LST Warmth Index...')
@@ -74,12 +74,12 @@ def calculate_lst_warmth_index(**kwargs):
     iteration_start = time.time()
     arcpy.management.ProjectRaster(lst_warmth,
                                    reprojected_raster,
-                                   target_projection,
+                                   output_system,
                                    'BILINEAR',
                                    cell_size,
                                    geographic_transform,
                                    '',
-                                   original_projection)
+                                   input_system)
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)
