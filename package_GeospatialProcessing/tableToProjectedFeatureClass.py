@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Table to Projected Feature Class
 # Author: Timm Nawrocki
-# Last Updated: 2021-03-10
+# Last Updated: 2021-03-11
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Table to Projected Feature Class" is a function that converts a csv table containing point coordinates in a geographic coordinate system to feature class with a projected coordinate system and clipped to a study area.
 # ---------------------------------------------------------------------------
@@ -82,6 +82,11 @@ def table_to_feature_projected(**kwargs):
                         output_feature)
     # Add XY coordinates
     arcpy.management.AddXY(output_feature)
+    # Delete intermediate datasets if they exist
+    if arcpy.Exists(table_initial) == 1:
+        arcpy.management.Delete(table_initial)
+    if arcpy.Exists(table_projected) == 1:
+        arcpy.management.Delete(table_projected)
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)
