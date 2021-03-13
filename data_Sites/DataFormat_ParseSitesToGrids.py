@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Parse Sites to Grids
 # Author: Timm Nawrocki
-# Last Updated: 2020-11-30
+# Last Updated: 2021-03-12
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Parse Sites to Grids" prepares a table of point data for feature extraction by selecting appropriate raster cells based on cell size and splits raster points by major grids.
 # ---------------------------------------------------------------------------
@@ -12,51 +12,118 @@ import arcpy
 import os
 from package_GeospatialProcessing import arcpy_geoprocessing
 from package_GeospatialProcessing import format_site_data
+from package_GeospatialProcessing import merge_sites
 from package_GeospatialProcessing import parse_site_data
+from package_GeospatialProcessing import table_to_feature_projected
 
 # Set root directory
 drive = 'N:/'
 root_folder = 'ACCS_Work'
 
 # Define data folder
-data_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input')
+data_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data')
 
 # Create parsed folder within data folder if it does not already exist
-parsed_folder = os.path.join(data_folder, 'sites/parsed')
+parsed_folder = os.path.join(data_folder, 'Data_Input/sites/parsed')
 if os.path.exists(parsed_folder) == 0:
     os.mkdir(parsed_folder)
 
 # Define work environment
-work_geodatabase = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/BeringiaVegetation.gdb')
+work_geodatabase = os.path.join(drive, root_folder,
+                                'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/BeringiaVegetation.gdb')
 
 # Define input datasets
-site_table = os.path.join(data_folder, 'sites/sites_all.csv')
+sites_file = os.path.join(data_folder, 'Data_Input/sites/sites_all.csv')
+absences_glacier = os.path.join(work_geodatabase, 'Absences_Glacier')
+absences_lake = os.path.join(work_geodatabase, 'Absences_Lake')
+absences_picea = os.path.join(work_geodatabase, 'Absences_Picea')
+absences_betula = os.path.join(work_geodatabase, 'Absences_BetulaTrees')
 study_area = os.path.join(work_geodatabase, 'NorthAmericanBeringia_ModelArea')
 grid_major = os.path.join(drive, root_folder, 'Data/analyses/NorthAmericanBeringia_GridIndex_Major_400km_Selected.shp')
-snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/northAmericanBeringia_ModelArea.tif')
+snap_raster = os.path.join(data_folder, 'Data_Input/northAmericanBeringia_ModelArea.tif')
 
 # Define output point feature class
-sites_formatted = os.path.join(work_geodatabase, 'sites_formatted')
+sites_feature = os.path.join(work_geodatabase, 'Sites_Databases_AKALB')
+merged_feature = os.path.join(work_geodatabase, 'Sites_All_AKALB')
+merged_file = os.path.join(data_folder, 'Data_Input/sites/sites_merged.csv')
+sites_formatted = os.path.join(work_geodatabase, 'Sites_Formatted_AKALB')
 
-# Set overwrite option
-arcpy.env.overwriteOutput = True
+# Convert sites csv table to point feature class if it does not already exist
+if arcpy.Exists(sites_feature) == 0:
 
-# Define input and output arrays
-sites_inputs = [site_table, study_area, snap_raster]
-sites_outputs = [sites_formatted]
+    # Define input and output arrays for table conversion
+    table_inputs = [study_area, sites_file]
+    table_outputs = [sites_feature]
+
+    # Create key word arguments
+    table_kwargs = {'input_projection': 4269,
+                    'output_projection': 3338,
+                    'geographic_transformation': '',
+                    'work_geodatabase': work_geodatabase,
+                    'input_array': table_inputs,
+                    'output_array': table_outputs
+                    }
+
+    # Convert table to points
+    print(f'Converting table to projected points feature class for study area...')
+    arcpy_geoprocessing(table_to_feature_projected, **table_kwargs)
+    print('----------')
+
+else:
+    print('Projected points feature class for study area already exists.')
+    print('----------')
+
+# Merge site data with synthetic absences if merged data does not already exist
+if arcpy.Exists(merged_feature) == 0:
+
+    # Define output fields
+    output_fields = ['site_code',
+                     'initial_project',
+                     'perspective',
+                     'cover_method',
+                     'scope_vascular',
+                     'scope_bryophyte',
+                     'scope_lichen',
+                     'plot_dimensions',
+                     'POINT_X',
+                     'POINT_Y']
+
+    # Define input and output arrays for site merge
+    merge_inputs = [sites_feature, absences_glacier, absences_lake, absences_picea, absences_betula]
+    merge_outputs = [merged_feature, merged_file]
+
+    # Create key word arguments
+    merge_kwargs = {'output_fields': output_fields,
+                    'work_geodatabase': work_geodatabase,
+                    'input_array': merge_inputs,
+                    'output_array': merge_outputs
+                    }
+
+    # Merge site and synthetic absence points
+    print(f'Merging site points with synthetic absence points...')
+    arcpy_geoprocessing(merge_sites, **merge_kwargs)
+    print('----------')
+
+else:
+    print('Merged sites feature class already exists.')
+    print('----------')
+
+# Define input and output arrays to format site data
+format_inputs = [merged_feature, study_area, snap_raster]
+format_outputs = [sites_formatted]
 
 # Create key word arguments
-sites_kwargs = {'work_geodatabase': work_geodatabase,
-                'input_array': sites_inputs,
-                'output_array': sites_outputs
-                }
+format_kwargs = {'work_geodatabase': work_geodatabase,
+                 'input_array': format_inputs,
+                 'output_array': format_outputs
+                 }
 
 # Format site data
 print(f'Formatting site data...')
-arcpy_geoprocessing(format_site_data, **sites_kwargs)
+arcpy_geoprocessing(format_site_data, **format_kwargs)
 print('----------')
 
-# Define input array
+# Define input array to parse sites
 parsed_inputs = [sites_formatted, grid_major]
 
 # Initiate a search cursor to read the grid name for each grid

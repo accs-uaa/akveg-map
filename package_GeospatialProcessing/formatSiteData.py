@@ -53,19 +53,26 @@ def format_site_data(**kwargs):
     arcpy.management.CopyFeatures(site_feature, sites_buffer_distance)
     codeblock = """def set_buffer_distance(plot_dimensions):
     if (plot_dimensions == '10×10'
+    or plot_dimensions == '10×12'
+    or plot_dimensions == '12×12'
+    or plot_dimensions == '15×15'
+    or plot_dimensions == '15×18'
+    or plot_dimensions == '18×18'
     or plot_dimensions == '5 radius'
     or plot_dimensions == '8×10'
     or plot_dimensions == '8×12'
     or plot_dimensions == '8×8'):
         return 1
     elif (plot_dimensions == '10 radius'
+    or plot_dimensions == '15 radius'
     or plot_dimensions == '8 radius'
     or plot_dimensions == '20×20'
     or plot_dimensions == '15 radius'
     or plot_dimensions == '30×30'
     or plot_dimensions == '20 radius'):
         return 15
-    elif plot_dimensions == '23 radius':
+    elif (plot_dimensions == '23 radius'
+    or plot_dimensions == '50×50'):
         return 18
     elif plot_dimensions == '30 radius':
         return 25
@@ -78,7 +85,7 @@ def format_site_data(**kwargs):
                               'SHORT')
     arcpy.management.CalculateField(sites_buffer_distance,
                                     'buffer_distance',
-                                    'set_buffer_distance(!plotDimensions!)',
+                                    'set_buffer_distance(!plot_dimensions!)',
                                     'PYTHON3',
                                     codeblock)
     # Create a new feature class of plot locations that will not be buffered
@@ -147,10 +154,8 @@ def format_site_data(**kwargs):
                                   'scope_bryophyte',
                                   'scope_lichen',
                                   'plot_dimensions',
-                                  'datum',
-                                  'latitude',
-                                  'longitude',
-                                  'error',
+                                  'POINT_X',
+                                  'POINT_Y',
                                   'buffer_distance',
                                   'pointid',
                                   'grid_code'])

@@ -105,6 +105,8 @@ site_cakn = read_xlsx(site_cakn_file, sheet = site_sheet)
 # Merge site table
 site_data = rbind(site_akveg, site_abr, site_arcn, site_cakn)
 site_data = site_data %>%
+  # Assume 23 m radius to approximate aerial plot size
+  mutate(plot_dimensions = ifelse(perspective == 'aerial', '23 radius', plot_dimensions)) %>%
   select(-site_id)
 
 # Export data

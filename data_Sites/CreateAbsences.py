@@ -62,11 +62,11 @@ if arcpy.Exists(sites_feature) == 0:
     # Convert table to points
     print(f'Converting table to projected points feature class for study area...')
     arcpy_geoprocessing(table_to_feature_projected, **table_kwargs)
-    print('\t----------')
+    print('----------')
 
 else:
     print('Projected points feature class for study area already exists.')
-    print('\t----------')
+    print('----------')
 
 # Generate random glacier absences feature class if it does not already exist
 if arcpy.Exists(absences_glacier) == 0:
@@ -102,7 +102,7 @@ if arcpy.Exists(absences_lake) == 0:
 
     # Create key word arguments
     lake_kwargs = {'number_points': 170,
-                   'minimum_distance': '5 Kilometers',
+                   'minimum_distance': '2 Kilometers',
                    'site_prefix': 'LAKES',
                    'initial_project': 'Lake Absences',
                    'selection_query': selection_query,
@@ -128,7 +128,7 @@ if arcpy.Exists(absences_picea) == 0:
 
     # Create key word arguments
     picea_kwargs = {'number_points': 150,
-                    'minimum_distance': '10 Kilometers',
+                    'minimum_distance': '5 Kilometers',
                     'site_prefix': 'PICEA',
                     'initial_project': 'Picea Absences',
                     'selection_query': '',
@@ -154,7 +154,7 @@ if arcpy.Exists(absences_betula) == 0:
 
     # Create key word arguments
     betula_kwargs = {'number_points': 250,
-                     'minimum_distance': '10 Kilometers',
+                     'minimum_distance': '5 Kilometers',
                      'site_prefix': 'BETTRE',
                      'initial_project': 'Betula Tree Absences',
                      'selection_query': '',
