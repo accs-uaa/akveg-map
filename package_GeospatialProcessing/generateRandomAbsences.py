@@ -213,7 +213,7 @@ def generate_random_absences(**kwargs):
     arcpy.management.AddField(output_feature, 'scope_lichen', 'TEXT')
     arcpy.management.CalculateField(output_feature, 'scope_lichen', '"none"')
     arcpy.management.AddField(output_feature, 'plot_dimensions', 'TEXT')
-    arcpy.management.CalculateField(output_feature, 'plot_dimensions', '"23 radius"')
+    arcpy.management.CalculateField(output_feature, 'plot_dimensions', '"20 radius"')
     arcpy.management.AddXY(output_feature)
     # Delete intermediate datasets if they exist
     if arcpy.Exists(mask_selected) == 1:

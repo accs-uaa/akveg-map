@@ -39,12 +39,12 @@ absences_lake = os.path.join(work_geodatabase, 'Absences_Lake')
 absences_picea = os.path.join(work_geodatabase, 'Absences_Picea')
 absences_betula = os.path.join(work_geodatabase, 'Absences_BetulaTrees')
 study_area = os.path.join(work_geodatabase, 'NorthAmericanBeringia_ModelArea')
-grid_major = os.path.join(drive, root_folder, 'Data/analyses/NorthAmericanBeringia_GridIndex_Major_400km_Selected.shp')
-snap_raster = os.path.join(data_folder, 'Data_Input/northAmericanBeringia_ModelArea.tif')
+grid_major = os.path.join(work_geodatabase, 'NorthAmericanBeringia_GridIndex_Major_400km_Selected')
+area_of_interest = os.path.join(data_folder, 'Data_Input/northAmericanBeringia_ModelArea.tif')
 
 # Define output point feature class
 sites_feature = os.path.join(work_geodatabase, 'Sites_Databases_AKALB')
-merged_feature = os.path.join(work_geodatabase, 'Sites_All_AKALB')
+merged_feature = os.path.join(work_geodatabase, 'Sites_Merged_AKALB')
 merged_file = os.path.join(data_folder, 'Data_Input/sites/sites_merged.csv')
 sites_formatted = os.path.join(work_geodatabase, 'Sites_Formatted_AKALB')
 
@@ -108,27 +108,33 @@ else:
     print('Merged sites feature class already exists.')
     print('----------')
 
-# Define input and output arrays to format site data
-format_inputs = [merged_feature, study_area, snap_raster]
-format_outputs = [sites_formatted]
+# Format site data if it does not already exist
+if arcpy.Exists(sites_formatted) == 0:
+    # Define input and output arrays to format site data
+    format_inputs = [merged_feature, area_of_interest]
+    format_outputs = [sites_formatted]
 
-# Create key word arguments
-format_kwargs = {'work_geodatabase': work_geodatabase,
-                 'input_array': format_inputs,
-                 'output_array': format_outputs
-                 }
+    # Create key word arguments
+    format_kwargs = {'work_geodatabase': work_geodatabase,
+                     'input_array': format_inputs,
+                     'output_array': format_outputs
+                     }
 
-# Format site data
-print(f'Formatting site data...')
-arcpy_geoprocessing(format_site_data, **format_kwargs)
-print('----------')
+    # Format site data
+    print(f'Formatting site data...')
+    arcpy_geoprocessing(format_site_data, **format_kwargs)
+    print('----------')
 
-# Define input array to parse sites
+else:
+    print('Formatted data already exists.')
+    print('----------')
+
+# Parse site data to grids with a search cursor
 parsed_inputs = [sites_formatted, grid_major]
-
-# Initiate a search cursor to read the grid name for each grid
 with arcpy.da.SearchCursor(grid_major, ['Major']) as cursor:
+    # Iterate through each grid in major grid
     for row in cursor:
+        # Identify grid name
         grid_name = row[0]
 
         # Define output array

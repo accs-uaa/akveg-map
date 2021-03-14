@@ -20,13 +20,14 @@ def format_site_data(**kwargs):
 
     # Import packages
     import arcpy
+    from arcpy.sa import Raster
     import datetime
     import os
     import time
 
     # Parse key word argument inputs
     work_geodatabase = kwargs['work_geodatabase']
-    site_feature = kwargs['input_array'][0]
+    sites_feature = kwargs['input_array'][0]
     area_of_interest = kwargs['input_array'][1]
     sites_formatted = kwargs['output_array'][0]
 
@@ -36,50 +37,59 @@ def format_site_data(**kwargs):
     # Set workspace
     arcpy.env.workspace = work_geodatabase
 
-    # Set snap raster
+    # Set snap raster and extent
     arcpy.env.snapRaster = area_of_interest
+    arcpy.env.extent = Raster(area_of_interest).extent
+
+    # Set cell size
+    arcpy.env.cellSize = 2
 
     # Define intermediate datasets
     sites_buffer_distance = os.path.join(work_geodatabase, 'sites_buffer_distance')
-    sites_selected_point = os.path.join(work_geodatabase, 'sites_selected_points')
     sites_selected_toBuffer = os.path.join(work_geodatabase, 'sites_selected_toBuffer')
     sites_selected_buffered = os.path.join(work_geodatabase, 'sites_selected_buffered')
     sites_selected_raster = os.path.join(work_geodatabase, 'sites_selected_raster')
-    sites_selected_converted = os.path.join(work_geodatabase, 'sites_selected_converted')
 
     # Add a new field for the buffer distance and calculate buffer distance from plot dimensions for a copy of the feature class
     print('\tSelecting plots for analysis based on plot geometry...')
     iteration_start = time.time()
-    arcpy.management.CopyFeatures(site_feature, sites_buffer_distance)
+    arcpy.management.CopyFeatures(sites_feature, sites_buffer_distance)
     codeblock = """def set_buffer_distance(plot_dimensions):
-    if (plot_dimensions == '10×10'
-    or plot_dimensions == '10×12'
-    or plot_dimensions == '12×12'
-    or plot_dimensions == '15×15'
-    or plot_dimensions == '15×18'
-    or plot_dimensions == '18×18'
-    or plot_dimensions == '5 radius'
-    or plot_dimensions == '8×10'
-    or plot_dimensions == '8×12'
-    or plot_dimensions == '8×8'):
-        return 1
-    elif (plot_dimensions == '10 radius'
-    or plot_dimensions == '15 radius'
-    or plot_dimensions == '8 radius'
-    or plot_dimensions == '20×20'
-    or plot_dimensions == '15 radius'
-    or plot_dimensions == '30×30'
-    or plot_dimensions == '20 radius'):
-        return 15
-    elif (plot_dimensions == '23 radius'
-    or plot_dimensions == '50×50'):
-        return 18
-    elif plot_dimensions == '30 radius':
-        return 25
-    elif plot_dimensions == '34.7 radius':
-        return 30
-    else:
-        return 0"""
+        if (plot_dimensions == '5 radius'
+        or plot_dimensions == '8×10'
+        or plot_dimensions == '8×12'
+        or plot_dimensions == '8×8'):
+            return 4
+        elif (plot_dimensions == '10×10'
+        or plot_dimensions == '10×12'):
+            return 5
+        elif plot_dimensions == '12×12':
+            return 6
+        elif (plot_dimensions == '15×15'
+        or plot_dimensions == '15×18'
+        or plot_dimensions == '8 radius'):
+            return 7
+        elif (plot_dimensions == '18×18'
+        or plot_dimensions == '10 radius'):
+            return 9
+        elif plot_dimensions == '20×20':
+            return 10
+        elif plot_dimensions == '15 radius':
+            return 14
+        elif plot_dimensions == '30×30':
+            return 15
+        elif plot_dimensions == '20 radius':
+            return 19
+        elif plot_dimensions == '23 radius':
+            return 22
+        elif plot_dimensions == '50×50':
+            return 25
+        elif plot_dimensions == '30 radius':
+            return 29
+        elif plot_dimensions == '34.7 radius':
+            return 34
+        else:
+            return 0"""
     arcpy.management.AddField(sites_buffer_distance,
                               'buffer_distance',
                               'SHORT')
@@ -88,16 +98,10 @@ def format_site_data(**kwargs):
                                     'set_buffer_distance(!plot_dimensions!)',
                                     'PYTHON3',
                                     codeblock)
-    # Create a new feature class of plot locations that will not be buffered
-    arcpy.management.MakeFeatureLayer(sites_buffer_distance,
-                                      'sites_selected_point_layer',
-                                      'buffer_distance = 1')
-    arcpy.management.CopyFeatures('sites_selected_point_layer',
-                                  sites_selected_point)
     # Create a new feature class of plot locations that will be buffered
     arcpy.management.MakeFeatureLayer(sites_buffer_distance,
                                       'sites_selected_toBuffer_layer',
-                                      'buffer_distance IN (15, 18, 25, 30)')
+                                      'buffer_distance > 0')
     arcpy.management.CopyFeatures('sites_selected_toBuffer_layer',
                                   sites_selected_toBuffer)
     # End timing
@@ -105,12 +109,15 @@ def format_site_data(**kwargs):
     iteration_elapsed = int(iteration_end - iteration_start)
     iteration_success_time = datetime.datetime.now()
     # Report success
-    print(f'\tPlot selection completed at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
+    print(
+        f'\tPlot selection completed at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
     print('\t----------')
 
     # Buffer points and select raster cells to represent plot
-    print('\tSelecting raster cells to represent large plots...')
+    print('\tGenerating raster cells to represent plots...')
     iteration_start = time.time()
+    # Buffer sites
+    print('\t\tBuffering sites...')
     arcpy.analysis.Buffer(sites_selected_toBuffer,
                           sites_selected_buffered,
                           'buffer_distance',
@@ -119,59 +126,40 @@ def format_site_data(**kwargs):
                           'NONE',
                           '',
                           'PLANAR')
+    print('\t\tConverting buffered sites to raster...')
+    # Convert buffered sites to raster
     arcpy.conversion.PolygonToRaster(sites_selected_buffered,
                                      'site_code',
                                      sites_selected_raster,
                                      'CELL_CENTER',
                                      '',
-                                     10
+                                     2,
+                                     'BUILD'
                                      )
-    arcpy.conversion.RasterToPoint(sites_selected_raster,
-                                   sites_selected_converted,
-                                   'site_code')
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)
     iteration_success_time = datetime.datetime.now()
     # Report success
-    print(f'\tRaster cell selection completed at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
+    print(
+        f'\tPlot selection completed at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
     print('\t----------')
 
-    # Merge plots and remove intermediate fields and data
-    print(f'\tMerging selected raster cell points...')
+    # Convert raster cells to points for data extraction
+    print('\tBuilding extraction points...')
     iteration_start = time.time()
-    # Merge the plot points and converted buffered points
-    arcpy.management.Merge([sites_selected_point, sites_selected_converted],
-                           sites_formatted,
-                           '',
-                           '')
-    # Delete all fields except site code
-    arcpy.management.DeleteField(sites_formatted,
-                                 ['initial_project',
-                                  'perspective',
-                                  'cover_method',
-                                  'scope_vascular',
-                                  'scope_bryophyte',
-                                  'scope_lichen',
-                                  'plot_dimensions',
-                                  'POINT_X',
-                                  'POINT_Y',
-                                  'buffer_distance',
-                                  'pointid',
-                                  'grid_code'])
+    arcpy.conversion.RasterToPoint(sites_selected_raster,
+                                   sites_formatted,
+                                   'site_code')
     # Delete intermediate feature classes and rasters
     if arcpy.Exists(sites_buffer_distance) == 1:
         arcpy.management.Delete(sites_buffer_distance)
-    if arcpy.Exists(sites_selected_point) == 1:
-        arcpy.management.Delete(sites_selected_point)
     if arcpy.Exists(sites_selected_toBuffer) == 1:
         arcpy.management.Delete(sites_selected_toBuffer)
     if arcpy.Exists(sites_selected_buffered) == 1:
         arcpy.management.Delete(sites_selected_buffered)
     if arcpy.Exists(sites_selected_raster) == 1:
         arcpy.management.Delete(sites_selected_raster)
-    if arcpy.Exists(sites_selected_converted) == 1:
-        arcpy.management.Delete(sites_selected_converted)
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)
@@ -180,5 +168,5 @@ def format_site_data(**kwargs):
     print(
         f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
     print('\t----------')
-    out_process = f'Successfully formatted site data for feature extraction.'
+    out_process = f'Successfully formatted site data for data extraction.'
     return out_process
