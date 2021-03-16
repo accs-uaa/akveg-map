@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Prepare Class Data - Deciduous Trees
+# Prepare Class Data - Dryas
 # Author: Timm Nawrocki
 # Last Updated: 2021-03-15
 # Usage: Must be executed in R 4.0.0+.
-# Description: "Prepare Class Data - Deciduous Trees" prepares the map class data for statistical modeling.
+# Description: "Prepare Class Data - Dryas" prepares the map class data for statistical modeling.
 # ---------------------------------------------------------------------------
 
 # Set root directory
@@ -22,8 +22,8 @@ site_file = paste(data_folder,
                   'sites/sites_extracted.csv',
                   sep = '/')
 cover_file = paste(data_folder,
-                   'species_data/cover_all.csv',
-                   sep = '/')
+                     'species_data/cover_all.csv',
+                     sep = '/')
 
 # Import required libraries for geospatial processing: dplyr, readxl, stringr, and tidyr.
 library(dplyr)
@@ -56,12 +56,7 @@ site_visit = cover_data %>%
 
 # Filter the cover data to include only the map class
 presence_data = cover_data %>%
-  filter(name_accepted == 'Betula neoalaskana' |
-           name_accepted == 'Betula kenaica' |
-           name_accepted == 'Populus balsamifera' |
-           name_accepted == 'Populus tremuloides' |
-           name_accepted == 'Populus trichocarpa' |
-           name_accepted == 'Deciduous Tree') %>%
+  filter(genus == 'Dryas') %>%
   group_by(site_code, project, year, day, name_accepted, genus) %>%
   summarize(cover = max(cover))
 
@@ -69,8 +64,8 @@ presence_data = cover_data %>%
 presence_data = presence_data %>%
   group_by(site_code, project, year, day) %>%
   summarize(cover = sum(cover)) %>%
-  mutate(name_accepted = 'Deciduous Trees') %>%
-  mutate(genus = 'Deciduous Trees') %>%
+  mutate(name_accepted = 'Dryas Shrubs') %>%
+  mutate(genus = 'Dryas') %>%
   mutate(zero = ifelse(cover < 0.5, 0, 1))
 
 #### CREATE ABSENCE DATA
@@ -91,14 +86,14 @@ absence_synthetic = site_data %>%
   mutate(year = 9999) %>%
   mutate(day = 196) %>%
   rename(project = initial_project)
-
+  
 # Merge observed and synthetic absences
 absence_data = rbind(absence_observed, absence_synthetic)
 
 # Add map class information to absences
 absence_data = absence_data %>%
-  mutate(name_accepted = 'Deciduous Trees') %>%
-  mutate(genus = 'Deciduous Trees') %>%
+  mutate(name_accepted = 'Dryas Shrubs') %>%
+  mutate(genus = 'Dryas') %>%
   mutate(cover = 0) %>%
   mutate(zero = 0)
 
@@ -136,7 +131,7 @@ map_class = combined_data %>%
   filter(project != 'USFWS SELA PA') %>%
   filter(project != 'USFWS Selawik LC') %>%
   filter(project != 'Wrangell LC')
-
+  
 # Remove NPS I&M Data for non-spruce species/groups
 map_class = map_class %>%
   filter(project != 'NPS ARCN I&M') %>%
@@ -146,7 +141,8 @@ map_class = map_class %>%
 
 # Identify sites that are inappropriate for the modeled class
 remove_sites = cover_data %>%
-  filter(name_accepted == 'Betula' &
+  filter((name_accepted == 'Dwarf Shrub' |
+            name_accepted == 'Shrub') &
            cover > 1) %>%
   distinct(site_code)
 
@@ -157,5 +153,5 @@ map_class = map_class %>%
 #### EXPORT DATA
 
 # Export map class data as csv
-output_csv = paste(data_folder, 'species_data/mapClass_dectre.csv', sep = '/')
+output_csv = paste(data_folder, 'species_data/mapClass_dryas.csv', sep = '/')
 write.csv(map_class, file = output_csv, fileEncoding = 'UTF-8')

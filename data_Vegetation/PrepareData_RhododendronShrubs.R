@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Prepare Class Data - Deciduous Trees
+# Prepare Class Data - Rhododendron Shrubs
 # Author: Timm Nawrocki
 # Last Updated: 2021-03-15
 # Usage: Must be executed in R 4.0.0+.
-# Description: "Prepare Class Data - Deciduous Trees" prepares the map class data for statistical modeling.
+# Description: "Prepare Class Data - Rhododendron Shrubs" prepares the map class data for statistical modeling.
 # ---------------------------------------------------------------------------
 
 # Set root directory
@@ -56,12 +56,11 @@ site_visit = cover_data %>%
 
 # Filter the cover data to include only the map class
 presence_data = cover_data %>%
-  filter(name_accepted == 'Betula neoalaskana' |
-           name_accepted == 'Betula kenaica' |
-           name_accepted == 'Populus balsamifera' |
-           name_accepted == 'Populus tremuloides' |
-           name_accepted == 'Populus trichocarpa' |
-           name_accepted == 'Deciduous Tree') %>%
+  filter(name_accepted == 'Rhododendron groenlandicum' |
+           name_accepted == 'Rhododendron lapponicum' |
+           name_accepted == 'Rhododendron lapponicum ssp. alpinum' |
+           name_accepted == 'Rhododendron tomentosum' |
+           name_accepted == 'Rhododendron tomentosum ssp. decumbens') %>%
   group_by(site_code, project, year, day, name_accepted, genus) %>%
   summarize(cover = max(cover))
 
@@ -69,8 +68,8 @@ presence_data = cover_data %>%
 presence_data = presence_data %>%
   group_by(site_code, project, year, day) %>%
   summarize(cover = sum(cover)) %>%
-  mutate(name_accepted = 'Deciduous Trees') %>%
-  mutate(genus = 'Deciduous Trees') %>%
+  mutate(name_accepted = 'Rhododendron Shrubs') %>%
+  mutate(genus = 'Rhododendron') %>%
   mutate(zero = ifelse(cover < 0.5, 0, 1))
 
 #### CREATE ABSENCE DATA
@@ -97,8 +96,8 @@ absence_data = rbind(absence_observed, absence_synthetic)
 
 # Add map class information to absences
 absence_data = absence_data %>%
-  mutate(name_accepted = 'Deciduous Trees') %>%
-  mutate(genus = 'Deciduous Trees') %>%
+  mutate(name_accepted = 'Rhododendron Shrubs') %>%
+  mutate(genus = 'Rhododendron') %>%
   mutate(cover = 0) %>%
   mutate(zero = 0)
 
@@ -146,7 +145,9 @@ map_class = map_class %>%
 
 # Identify sites that are inappropriate for the modeled class
 remove_sites = cover_data %>%
-  filter(name_accepted == 'Betula' &
+  filter((name_accepted == 'Rhododendron' |
+            name_accepted == 'Coniferous Shrub' |
+            name_accepted == 'Shrub') &
            cover > 1) %>%
   distinct(site_code)
 
@@ -157,5 +158,5 @@ map_class = map_class %>%
 #### EXPORT DATA
 
 # Export map class data as csv
-output_csv = paste(data_folder, 'species_data/mapClass_dectre.csv', sep = '/')
+output_csv = paste(data_folder, 'species_data/mapClass_rhoshr.csv', sep = '/')
 write.csv(map_class, file = output_csv, fileEncoding = 'UTF-8')

@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Extract Features to Sites
 # Author: Timm Nawrocki
-# Last Updated: 2020-11-30
+# Last Updated: 2021-03-14
 # Usage: Must be executed in R 4.0.0+.
 # Description: "Extract Features to Sites" extracts data from rasters to points representing plot locations and collapses multi-point plots into single points with plot-level means.
 # ---------------------------------------------------------------------------
@@ -10,6 +10,12 @@
 # Set root directory
 drive = 'N:'
 root_folder = 'ACCS_Work'
+
+# Define data folder
+data_folder = paste(drive,
+                    root_folder,
+                    'Data',
+                    sep ='/')
 
 # Define input folders
 site_folder = paste(drive,
@@ -19,42 +25,33 @@ site_folder = paste(drive,
 parsed_folder = paste(site_folder,
                       'parsed',
                       sep = '/')
-topography_folder = paste(drive,
-                          root_folder,
-                          'Data/topography/Composite_10m_Beringia/gridded_select',
+topography_folder = paste(data_folder,
+                          'topography/Composite_10m_Beringia/integer/gridded_select',
                           sep = '/')
-sentinel1_folder = paste(drive,
-                         root_folder,
-                         'Data/imagery/sentinel-1/gridded_select',
+sentinel1_folder = paste(data_folder,
+                         'imagery/sentinel-1/gridded',
                          sep = '/')
-sentinel2_folder = paste(drive,
-                         root_folder,
-                         'Data/imagery/sentinel-2/gridded_select',
+sentinel2_folder = paste(data_folder,
+                         'imagery/sentinel-2/gridded',
                          sep = '/')
-modis_folder = paste(drive,
-                     root_folder,
-                     'Data/imagery/modis/gridded_select',
+modis_folder = paste(data_folder,
+                     'imagery/modis/gridded',
                      sep = '/')
-climate_folder = paste(drive,
-                       root_folder,
-                       'Data/climatology/SNAP_NorthwestNorthAmerica_10m/gridded_select',
-                       sep = '/')
-fire_folder = paste(drive,
-                    root_folder,
-                    'Data/climatology/Fire/gridded_select',
+temperature_folder = paste(data_folder,
+                           'climatology/temperature/gridded',
+                           sep = '/')
+precipitation_folder = paste(data_folder,
+                             'climatology/precipitation/gridded',
+                             sep = '/')
+fire_folder = paste(data_folder,
+                    'climatology/fire/gridded',
                     sep = '/')
 
 # Define input site metadata
 site_file = paste(site_folder,
-                  'sites_all.csv',
+                  'sites_merged.csv',
                   sep = '/')
 
-# Install required libraries if they are not already installed.
-Required_Packages <- c('dplyr', 'raster', 'rgdal', 'sp', 'stringr', 'tidyr')
-New_Packages <- Required_Packages[!(Required_Packages %in% installed.packages()[,"Package"])]
-if (length(New_Packages) > 0) {
-  install.packages(New_Packages)
-}
 # Import required libraries for geospatial processing: dplyr, raster, rgdal, sp, and stringr.
 library(dplyr)
 library(raster)
@@ -90,7 +87,8 @@ for (grid in grid_list) {
   sentinel1_grid = paste(sentinel1_folder, grid_folder, sep = '/')
   sentinel2_grid = paste(sentinel2_folder, grid_folder, sep = '/')
   modis_grid = paste(modis_folder, grid_folder, sep = '/')
-  climate_grid = paste(climate_folder, grid_folder, sep = '/')
+  temperature_grid = paste(temperature_folder, grid_folder, sep = '/')
+  precipitation_grid = paste(precipitation_folder, grid_folder, sep = '/')
   fire_grid = paste(fire_folder, grid_folder, sep = '/')
   
   # Create a list of all predictor rasters
@@ -98,13 +96,15 @@ for (grid in grid_list) {
   predictors_sentinel1 = list.files(sentinel1_grid, pattern = 'tif$', full.names = TRUE)
   predictors_sentinel2 = list.files(sentinel2_grid, pattern = 'tif$', full.names = TRUE)
   predictors_modis = list.files(modis_grid, pattern = 'tif$', full.names = TRUE)
-  predictors_climate = list.files(climate_grid, pattern = 'tif$', full.names = TRUE)
+  predictors_temperature = list.files(temperature_grid, pattern = 'tif$', full.names = TRUE)
+  predictors_precipitation = list.files(precipitation_grid, pattern = 'tif$', full.names = TRUE)
   predictors_fire = list.files(fire_grid, pattern = 'tif$', full.names = TRUE)
   predictors_all = c(predictors_topography,
                      predictors_sentinel1,
                      predictors_sentinel2,
                      predictors_modis,
-                     predictors_climate,
+                     predictors_temperature,
+                     predictors_precipitation,
                      predictors_fire)
   print("Number of predictor rasters:")
   print(length(predictors_all))
@@ -116,7 +116,7 @@ for (grid in grid_list) {
   site_data = readOGR(dsn = grid_sites)
   sites_extracted = data.frame(site_data@data, extract(predictor_stack, site_data))
   
-  # Find plot level mean values and convert field names to standard
+  # Convert field names to standard
   sites_extracted = sites_extracted %>%
     rename(aspect = paste('Aspect_Composite_10m_Beringia_AKALB_Grid_', grid_name, sep = '')) %>%
     rename(wetness = paste('CompoundTopographic_Composite_10m_Beringia_AKALB_Grid_', grid_name, sep = '')) %>%
@@ -130,94 +130,63 @@ for (grid in grid_list) {
     rename(radiation = paste('TopographicRadiation_Composite_10m_Beringia_AKALB_Grid_', grid_name, sep = '')) %>%
     rename(vh = paste('Sent1_vh_AKALB_Grid_', grid_name, sep = '')) %>%
     rename(vv = paste('Sent1_vv_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(shortIR1_05 = paste('Sent2_05May_11_shortInfrared1_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(shortIR2_05 = paste('Sent2_05May_12_shortInfrared2_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(blue_05 = paste('Sent2_05May_2_blue_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(green_05 = paste('Sent2_05May_3_green_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(red_05 = paste('Sent2_05May_4_red_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(redge1_05 = paste('Sent2_05May_5_redEdge1_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(redge2_05 = paste('Sent2_05May_6_redEdge2_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(redge3_05 = paste('Sent2_05May_7_redEdge3_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(nearIR_05 = paste('Sent2_05May_8_nearInfrared_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(redge4_05 = paste('Sent2_05May_8a_redEdge4_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(evi2_05 = paste('Sent2_05May_evi2_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(nbr_05 = paste('Sent2_05May_nbr_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(ndmi_05 = paste('Sent2_05May_ndmi_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(ndsi_05 = paste('Sent2_05May_ndsi_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(ndvi_05 = paste('Sent2_05May_ndvi_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(ndwi_05 = paste('Sent2_05May_ndwi_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(shortIR1_06 = paste('Sent2_06June_11_shortInfrared1_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(shortIR2_06 = paste('Sent2_06June_12_shortInfrared2_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(blue_06 = paste('Sent2_06June_2_blue_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(green_06 = paste('Sent2_06June_3_green_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(red_06 = paste('Sent2_06June_4_red_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(redge1_06 = paste('Sent2_06June_5_redEdge1_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(redge2_06 = paste('Sent2_06June_6_redEdge2_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(redge3_06 = paste('Sent2_06June_7_redEdge3_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(nearIR_06 = paste('Sent2_06June_8_nearInfrared_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(redge4_06 = paste('Sent2_06June_8a_redEdge4_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(evi2_06 = paste('Sent2_06June_evi2_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(nbr_06 = paste('Sent2_06June_nbr_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(ndmi_06 = paste('Sent2_06June_ndmi_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(ndsi_06 = paste('Sent2_06June_ndsi_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(ndvi_06 = paste('Sent2_06June_ndvi_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(ndwi_06 = paste('Sent2_06June_ndwi_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(shortIR1_07 = paste('Sent2_07July_11_shortInfrared1_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(shortIR2_07 = paste('Sent2_07July_12_shortInfrared2_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(blue_07 = paste('Sent2_07July_2_blue_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(green_07 = paste('Sent2_07July_3_green_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(red_07 = paste('Sent2_07July_4_red_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(redge1_07 = paste('Sent2_07July_5_redEdge1_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(redge2_07 = paste('Sent2_07July_6_redEdge2_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(redge3_07 = paste('Sent2_07July_7_redEdge3_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(nearIR_07 = paste('Sent2_07July_8_nearInfrared_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(redge4_07 = paste('Sent2_07July_8a_redEdge4_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(evi2_07 = paste('Sent2_07July_evi2_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(nbr_07 = paste('Sent2_07July_nbr_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(ndmi_07 = paste('Sent2_07July_ndmi_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(ndsi_07 = paste('Sent2_07July_ndsi_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(ndvi_07 = paste('Sent2_07July_ndvi_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(ndwi_07 = paste('Sent2_07July_ndwi_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(shortIR1_08 = paste('Sent2_08August_11_shortInfrared1_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(shortIR2_08 = paste('Sent2_08August_12_shortInfrared2_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(blue_08 = paste('Sent2_08August_2_blue_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(green_08 = paste('Sent2_08August_3_green_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(red_08 = paste('Sent2_08August_4_red_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(redge1_08 = paste('Sent2_08August_5_redEdge1_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(redge2_08 = paste('Sent2_08August_6_redEdge2_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(redge3_08 = paste('Sent2_08August_7_redEdge3_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(nearIR_08 = paste('Sent2_08August_8_nearInfrared_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(redge4_08 = paste('Sent2_08August_8a_redEdge4_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(evi2_08 = paste('Sent2_08August_evi2_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(nbr_08 = paste('Sent2_08August_nbr_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(ndmi_08 = paste('Sent2_08August_ndmi_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(ndsi_08 = paste('Sent2_08August_ndsi_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(ndvi_08 = paste('Sent2_08August_ndvi_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(ndwi_08 = paste('Sent2_08August_ndwi_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(shortIR1_09 = paste('Sent2_09September_11_shortInfrared1_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(shortIR2_09 = paste('Sent2_09September_12_shortInfrared2_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(blue_09 = paste('Sent2_09September_2_blue_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(green_09 = paste('Sent2_09September_3_green_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(red_09 = paste('Sent2_09September_4_red_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(redge1_09 = paste('Sent2_09September_5_redEdge1_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(redge2_09 = paste('Sent2_09September_6_redEdge2_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(redge3_09 = paste('Sent2_09September_7_redEdge3_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(nearIR_09 = paste('Sent2_09September_8_nearInfrared_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(redge4_09 = paste('Sent2_09September_8a_redEdge4_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(evi2_09 = paste('Sent2_09September_evi2_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(nbr_09 = paste('Sent2_09September_nbr_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(ndmi_09 = paste('Sent2_09September_ndmi_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(ndsi_09 = paste('Sent2_09September_ndsi_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(ndvi_09 = paste('Sent2_09September_ndvi_AKALB_Grid_', grid_name, sep = '')) %>%
-    rename(ndwi_09 = paste('Sent2_09September_ndwi_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(shortIR1_06 = paste('Sent2_06_11_shortInfrared1_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(shortIR2_06 = paste('Sent2_06_12_shortInfrared2_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(blue_06 = paste('Sent2_06_2_blue_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(green_06 = paste('Sent2_06_3_green_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(red_06 = paste('Sent2_06_4_red_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(redge1_06 = paste('Sent2_06_5_redEdge1_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(redge2_06 = paste('Sent2_06_6_redEdge2_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(redge3_06 = paste('Sent2_06_7_redEdge3_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(nearIR_06 = paste('Sent2_06_8_nearInfrared_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(redge4_06 = paste('Sent2_06_8a_redEdge4_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(evi2_06 = paste('Sent2_06_evi2_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(nbr_06 = paste('Sent2_06_nbr_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(ndmi_06 = paste('Sent2_06_ndmi_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(ndsi_06 = paste('Sent2_06_ndsi_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(ndvi_06 = paste('Sent2_06_ndvi_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(ndwi_06 = paste('Sent2_06_ndwi_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(shortIR1_07 = paste('Sent2_07_11_shortInfrared1_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(shortIR2_07 = paste('Sent2_07_12_shortInfrared2_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(blue_07 = paste('Sent2_07_2_blue_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(green_07 = paste('Sent2_07_3_green_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(red_07 = paste('Sent2_07_4_red_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(redge1_07 = paste('Sent2_07_5_redEdge1_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(redge2_07 = paste('Sent2_07_6_redEdge2_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(redge3_07 = paste('Sent2_07_7_redEdge3_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(nearIR_07 = paste('Sent2_07_8_nearInfrared_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(redge4_07 = paste('Sent2_07_8a_redEdge4_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(evi2_07 = paste('Sent2_07_evi2_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(nbr_07 = paste('Sent2_07_nbr_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(ndmi_07 = paste('Sent2_07_ndmi_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(ndsi_07 = paste('Sent2_07_ndsi_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(ndvi_07 = paste('Sent2_07_ndvi_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(ndwi_07 = paste('Sent2_07_ndwi_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(shortIR1_08 = paste('Sent2_08.09_11_shortInfrared1_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(shortIR2_08 = paste('Sent2_08.09_12_shortInfrared2_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(blue_08 = paste('Sent2_08.09_2_blue_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(green_08 = paste('Sent2_08.09_3_green_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(red_08 = paste('Sent2_08.09_4_red_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(redge1_08 = paste('Sent2_08.09_5_redEdge1_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(redge2_08 = paste('Sent2_08.09_6_redEdge2_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(redge3_08 = paste('Sent2_08.09_7_redEdge3_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(nearIR_08 = paste('Sent2_08.09_8_nearInfrared_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(redge4_08 = paste('Sent2_08.09_8a_redEdge4_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(evi2_08 = paste('Sent2_08.09_evi2_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(nbr_08 = paste('Sent2_08.09_nbr_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(ndmi_08 = paste('Sent2_08.09_ndmi_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(ndsi_08 = paste('Sent2_08.09_ndsi_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(ndvi_08 = paste('Sent2_08.09_ndvi_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(ndwi_08 = paste('Sent2_08.09_ndwi_AKALB_Grid_', grid_name, sep = '')) %>%
     rename(lstWarmth = paste('MODIS_LST_WarmthIndex_AKALB_Grid_', grid_name, sep = '')) %>%
     rename(summerWarmth = paste('SummerWarmth_MeanAnnual_AKALB_Grid_', grid_name, sep = '')) %>%
+    rename(januaryMin = paste('January_MinimumTemperature_AKALB_Grid_', grid_name, sep = '')) %>%
     rename(precip = paste('Precipitation_MeanAnnual_AKALB_Grid_', grid_name, sep = '')) %>%
     rename(fireYear = paste('FireHistory_AKALB_Grid_', grid_name, sep = ''))
 
-  # Summarize data by site and taxon
+  # Summarize data by site
   sites_mean = sites_extracted %>%
-    group_by(siteCode) %>%
+    group_by(site_code) %>%
     summarize(aspect = round(mean(aspect), digits = 0),
               wetness = round(mean(wetness), digits = 0),
               elevation = round(mean(elevation), digits = 0),
@@ -230,22 +199,6 @@ for (grid in grid_list) {
               radiation = round(mean(radiation), digits = 0),
               vh = round(mean(vh), digits = 0),
               vv = round(mean(vv), digits = 0),
-              shortIR1_05 = round(mean(shortIR1_05), digits = 0),
-              shortIR2_05 = round(mean(shortIR2_05), digits = 0),
-              blue_05 = round(mean(blue_05), digits = 0),
-              green_05 = round(mean(green_05), digits = 0),
-              red_05 = round(mean(red_05), digits = 0),
-              redge1_05 = round(mean(redge1_05), digits = 0),
-              redge2_05 = round(mean(redge2_05), digits = 0),
-              redge3_05 = round(mean(redge3_05), digits = 0),
-              nearIR_05 = round(mean(nearIR_05), digits = 0),
-              redge4_05 = round(mean(redge4_05), digits = 0),
-              evi2_05 = round(mean(evi2_05), digits = 0),
-              nbr_05 = round(mean(nbr_05), digits = 0),
-              ndmi_05 = round(mean(ndmi_05), digits = 0),
-              ndsi_05 = round(mean(ndsi_05), digits = 0),
-              ndvi_05 = round(mean(ndvi_05), digits = 0),
-              ndwi_05 = round(mean(ndwi_05), digits = 0),
               shortIR1_06 = round(mean(shortIR1_06), digits = 0),
               shortIR2_06 = round(mean(shortIR2_06), digits = 0),
               blue_06 = round(mean(blue_06), digits = 0),
@@ -294,25 +247,10 @@ for (grid in grid_list) {
               ndsi_08 = round(mean(ndsi_08), digits = 0),
               ndvi_08 = round(mean(ndvi_08), digits = 0),
               ndwi_08 = round(mean(ndwi_08), digits = 0),
-              shortIR1_09 = round(mean(shortIR1_09), digits = 0),
-              shortIR2_09 = round(mean(shortIR2_09), digits = 0),
-              blue_09 = round(mean(blue_09), digits = 0),
-              green_09 = round(mean(green_09), digits = 0),
-              red_09 = round(mean(red_09), digits = 0),
-              redge1_09 = round(mean(redge1_09), digits = 0),
-              redge2_09 = round(mean(redge2_09), digits = 0),
-              redge3_09 = round(mean(redge3_09), digits = 0),
-              nearIR_09 = round(mean(nearIR_09), digits = 0),
-              redge4_09 = round(mean(redge4_09), digits = 0),
-              evi2_09 = round(mean(evi2_09), digits = 0),
-              nbr_09 = round(mean(nbr_09), digits = 0),
-              ndmi_09 = round(mean(ndmi_09), digits = 0),
-              ndsi_09 = round(mean(ndsi_09), digits = 0),
-              ndvi_09 = round(mean(ndvi_09), digits = 0),
-              ndwi_09 = round(mean(ndwi_09), digits = 0),
               lstWarmth = round(mean(lstWarmth), digits = 0),
               precip = round(mean(precip), digits = 0),
               summerWarmth = round(mean(summerWarmth), digits = 0),
+              januaryMin = round(mean(januaryMin), digits = 0),
               fireYear = round(max(fireYear), digits = 0),
               num_points = n())
   
@@ -324,11 +262,11 @@ for (grid in grid_list) {
 library(tidyr)
 
 # Merge data list into single data frame
-sites_extracted = bind_rows(data_list)
+sites_combined = bind_rows(data_list)
 
 # Join site metadata to extracted data and remove na values
 sites_joined = site_metadata %>%
-  inner_join(sites_extracted, by = 'siteCode') %>%
+  inner_join(sites_combined, by = 'site_code') %>%
   drop_na()
 
 # Export data as a csv

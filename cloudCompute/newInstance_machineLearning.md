@@ -2,9 +2,9 @@
 
 *Author*: Timm Nawrocki, Alaska Center for Conservation Science
 
-*Last Updated*: 2020-06-07
+*Last Updated*: 2021-03-15
 
-*Description*: Instructions to create a virtual machine (vm) instance on Google Cloud Compute configured with 16 vCPUs, 60 GB of CPU memory, a 1000 GB persistent disk, and Ubuntu 18.04 LTS operating system. The machine will be capable of running Jupyter Notebooks from an Ananconda 3 installation through a web browser. Most of the Google Cloud Compute Engine configuration can be accomplished using the browser interface, which is how configuration steps are explained in this document. If preferred, all of the configuration steps can also be scripted using the Google Cloud SDK. Users should download and install the [Google Cloud SDK](https://cloud.google.com/sdk/) regardless because it is necessary for batch file uploads and downloads.
+*Description*: Instructions to create a virtual machine (vm) instance on Google Cloud Compute configured with 16 vCPUs, 60 GB of CPU memory, a 1000 GB persistent disk, and Ubuntu 20.04 LTS operating system. The machine will be capable of running Jupyter Notebooks from an Anaconda 3 installation through a web browser. Most of the Google Cloud Compute Engine configuration can be accomplished using the browser interface, which is how configuration steps are explained in this document. If preferred, all of the configuration steps can also be scripted using the Google Cloud SDK. Users should download and install the [Google Cloud SDK](https://cloud.google.com/sdk/) regardless because it is necessary for batch file uploads and downloads.
 
 ## 1. Configure project
 Create a new project if necessary and enable API access for Google Cloud Compute Engine.
@@ -59,9 +59,9 @@ The following steps must be followed every time a new instance is provisioned. T
 
 *Zone*: us-west1-b
 
-*Machine type*: 16 vCPUs (60 GB memory)
+*Machine type*: 16 vCPUs (64 GB memory)
 
-*Boot disk*: Ubuntu 18.04 LTS
+*Boot disk*: Ubuntu 20.04 LTS
 
 *Boot disk type*: Standard Persistent Disk
 
@@ -95,25 +95,28 @@ sudo apt-get install bzip2 git libxml2-dev vim
 Install latest Anaconda release. The version referenced in the example below may need to be updated. The repository version should match the Ubuntu Linux release version.
 
 ```
-wget https://repo.anaconda.com/archive/Anaconda3-2020.02-Linux-x86_64.s
-bash Anaconda3-2020.02-Linux-x86_64.sh
+wget https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh
+bash Anaconda3-2020.11-Linux-x86_64.sh
 ```
 
-At the option to prepend the Anaconda3 install location to PATH in your /home... enter yes.
-
-At the option to install Microsoft VSCode enter no.
+At the option to prepend the Anaconda3 install location to PATH in your home directory, hit enter. At the option to  initialize Anaconda 3, type "yes".
 
 Remove the installation file and start bashrc.
 
 ```
-rm Anaconda3-2020.02-Linux-x86_64.sh
+rm Anaconda3-2020.11-Linux-x86_64.sh
 source ~/.bashrc
 ```
 
-The statistical models require packages that are not included in the Anaconda distribution for bayesian optimization and gradient boosting. Those must be installed using pip.
+The statistical models require packages that are not included in the Anaconda distribution for bayesian optimization and gradient boosting. Those must be installed using pip after updating the Anaconda environment and installing build tools.
 
 ```
 python3 -m pip install --upgrade pip setuptools wheel
+conda update --all
+sudo apt-get update
+sudo apt-get install python3-dev
+sudo apt-get install build-essential   
+conda update anaconda
 pip install GPy
 pip install GPyOpt
 pip install lightgbm

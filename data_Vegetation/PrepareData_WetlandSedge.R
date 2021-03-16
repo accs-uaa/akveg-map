@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Prepare Class Data - Wetland Sedges
 # Author: Timm Nawrocki
-# Last Updated: 2020-11-30
+# Last Updated: 2021-03-15
 # Usage: Must be executed in R 4.0.0+.
 # Description: "Prepare Class Data - Wetland Sedges" prepares the map class data for statistical modeling.
 # ---------------------------------------------------------------------------
@@ -21,163 +21,187 @@ data_folder = paste(drive,
 site_file = paste(data_folder,
                   'sites/sites_extracted.csv',
                   sep = '/')
-species_file = paste(data_folder,
-                     'species_data/akveg_CoverTotal.xlsx',
+cover_file = paste(data_folder,
+                     'species_data/cover_all.csv',
                      sep = '/')
-date_file = paste(data_folder,
-                  'sites/visit_date.xlsx',
-                  sep = '/')
-observation_sheet = 1
 
-# Install required libraries if they are not already installed.
-Required_Packages <- c('dplyr', 'readxl', 'stringr', 'tidyr')
-New_Packages <- Required_Packages[!(Required_Packages %in% installed.packages()[,"Package"])]
-if (length(New_Packages) > 0) {
-  install.packages(New_Packages)
-}
 # Import required libraries for geospatial processing: dplyr, readxl, stringr, and tidyr.
 library(dplyr)
+library(lubridate)
 library(readxl)
 library(stringr)
 library(tidyr)
 
 # Read site data and species data into dataframes
 site_data = read.csv(site_file, fileEncoding = 'UTF-8')
-species_data = read_xlsx(species_file,
-                         sheet = observation_sheet)
-visit_date = read_xlsx(date_file,
-                       sheet = observation_sheet)
+cover_data = read.csv(cover_file, fileEncoding = 'UTF-8')
+
+# Drop X column from site data
+site_data = site_data %>%
+  select(-X)
+
+# Select columns and parse dates
+cover_data = cover_data %>%
+  mutate(veg_observe_date = ymd(veg_observe_date)) %>%
+  mutate(year = year(veg_observe_date)) %>%
+  mutate(day = yday(veg_observe_date)) %>%
+  select(project, site_code, year, day, cover_type, name_accepted, genus, cover)
+
+# Create table of site visit dates
+site_visit = cover_data %>%
+  select(site_code, year, day) %>%
+  distinct()
 
 #### CREATE PRESENCE DATA
 
-# Clean unused columns from species data
-species_data = species_data[c('siteCode', 'year', 'day', 'nameAdjudicated', 'nameAccepted',  'genus', 'coverTotal')]
-
-# Filter the species data to include only the map class
-presence_data = species_data %>%
-  filter(nameAccepted == 'Carex adelostoma' |
-           nameAccepted == 'Carex aquatilis' |
-           nameAccepted == 'Carex arcta' |
-           nameAccepted == 'Carex bicolor' |
-           nameAccepted == 'Carex chordorrhiza' |
-           nameAccepted == 'Carex diandra' |
-           nameAccepted == 'Carex echinata' |
-           nameAccepted == 'Carex enanderi' |
-           nameAccepted == 'Carex glareosa' |
-           nameAccepted == 'Carex glareosa ssp. glareosa' |
-           nameAccepted == 'Carex gynocrates' |
-           nameAccepted == 'Carex holostoma' |
-           nameAccepted == 'Carex interior' |
-           nameAccepted == 'Carex kelloggii' |
-           nameAccepted == 'Carex lachenalii' |
-           nameAccepted == 'Carex lasiocarpa' |
-           nameAccepted == 'Carex laxa' |
-           nameAccepted == 'Carex leptalea' |
-           nameAccepted == 'Carex limosa' |
-           nameAccepted == 'Carex livida' |
-           nameAccepted == 'Carex lyngbyei' |
-           nameAccepted == 'Carex marina' |
-           nameAccepted == 'Carex marina ssp. marina' |
-           nameAccepted == 'Carex membranacea' |
-           nameAccepted == 'Carex microglochin' |
-           nameAccepted == 'Carex pauciflora' |
-           nameAccepted == 'Carex paupercula' |
-           nameAccepted == 'Carex pluriflora' |
-           nameAccepted == 'Carex rariflora' |
-           nameAccepted == 'Carex rostrata' |
-           nameAccepted == 'Carex rotundata' |
-           nameAccepted == 'Carex saxatilis' |
-           nameAccepted == 'Carex saxatilis ssp. laxa' |
-           nameAccepted == 'Carex sitchensis' |
-           nameAccepted == 'Carex utriculata' |
-           nameAccepted == 'Carex vaginata' |
-           nameAccepted == 'Carex viridula ssp. viridula' |
-           nameAccepted == 'Eriophorum angustifolium' |
-           nameAccepted == 'Eriophorum chamissonis' |
-           nameAccepted == 'Eriophorum gracile' |
-           nameAccepted == 'Eriophorum russeolum' |
-           nameAccepted == 'Eriophorum russeolum ssp. leiocarpum' |
-           nameAccepted == 'Eriophorum scheuchzeri' |
-           nameAccepted == 'Eriophorum triste' |
-           nameAccepted == 'Eriophorum viridicarinatum') %>%
-  group_by(siteCode, year, day, nameAccepted, genus) %>%
-  summarize(coverTotal = max(coverTotal))
+# Filter the cover data to include only the map class
+presence_data = cover_data %>%
+  filter(name_accepted == 'Carex adelostoma' |
+           name_accepted == 'Carex aquatilis' |
+           name_accepted == 'Carex arcta' |
+           name_accepted == 'Carex bicolor' |
+           name_accepted == 'Carex chordorrhiza' |
+           name_accepted == 'Carex diandra' |
+           name_accepted == 'Carex echinata' |
+           name_accepted == 'Carex enanderi' |
+           name_accepted == 'Carex glareosa' |
+           name_accepted == 'Carex glareosa ssp. glareosa' |
+           name_accepted == 'Carex gynocrates' |
+           name_accepted == 'Carex holostoma' |
+           name_accepted == 'Carex interior' |
+           name_accepted == 'Carex kelloggii' |
+           name_accepted == 'Carex lachenalii' |
+           name_accepted == 'Carex lasiocarpa' |
+           name_accepted == 'Carex laxa' |
+           name_accepted == 'Carex leptalea' |
+           name_accepted == 'Carex limosa' |
+           name_accepted == 'Carex livida' |
+           name_accepted == 'Carex lyngbyei' |
+           name_accepted == 'Carex marina' |
+           name_accepted == 'Carex marina ssp. marina' |
+           name_accepted == 'Carex membranacea' |
+           name_accepted == 'Carex microglochin' |
+           name_accepted == 'Carex pauciflora' |
+           name_accepted == 'Carex paupercula' |
+           name_accepted == 'Carex pluriflora' |
+           name_accepted == 'Carex rariflora' |
+           name_accepted == 'Carex rostrata' |
+           name_accepted == 'Carex rotundata' |
+           name_accepted == 'Carex saxatilis' |
+           name_accepted == 'Carex saxatilis ssp. laxa' |
+           name_accepted == 'Carex sitchensis' |
+           name_accepted == 'Carex utriculata' |
+           name_accepted == 'Carex vaginata' |
+           name_accepted == 'Carex viridula ssp. viridula' |
+           name_accepted == 'Eriophorum angustifolium' |
+           name_accepted == 'Eriophorum chamissonis' |
+           name_accepted == 'Eriophorum gracile' |
+           name_accepted == 'Eriophorum gracile ssp. gracile' |
+           name_accepted == 'Eriophorum komarovii' |
+           name_accepted == 'Eriophorum ×medium' |
+           name_accepted == 'Eriophorum ×medium ssp. album' |
+           name_accepted == 'Eriophorum russeolum' |
+           name_accepted == 'Eriophorum russeolum ssp. leiocarpum' |
+           name_accepted == 'Eriophorum scheuchzeri' |
+           name_accepted == 'Eriophorum scheuchzeri ssp. arcticum' |
+           name_accepted == 'Eriophorum scheuchzeri ssp. scheuchzeri' |
+           name_accepted == 'Eriophorum triste' |
+           name_accepted == 'Eriophorum viridicarinatum') %>%
+  group_by(site_code, project, year, day, name_accepted, genus) %>%
+  summarize(cover = max(cover))
 
 # Sum multiple taxa to single summary
 presence_data = presence_data %>%
-  group_by(siteCode, year, day) %>%
-  summarize(coverTotal = sum(coverTotal)) %>%
-  mutate(nameAccepted = 'Wetland Sedges') %>%
-  mutate(genus = 'Sedges') %>%
-  mutate(regress = 1)
-  
-#### REMOVE INAPPROPRIATE GROUND SITES
-
-# Identify sites that are inappropriate for the modeled class
-remove_sites = species_data %>%
-  filter(nameAccepted == 'Carex' |
-           nameAccepted == 'Eriophorum') %>%
-  filter(coverTotal >= 2)
-
-# Remove inappropriate sites from site data
-sites = site_data %>%
-  anti_join(remove_sites, by = 'siteCode')
+  group_by(site_code, project, year, day) %>%
+  summarize(cover = sum(cover)) %>%
+  mutate(name_accepted = 'Wetland Sedges') %>%
+  mutate(genus = 'Wetland Sedges') %>%
+  mutate(zero = ifelse(cover < 0.5, 0, 1))
 
 #### CREATE ABSENCE DATA
 
-# Remove presences from all sites to create absence sites
-absence_data = sites['siteCode'] %>%
-  anti_join(presence_data, by = 'siteCode') %>%
-  inner_join(visit_date, by = 'siteCode') %>%
-  mutate(nameAccepted = 'Wetland Sedges') %>%
-  mutate(genus = 'Sedges') %>%
-  mutate(coverTotal = 0) %>%
-  mutate(regress = 0)
+# Remove presences from all sites to create observed absences
+absence_observed = site_data %>%
+  select(site_code, initial_project) %>%
+  distinct() %>%
+  anti_join(presence_data, by = 'site_code') %>%
+  inner_join(site_visit, by = 'site_code') %>%
+  rename(project = initial_project)
+
+# Add synthetic absences
+absence_synthetic = site_data %>%
+  filter(initial_project == 'Lake Absences' |
+           initial_project == 'Glacier Absences') %>%
+  select(site_code, initial_project) %>%
+  mutate(year = 9999) %>%
+  mutate(day = 196) %>%
+  rename(project = initial_project)
+  
+# Merge observed and synthetic absences
+absence_data = rbind(absence_observed, absence_synthetic)
+
+# Add map class information to absences
+absence_data = absence_data %>%
+  mutate(name_accepted = 'Wetland Sedges') %>%
+  mutate(genus = 'Wetland Sedges') %>%
+  mutate(cover = 0) %>%
+  mutate(zero = 0)
 
 #### MERGE PRESENCES AND ABSENCES
 
 # Bind rows from ground data
 combined_data = bind_rows(presence_data, absence_data)
 
-# Join site data to map class
+# Join site data to map class data
 combined_data = combined_data %>%
-  inner_join(site_data, by = 'siteCode')
+  inner_join(site_data, by = 'site_code') %>%
+  select(-initial_project)
 
-# Add zero field
-absences = combined_data %>%
-  filter(coverType != 'aerial') %>%
-  filter(coverTotal < 0.5) %>%
-  mutate(zero = 0)
-ground_presences = combined_data %>%
-  filter(coverType != 'aerial') %>%
-  filter(coverTotal >= 0.5) %>%
-  mutate(zero = 1)
-aerial_presences = combined_data %>%
-  filter(coverType == 'aerial') %>%
-  filter(coverTotal >= 5) %>%
-  mutate(zero = 1)
-map_class = bind_rows(absences, ground_presences, aerial_presences)
-
-# Control for fire year, year, cover type, and project
-map_class = map_class %>%
+# Control for aerial data, fire year, year, cover type, and project
+map_class = combined_data %>%
+  filter(perspective == 'ground' |
+           perspective == 'generated' |
+           (perspective == 'aerial' &
+              cover >= 5)) %>%
   filter(year > fireYear) %>%
-  filter(year >= 2000) %>%
-  filter(coverType != 'Braun-Blanquet Classification') %>%
-  filter(initialProject != 'NPS CAKN Permafrost') %>%
-  filter(initialProject != 'NPS YUCH PA') %>%
-  filter(initialProject != 'Shell ONES Remote Sensing') %>%
-  filter(initialProject != 'USFWS IRM') %>%
-  filter(initialProject != 'Bering LC') %>%
-  filter(initialProject != 'NPS Katmai LC') %>%
-  filter(initialProject != 'Wrangell-St. Elias LC') %>%
-  filter(initialProject != 'NPS Alagnak ELS') %>%
-  filter(initialProject != 'NSSI LC')
-
-# Remove project data inappropriate to map class
+  filter(year >= 1994) %>%
+  filter(cover_method != 'braun-blanquet visual estimate' |
+           cover_method != 'custom classification visual estimate') %>%
+  filter(project != 'AIM Fortymile') %>%
+  filter(project != 'Bering LC') %>%
+  filter(project != 'Breen Poplar') %>%
+  filter(project != 'Katmai Bear') %>%
+  filter(project != 'NPS ARCN Lichen') %>%
+  filter(project != 'NPS CAKN Permafrost') %>%
+  filter(project != 'NPS Denali LC') %>%
+  filter(project != 'NPS Gates LC') %>%
+  filter(project != 'NPS Yukon-Charley PA') %>%
+  filter(project != 'Shell ONES Remote Sensing') %>%
+  filter(project != 'USFWS Interior') %>%
+  filter(project != 'USFWS SELA PA') %>%
+  filter(project != 'USFWS Selawik LC') %>%
+  filter(project != 'Wrangell LC')
+  
+# Remove NPS I&M Data for non-spruce species/groups
 map_class = map_class %>%
-  filter(initialProject != 'NPS ARCN Lichen') %>%
-  filter(initialProject != 'NPS ARCN I&M') %>%
-  filter(initialProject != 'NPS CAKN I&M')
+  filter(project != 'NPS ARCN I&M') %>%
+  filter(project != 'NPS CAKN I&M')
+
+#### REMOVE INAPPROPRIATE SITES
+
+# Identify sites that are inappropriate for the modeled class
+remove_sites = cover_data %>%
+  filter((name_accepted == 'Eriophorum' |
+            name_accepted == 'Carex' |
+            name_accepted == 'Graminoid') &
+           cover > 1) %>%
+  distinct(site_code)
+
+# Remove inappropriate sites from site data
+map_class = map_class %>%
+  anti_join(remove_sites, by = 'site_code')
+
+#### EXPORT DATA
 
 # Export map class data as csv
 output_csv = paste(data_folder, 'species_data/mapClass_wetsed.csv', sep = '/')
