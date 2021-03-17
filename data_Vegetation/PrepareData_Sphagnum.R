@@ -152,5 +152,5 @@ map_class = map_class %>%
 #### EXPORT DATA
 
 # Export map class data as csv
-output_csv = paste(data_folder, 'species_data/mapClass_sphagnum.csv', sep = '/')
+output_csv = paste(data_folder, 'species_data/mapClass_sphagn.csv', sep = '/')
 write.csv(map_class, file = output_csv, fileEncoding = 'UTF-8')
