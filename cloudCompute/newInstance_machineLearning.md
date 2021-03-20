@@ -73,8 +73,6 @@ The following steps must be followed every time a new instance is provisioned. T
 
 *Firewall*: Allow HTTP Traffic, Allow HTTPS traffic
 
-*Deletion rule*: Uncheck
-
 After hitting the create button, the new instance will start automatically.
 
 Navigate to VPC Network -> External IP Addresses.
@@ -89,7 +87,7 @@ Update the system prior to installing software and then install necessary base p
 
 ```
 sudo apt-get update
-sudo apt-get install bzip2 git libxml2-dev vim
+sudo apt-get install build-essential bzip2 cmake git libxml2-dev python3-dev vim
 ```
 
 Install latest Anaconda release. The version referenced in the example below may need to be updated. The repository version should match the Ubuntu Linux release version.
@@ -101,25 +99,33 @@ bash Anaconda3-2020.11-Linux-x86_64.sh
 
 At the option to prepend the Anaconda3 install location to PATH in your home directory, hit enter. At the option to  initialize Anaconda 3, type "yes".
 
-Remove the installation file and start bashrc.
+Remove the installation file, start bashrc, and update all packages using conda.
 
 ```
 rm Anaconda3-2020.11-Linux-x86_64.sh
 source ~/.bashrc
+conda update --all
 ```
 
-The statistical models require packages that are not included in the Anaconda distribution for bayesian optimization and gradient boosting. Those must be installed using pip after updating the Anaconda environment and installing build tools.
+The statistical models require packages that are not included in the Anaconda distribution for bayesian optimization. Those must be installed using pip after updating the Anaconda environment and installing build tools.
 
 ```
 python3 -m pip install --upgrade pip setuptools wheel
-conda update --all
-sudo apt-get update
-sudo apt-get install python3-dev
-sudo apt-get install build-essential   
-conda update anaconda
 pip install GPy
 pip install GPyOpt
-pip install lightgbm
+```
+
+Install LightGBM from repository (or alternatively use `pip install lightGBM` if there are no problems with the latest pypi release.
+
+```
+git clone --recursive https://github.com/microsoft/LightGBM
+cd ~/LightGBM
+mkdir build
+cd build
+cmake ..
+make -j4
+cd ~/LightGBM/python-package
+python setup.py install
 ```
 
 ### Set up Jupyter Notebooks for browser access:
