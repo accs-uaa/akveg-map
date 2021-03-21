@@ -2,7 +2,7 @@
 
 *Author*: Timm Nawrocki, Alaska Center for Conservation Science
 
-*Last Updated*: 2021-02-19
+*Last Updated*: 2021-03-20
 
 *Description*: Instructions to create a virtual machine (vm) instance on Google Cloud Compute configured with 4 vCPUs, 16 GB of CPU memory, a 4 TB persistent disk, and Ubuntu 20.04 LTS operating system. The machine will be capable of running R scripts from a RStudio Server installation through a web browser. Most of the Google Cloud Compute Engine configuration can be accomplished using the browser interface, which is how configuration steps are explained in this document. If preferred, all of the configuration steps can also be scripted using the Google Cloud SDK. Users should download and install the [Google Cloud SDK](https://cloud.google.com/sdk/) regardless because it is necessary for batch file uploads and downloads.
 
@@ -91,7 +91,11 @@ Update the system prior to installing software and then install necessary depend
 
 ```
 sudo apt-get update
+sudo apt install build-essential
 sudo apt install dirmngr gnupg apt-transport-https ca-certificates software-properties-common
+sudo apt install libgeos-dev libproj-dev libgdal-dev libudunits2-dev
+sudo apt-get install gdebi-core
+sudo apt-get update
 ```
 
 Add the CRAN repository to the system sources list. The version referenced in the example below may need to be updated. The repository version should match the Ubuntu Linux LTS release version.
@@ -99,6 +103,7 @@ Add the CRAN repository to the system sources list. The version referenced in th
 ```
 sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
 sudo add-apt-repository 'deb https://cloud.r-project.org/bin/linux/ubuntu focal-cran40/'
+sudo apt update
 ```
 
 Install latest R release and check R version.
@@ -106,13 +111,6 @@ Install latest R release and check R version.
 ```
 sudo apt install r-base
 R --version
-```
-
-Install base dependencies for rgdal package and update all.
-
-```
-sudo apt install libgeos-dev libproj-dev libgdal-dev libudunits2-dev
-sudo apt-get update
 ```
 
 Start R and install the necessary libraries. To quit R, type `q()`.
@@ -131,10 +129,9 @@ q()
 Install latest R Studio Server. The version may need to be updated from below.
 
 ```
-sudo apt-get install gdebi-core
-wget https://download2.rstudio.org/server/bionic/amd64/rstudio-server-1.4.1103-amd64.deb
-sudo gdebi rstudio-server-1.4.1103-amd64.deb
-rm rstudio-server-1.4.1103-amd64.deb
+wget https://download2.rstudio.org/server/bionic/amd64/rstudio-server-1.4.1106-amd64.deb
+sudo gdebi rstudio-server-1.4.1106-amd64.deb
+rm rstudio-server-1.4.1106-amd64.deb
 ```
 
 Once R Studio Server is installed, it will automatically start running.

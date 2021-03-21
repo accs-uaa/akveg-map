@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Extract Features to Grids
 # Author: Timm Nawrocki
-# Last Updated: 2021-02-19
+# Last Updated: 2021-03-20
 # Usage: Must be executed in R 4.0.0+.
 # Description: "Extract Features to Grids" extracts data from rasters to prediction grids.
 # ---------------------------------------------------------------------------
@@ -10,32 +10,13 @@
 # Enter machine number
 machine_number = 1
 
-# Set root directory
-drive = 'N:'
-root_folder = 'ACCS_Work'
-
-# Define input folders
-data_folder = paste(drive,
-                    root_folder,
-                    'Data',
-                    sep = '/')
-
 # Define input grid list
-grid_table = paste(data_folder,
-                 'analyses/gridMinor.xlsx',
-                 sep ='/')
+grid_table = '/home/twn_rstudio/gridMinor.xlsx'
 
 # Define input folders
-grid_folder = paste(data_folder,
-                    'analyses/gridMinor',
-                    sep = '/')
-raster_folder = paste(data_folder,
-                      'topography/Composite_10m_Beringia/gridded_select',
-                      sep = '/')
-output_folder = paste(drive,
-                      root_folder,
-                      'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/grids',
-                      sep = '/')
+grid_folder = '/home/twn_rstudio/gridMinor'
+raster_folder = '/home/twn_rstudio/rasters'
+output_folder = '/home/twn_rstudio/extracted_grids'
 
 # Import required libraries
 library(dplyr)
@@ -47,8 +28,8 @@ library(stringr)
 
 # Define and subset input grid data
 grid_data = read_excel(grid_table, sheet = 'gridMinor')
-first = (3964 * machine_number) - 3693
-last = 3964 * machine_number
+first = (265 * machine_number) - 264
+last = 265 * machine_number
 grid_data = slice(grid_data, (first:last))
 major_data = grid_data %>%
   distinct(Major)
@@ -116,22 +97,6 @@ for (major in major_list) {
           rename(radiation = paste('TopographicRadiation_Composite_10m_Beringia_AKALB_Grid_', major, sep = '')) %>%
           rename(vh = paste('Sent1_vh_AKALB_Grid_', major, sep = '')) %>%
           rename(vv = paste('Sent1_vv_AKALB_Grid_', major, sep = '')) %>%
-          rename(shortIR1_05 = paste('Sent2_05_11_shortInfrared1_AKALB_Grid_', major, sep = '')) %>%
-          rename(shortIR2_05 = paste('Sent2_05_12_shortInfrared2_AKALB_Grid_', major, sep = '')) %>%
-          rename(blue_05 = paste('Sent2_05_2_blue_AKALB_Grid_', major, sep = '')) %>%
-          rename(green_05 = paste('Sent2_05_3_green_AKALB_Grid_', major, sep = '')) %>%
-          rename(red_05 = paste('Sent2_05_4_red_AKALB_Grid_', major, sep = '')) %>%
-          rename(redge1_05 = paste('Sent2_05_5_redEdge1_AKALB_Grid_', major, sep = '')) %>%
-          rename(redge2_05 = paste('Sent2_05_6_redEdge2_AKALB_Grid_', major, sep = '')) %>%
-          rename(redge3_05 = paste('Sent2_05_7_redEdge3_AKALB_Grid_', major, sep = '')) %>%
-          rename(nearIR_05 = paste('Sent2_05_8_nearInfrared_AKALB_Grid_', major, sep = '')) %>%
-          rename(redge4_05 = paste('Sent2_05_8a_redEdge4_AKALB_Grid_', major, sep = '')) %>%
-          rename(evi2_05 = paste('Sent2_05_evi2_AKALB_Grid_', major, sep = '')) %>%
-          rename(nbr_05 = paste('Sent2_05_nbr_AKALB_Grid_', major, sep = '')) %>%
-          rename(ndmi_05 = paste('Sent2_05_ndmi_AKALB_Grid_', major, sep = '')) %>%
-          rename(ndsi_05 = paste('Sent2_05_ndsi_AKALB_Grid_', major, sep = '')) %>%
-          rename(ndvi_05 = paste('Sent2_05_ndvi_AKALB_Grid_', major, sep = '')) %>%
-          rename(ndwi_05 = paste('Sent2_05_ndwi_AKALB_Grid_', major, sep = '')) %>%
           rename(shortIR1_06 = paste('Sent2_06_11_shortInfrared1_AKALB_Grid_', major, sep = '')) %>%
           rename(shortIR2_06 = paste('Sent2_06_12_shortInfrared2_AKALB_Grid_', major, sep = '')) %>%
           rename(blue_06 = paste('Sent2_06_2_blue_AKALB_Grid_', major, sep = '')) %>%
@@ -180,22 +145,6 @@ for (major in major_list) {
           rename(ndsi_08 = paste('Sent2_08.09_ndsi_AKALB_Grid_', major, sep = '')) %>%
           rename(ndvi_08 = paste('Sent2_08.09_ndvi_AKALB_Grid_', major, sep = '')) %>%
           rename(ndwi_08 = paste('Sent2_08.09_ndwi_AKALB_Grid_', major, sep = '')) %>%
-          rename(shortIR1_09 = paste('Sent2_10_11_shortInfrared1_AKALB_Grid_', major, sep = '')) %>%
-          rename(shortIR2_09 = paste('Sent2_10_12_shortInfrared2_AKALB_Grid_', major, sep = '')) %>%
-          rename(blue_09 = paste('Sent2_10_2_blue_AKALB_Grid_', major, sep = '')) %>%
-          rename(green_09 = paste('Sent2_10_3_green_AKALB_Grid_', major, sep = '')) %>%
-          rename(red_09 = paste('Sent2_10_4_red_AKALB_Grid_', major, sep = '')) %>%
-          rename(redge1_09 = paste('Sent2_10_5_redEdge1_AKALB_Grid_', major, sep = '')) %>%
-          rename(redge2_09 = paste('Sent2_10_6_redEdge2_AKALB_Grid_', major, sep = '')) %>%
-          rename(redge3_09 = paste('Sent2_10_7_redEdge3_AKALB_Grid_', major, sep = '')) %>%
-          rename(nearIR_09 = paste('Sent2_10_8_nearInfrared_AKALB_Grid_', major, sep = '')) %>%
-          rename(redge4_09 = paste('Sent2_10_8a_redEdge4_AKALB_Grid_', major, sep = '')) %>%
-          rename(evi2_09 = paste('Sent2_10_evi2_AKALB_Grid_', major, sep = '')) %>%
-          rename(nbr_09 = paste('Sent2_10_nbr_AKALB_Grid_', major, sep = '')) %>%
-          rename(ndmi_09 = paste('Sent2_10_ndmi_AKALB_Grid_', major, sep = '')) %>%
-          rename(ndsi_09 = paste('Sent2_10_ndsi_AKALB_Grid_', major, sep = '')) %>%
-          rename(ndvi_09 = paste('Sent2_10_ndvi_AKALB_Grid_', major, sep = '')) %>%
-          rename(ndwi_09 = paste('Sent2_10_ndwi_AKALB_Grid_', major, sep = '')) %>%
           rename(lstWarmth = paste('MODIS_LST_WarmthIndex_AKALB_Grid_', major, sep = '')) %>%
           rename(janMin = paste('January_MinimumTemperature_AKALB_Grid_', major, sep = '')) %>%
           rename(summerWarmth = paste('SummerWarmth_MeanAnnual_AKALB_Grid_', major, sep = '')) %>%
