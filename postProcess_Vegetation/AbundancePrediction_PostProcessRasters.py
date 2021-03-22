@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Post-process Abundance Rasters
 # Author: Timm Nawrocki
-# Last Updated: 2020-11-30
+# Last Updated: 2021-03-21
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Post-process Abundance Rasters" merges raster tiles and controls for water.
 # ---------------------------------------------------------------------------
@@ -14,7 +14,7 @@ from package_GeospatialProcessing import arcpy_geoprocessing
 from package_GeospatialProcessing import postprocess_abundance
 
 # Set root directory
-drive = 'N:/'
+drive = 'F:/'
 root_folder = 'ACCS_Work'
 
 # Define species folder
@@ -27,8 +27,8 @@ data_folder = os.path.join(drive,
                            'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Output')
 
 # Define input and output raster folders
-input_folder = os.path.join(data_folder, 'predicted_rasters', species_folder)
-output_folder = os.path.join(data_folder, 'rasters_final', species_folder)
+input_folder = os.path.join(data_folder, 'predicted_rasters/round_20210316', species_folder)
+output_folder = os.path.join(data_folder, 'rasters_final/round_20210316', species_folder)
 
 # Define work environment
 work_geodatabase = os.path.join(drive,

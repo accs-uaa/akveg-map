@@ -25,9 +25,10 @@ ehthumbs.db
 Thumbs.db
 *.db
 
-# Cache Folders #
+# Cache Folders and Files #
 #################
 .idea
 .ipynb_checkpoints
 .Rhistory
 .Rdata
+__pycache__
