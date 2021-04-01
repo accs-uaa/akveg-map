@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Partition Model Validation Results by Region
 # Author: Timm Nawrocki
-# Last Updated: 2020-11-30
+# Last Updated: 2021-04-01
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Partition Model Validation Results by Region" extracts a set of predictor raster datasets to a study area to enforce the same extent on all rasters.
 # ---------------------------------------------------------------------------
@@ -19,21 +19,28 @@ root_folder = 'ACCS_Work'
 # Define data folder
 data_folder = os.path.join(drive,
                            root_folder,
-                           'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Output/model_results/final')
+                           'Projects/VegetationEcology/AKVEG_QuantitativeMap',
+                           'Data/Data_Output/model_results/round_20210316/final')
 
 # Define work environment
 work_geodatabase = os.path.join(drive,
                                 root_folder,
-                                'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/BeringiaVegetation.gdb')
+                                'Projects/VegetationEcology/AKVEG_QuantitativeMap',
+                                'Data/BeringiaVegetation.gdb')
 
 # Define regional feature classes
-arctic = os.path.join(work_geodatabase, 'mapRegion_Arctic')
-southwest = os.path.join(work_geodatabase, 'mapRegion_Southwest')
-interior = os.path.join(work_geodatabase, 'mapRegion_Interior')
-regions = [arctic, southwest, interior]
+northern = os.path.join(work_geodatabase,
+                        'NorthAmericanBeringia_Subregion_Northern')
+western = os.path.join(work_geodatabase,
+                       'NorthAmericanBeringia_Subregion_Western')
+interior = os.path.join(work_geodatabase,
+                        'NorthAmericanBeringia_Subregion_Interior')
+regions = [northern, western, interior]
 
 # Define model output folders
-class_folders = ['alnus_nmse', 'betshr_nmse', 'bettre_nmse', 'calcan_nmse', 'cladon_nmse', 'dectre_nmse', 'empnig_nmse', 'erivag_nmse', 'picgla_nmse', 'picmar_nmse', 'rhotom_nmse', 'salshr_nmse', 'sphagn_nmse', 'vaculi_nmse', 'vacvit_nmse', 'wetsed_nmse']
+class_folders = ['alnus', 'betshr', 'bettre', 'dectre', 'dryas',
+                 'empnig', 'erivag', 'picgla', 'picmar', 'rhoshr',
+                 'salshr', 'sphagn', 'vaculi', 'vacvit', 'wetsed']
 
 # Loop through model output folders and partition results for each region
 count = 1
@@ -42,7 +49,7 @@ for class_folder in class_folders:
     input_folder = os.path.join(data_folder, class_folder)
 
     # Define input table
-    input_table = os.path.join(input_folder, 'mapRegion_Statewide.csv')
+    input_table = os.path.join(input_folder, 'NorthAmericanBeringia_Region.csv')
 
     # Partition results to each region
     for region in regions:
@@ -58,7 +65,7 @@ for class_folder in class_folders:
 
         # Create key word arguments
         partition_kwargs = {'work_geodatabase': work_geodatabase,
-                            'input_projection': 4269,
+                            'input_projection': 3338,
                             'input_array': partition_inputs,
                             'output_array': partition_outputs
                             }

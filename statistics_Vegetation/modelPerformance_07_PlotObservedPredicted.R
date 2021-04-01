@@ -8,12 +8,13 @@
 # ---------------------------------------------------------------------------
 
 # Set map classes
-map_classes = c('alnus', 'betshr', 'bettre', 'calcan', 'cladon', 'dectre', 'empnig', 'erivag', 'picgla', 'picmar', 'rhotom', 'salshr', 'sphagn', 'vaculi', 'vacvit', 'wetsed')
+map_classes = c('alnus', 'betshr', 'bettre', 'dectre', 'dryas',
+                'empnig', 'erivag', 'picgla', 'picmar', 'rhoshr',
+                'salshr', 'sphagn', 'vaculi', 'vacvit', 'wetsed')
 upper_limits = c(60,
                  200,
                  40,
-                 150,
-                 200,
+                 40,
                  40,
                  200,
                  100,
@@ -34,7 +35,8 @@ root_folder = 'ACCS_Work'
 # Define input folders
 data_folder = paste(drive,
                     root_folder,
-                    'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Output/model_results/final',
+                    'Projects/VegetationEcology/AKVEG_QuantitativeMap',
+                    'Data/Data_Output/model_results/round_20210316/final',
                     sep = '/')
 
 # Import required libraries
@@ -52,38 +54,39 @@ for (map_class in map_classes) {
   class_folder = paste(data_folder,
                        '/',
                        map_class,
-                       '_nmse',
                        sep = '')
+  plots_folder = paste(class_folder,
+                       'plots',
+                       sep = '/')
   
   # Define input and output files
   native_file = paste(class_folder,
-                      'mapRegion_Statewide.csv',
+                      'NorthAmericanBeringia_Region.csv',
                       sep = '/')
   grid_file = paste(class_folder,
-                    'scaledData_grid.csv',
+                    'ScaledData_grid.csv',
                     sep = '/')
   ecoregion_file = paste(class_folder,
-                         'scaledData_ecoregion.csv',
+                         'ScaledData_ecoregion.csv',
                          sep = '/')
   
   # Read statewide model results for native resolution into data frame
-  native_results = read.csv(native_file, fileEncoding = 'UTF-8')
+  native_results = read.csv(native_file)
   native_results = native_results %>%
-    filter(initialProject != 'NPS ARCN Lichen') %>%
     mutate(scale = '10 × 10 m Map Resolution') %>%
-    select(scale, coverTotal, prediction)
+    select(scale, cover, prediction)
   
   # Read statewide model results for grid resolution into data frame
-  grid_results = read.csv(grid_file, fileEncoding = 'UTF-8')
+  grid_results = read.csv(grid_file)
   grid_results = grid_results %>%
     mutate(scale = 'Scaled by 10 × 10 km Grids') %>%
-    select(scale, coverTotal, prediction)
+    select(scale, cover, prediction)
   
   # Read statewide model results for ecoregion scale into data frame
-  ecoregion_results = read.csv(ecoregion_file, fileEncoding = 'UTF-8')
+  ecoregion_results = read.csv(ecoregion_file)
   ecoregion_results = ecoregion_results %>%
-    mutate(scale = 'Scaled by Ecoregion') %>%
-    select(scale, coverTotal, prediction)
+    mutate(scale = 'Scaled by Unified Ecoregions') %>%
+    select(scale, cover, prediction)
   
   # Bind rows
   scaled_results = rbind(grid_results, ecoregion_results)
@@ -103,11 +106,11 @@ for (map_class in map_classes) {
   upper_limit = upper_limits[match(map_class, map_classes)]
   
   # Plot native resolution results
-  map_plot = ggplot(data = native_results, aes(x = coverTotal, y = prediction)) +
+  map_plot = ggplot(data = native_results, aes(x = cover, y = prediction)) +
     theme_bw() +
     font +
     geom_bin2d(data = native_results,
-               aes(x = coverTotal, y = prediction,
+               aes(x = cover, y = prediction,
                    fill = ..count..),
                inherit.aes = FALSE,
                bins = 21) +
@@ -124,7 +127,7 @@ for (map_class in map_classes) {
     scale_y_continuous(breaks = seq(0, 100, by = 10), limits = c(-6, 100), expand = c(0.02, 0))
   
   # Plot native resolution results
-  scaled_plot = ggplot(data = scaled_results, aes(x = coverTotal, y = prediction)) +
+  scaled_plot = ggplot(data = scaled_results, aes(x = cover, y = prediction)) +
     theme_bw() +
     font +
     geom_point(alpha = 0.4,
@@ -144,10 +147,10 @@ for (map_class in map_classes) {
     scale_y_continuous(breaks=seq(0, 60, by = 10), limits = c(0, 60), expand = c(0.02, 0))
   
   # Save jpgs at 600 dpi
-  map_output = paste(class_folder,
+  map_output = paste(plots_folder,
                      'Figure_ObservedPredicted_MapResolution.jpg',
                      sep = '/')
-  scaled_output = paste(class_folder,
+  scaled_output = paste(plots_folder,
                         'Figure_ObservedPredicted_Scaled.jpg',
                         sep = '/')
   ggsave(map_output,

@@ -57,8 +57,8 @@ def extract_categorical_maps(**kwargs):
     iteration_start = time.time()
     arcpy.management.XYTableToPoint(input_table,
                                     points_feature,
-                                    'longitude',
-                                    'latitude',
+                                    'POINT_X',
+                                    'POINT_Y',
                                     '',
                                     input_system)
     ExtractMultiValuesToPoints(points_feature,

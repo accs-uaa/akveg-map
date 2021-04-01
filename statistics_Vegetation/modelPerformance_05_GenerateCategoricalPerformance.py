@@ -2,8 +2,8 @@
 # ---------------------------------------------------------------------------
 # Generate Categorical Performance
 # Author: Timm Nawrocki
-# Last Updated: 2020-11-30
-# Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
+# Last Updated: 2021-04-01
+# Usage: Must be executed in an Anaconda Python 3.7+ installation.
 # Description: "Generate Categorical Performance" calculates the r squared, mean absolute error, and root mean squared error of the categorical vegetation maps.
 # ---------------------------------------------------------------------------
 
@@ -30,26 +30,32 @@ root_folder = 'ACCS_Work'
 # Define data folder
 data_folder = os.path.join(drive,
                            root_folder,
-                           'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Output/model_results/final')
+                           'Projects/VegetationEcology/AKVEG_QuantitativeMap',
+                           'Data/Data_Output/model_results/round_20210316/final')
 
 # Define output csv file
 categorical_csv = os.path.join(data_folder, 'performance_categorical.csv')
 
 # Define model output folders
-class_folders = ['alnus_nmse', 'betshr_nmse', 'bettre_nmse', 'calcan_nmse', 'cladon_nmse', 'dectre_nmse', 'empnig_nmse', 'erivag_nmse', 'picgla_nmse', 'picmar_nmse', 'rhotom_nmse', 'salshr_nmse', 'sphagn_nmse', 'vaculi_nmse', 'vacvit_nmse', 'wetsed_nmse']
+class_folders = ['alnus', 'betshr', 'bettre', 'dectre', 'dryas',
+                 'empnig', 'erivag', 'picgla', 'picmar', 'rhoshr',
+                 'salshr', 'sphagn', 'vaculi', 'vacvit', 'wetsed']
 
 # Define vegetation map variables and regions
 vegetation_maps = [['nlcd'], ['coarse'], ['fine']]
-regions = ['Statewide', 'Arctic', 'Southwest', 'Interior']
+regions = ['Region',
+           'Subregion_Northern',
+           'Subregion_Western',
+           'Subregion_Interior']
 
 # Define output variables
-output_variables = ['mapClass', 'region', 'vegMap', 'r2', 'std_mae']
+output_variables = ['mapClass', 'region', 'vegMap', 'r2', 'mae', 'rmse', 'cover_mean', 'cover_median']
 
 # Create empty data frame
 categorical_performance = pd.DataFrame(columns = output_variables)
 
 # Define static variables
-cover = ['coverTotal']
+cover = ['cover']
 discrete_response = ['discrete_response']
 
 # Define 10-fold cross validation split methods
@@ -60,20 +66,18 @@ count = 1
 for class_folder in class_folders:
     for region in regions:
         # Read input data file
-        input_file = os.path.join(data_folder, class_folder, 'mapRegion_' + region + '.csv')
+        input_file = os.path.join(data_folder, class_folder, 'NorthAmericanBeringia_' + region + '.csv')
         input_data = pd.read_csv(input_file)
         # Convert values to floats
         input_data[cover[0]] = input_data[cover[0]].astype(float)
-
-        # Subset cover data (relevant for Lichens only)
-        input_data = input_data[input_data['initialProject'] != 'NPS ARCN Lichen']
 
         # Shuffle data
         input_data = shuffle(input_data, random_state=21)
 
         # Calculate mean and median value of presences
-        presence_data = input_data[input_data['regress'] == 1]
-        mean_cover = presence_data['coverTotal'].mean()
+        presence_data = input_data[input_data['zero'] == 1]
+        cover_mean = presence_data['cover'].mean()
+        cover_median = presence_data['cover'].median()
 
         # Loop through categorical maps
         for map in vegetation_maps:
@@ -136,7 +140,9 @@ for class_folder in class_folders:
             y_regress_predicted = outer_results[discrete_response[0]]
 
             # Calculate performance metrics from output_results
-            r_score = r2_score(y_regress_observed, y_regress_predicted, sample_weight=None,
+            r_score = r2_score(y_regress_observed,
+                               y_regress_predicted,
+                               sample_weight=None,
                                multioutput='uniform_average')
             mae = mean_absolute_error(y_regress_observed, y_regress_predicted)
             rmse = np.sqrt(mean_squared_error(y_regress_observed, y_regress_predicted))
@@ -146,7 +152,10 @@ for class_folder in class_folders:
                                                region,
                                                map[0],
                                                round(r_score, 2),
-                                               round((mae / mean_cover), 2)
+                                               round(mae, 2),
+                                               round(rmse, 2),
+                                               round(cover_mean, 2),
+                                               round(cover_median, 2)
                                                ]],
                                              columns = output_variables)
             categorical_performance = categorical_performance.append(iteration_results, ignore_index=True)

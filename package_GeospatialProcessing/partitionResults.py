@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Partition Results
 # Author: Timm Nawrocki
-# Last Updated: 2021-03-10
+# Last Updated: 2021-04-01
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Partition Results" is a function that spatially partitions model validation results within a region feature class.
 # ---------------------------------------------------------------------------
@@ -53,8 +53,8 @@ def partition_results(**kwargs):
     iteration_start = time.time()
     arcpy.management.XYTableToPoint(input_table,
                                     points_feature,
-                                    'longitude',
-                                    'latitude',
+                                    'POINT_X',
+                                    'POINT_Y',
                                     '',
                                     input_system)
     arcpy.analysis.Clip(points_feature, region, clip_feature)

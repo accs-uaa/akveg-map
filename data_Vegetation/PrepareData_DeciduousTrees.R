@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Prepare Class Data - Deciduous Trees
 # Author: Timm Nawrocki
-# Last Updated: 2021-03-15
+# Last Updated: 2021-03-21
 # Usage: Must be executed in R 4.0.0+.
 # Description: "Prepare Class Data - Deciduous Trees" prepares the map class data for statistical modeling.
 # ---------------------------------------------------------------------------
@@ -61,6 +61,7 @@ presence_data = cover_data %>%
            name_accepted == 'Populus balsamifera' |
            name_accepted == 'Populus tremuloides' |
            name_accepted == 'Populus trichocarpa' |
+           name_accepted == 'Populus' |
            name_accepted == 'Deciduous Tree') %>%
   group_by(site_code, project, year, day, name_accepted, genus) %>%
   summarize(cover = max(cover))
@@ -119,7 +120,7 @@ map_class = combined_data %>%
            (perspective == 'aerial' &
               cover >= 5)) %>%
   filter(year > fireYear) %>%
-  filter(year >= 1994) %>%
+  filter(year >= 2000) %>%
   filter(cover_method != 'braun-blanquet visual estimate' |
            cover_method != 'custom classification visual estimate') %>%
   filter(project != 'AIM Fortymile') %>%
@@ -147,7 +148,7 @@ map_class = map_class %>%
 # Identify sites that are inappropriate for the modeled class
 remove_sites = cover_data %>%
   filter(name_accepted == 'Betula' &
-           cover > 1) %>%
+           cover >= 0.5) %>%
   distinct(site_code)
 
 # Remove inappropriate sites from site data

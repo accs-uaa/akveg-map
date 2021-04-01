@@ -2,9 +2,9 @@
 # ---------------------------------------------------------------------------
 # Generate Continuous Performance
 # Author: Timm Nawrocki
-# Last Updated: 2020-11-30
-# Usage: Must be executed in an Anaconda Python 3.7 installation.
-# Description: "Generate Continuous Performance" calculates the r squared, standardized mean absolute error, auc, and percentage distribution accuracy of the continuous vegetation maps at the native map resolution.
+# Last Updated: 2021-04-01
+# Usage: Must be executed in an Anaconda Python 3.7+ installation.
+# Description: "Generate Continuous Performance" calculates the r squared, mean absolute error, root mean squared error, auc, percentage distribution accuracy, mean cover, and median cover of the continuous vegetation maps at the native map resolution.
 # ---------------------------------------------------------------------------
 
 # Import packages for file manipulation, data manipulation, and plotting
@@ -25,25 +25,32 @@ root_folder = 'ACCS_Work'
 # Define data folder
 data_folder = os.path.join(drive,
                            root_folder,
-                           'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Output/model_results/final')
+                           'Projects/VegetationEcology/AKVEG_QuantitativeMap',
+                           'Data/Data_Output/model_results/round_20210316/final')
 
 # Define output csv file
 continuous_csv = os.path.join(data_folder, 'performance_continuous.csv')
 
 # Define model output folders
-class_folders = ['alnus_nmse', 'betshr_nmse', 'bettre_nmse', 'calcan_nmse', 'cladon_nmse', 'dectre_nmse', 'empnig_nmse', 'erivag_nmse', 'picgla_nmse', 'picmar_nmse', 'rhotom_nmse', 'salshr_nmse', 'sphagn_nmse', 'vaculi_nmse', 'vacvit_nmse', 'wetsed_nmse']
+class_folders = ['alnus', 'betshr', 'bettre', 'dectre', 'dryas',
+                 'empnig', 'erivag', 'picgla', 'picmar', 'rhoshr',
+                 'salshr', 'sphagn', 'vaculi', 'vacvit', 'wetsed']
 
 # Define vegetation map variables and regions
-regions = ['Statewide', 'Arctic', 'Southwest', 'Interior']
+regions = ['Region',
+           'Subregion_Northern',
+           'Subregion_Western',
+           'Subregion_Interior']
 
 # Define output variables
-output_variables = ['mapClass', 'region', 'vegMap', 'r2', 'mae', 'std_mae', 'auc', 'acc']
+output_variables = ['mapClass', 'region', 'vegMap', 'r2', 'mae', 'rmse',
+                    'auc', 'acc', 'cover_mean', 'cover_median']
 
 # Create empty data frame
 continuous_performance = pd.DataFrame(columns = output_variables)
 
 # Define static variables
-cover = ['coverTotal']
+cover = ['cover']
 prediction = ['prediction']
 zero_variable = ['zero']
 distribution = ['distribution']
@@ -53,8 +60,8 @@ presence = ['presence']
 count = 1
 for class_folder in class_folders:
     for region in regions:
-        # Read input data file and subset cover data (relevant for Lichens only)
-        input_file = os.path.join(data_folder, class_folder, 'mapRegion_' + region + '.csv')
+        # Read input data file
+        input_file = os.path.join(data_folder, class_folder, 'NorthAmericanBeringia_' + region + '.csv')
         input_data = pd.read_csv(input_file)
         # Convert values to floats
         input_data[cover[0]] = input_data[cover[0]].astype(float)
@@ -79,12 +86,10 @@ for class_folder in class_folders:
         # Calculate overall accuracy
         accuracy = (true_negative + true_positive) / (true_negative + false_positive + false_negative + true_positive)
 
-        # Subset cover data (relevant for Lichens only)
-        input_data = input_data[input_data['initialProject'] != 'NPS ARCN Lichen']
-
         # Calculate mean and median value of presences
-        presence_data = input_data[input_data['regress'] == 1]
-        mean_cover = presence_data['coverTotal'].mean()
+        presence_data = input_data[input_data['zero'] == 1]
+        cover_mean = presence_data['cover'].mean()
+        cover_median = presence_data['cover'].median()
 
         # Partition output results to foliar cover observed and predicted
         y_regress_observed = input_data[cover[0]]
@@ -102,9 +107,11 @@ for class_folder in class_folders:
                                         'continuous',
                                         round(r_score, 2),
                                         round(mae, 2),
-                                        round((mae / mean_cover), 2),
+                                        round(rmse, 2),
                                         round(auc, 2),
-                                        round(accuracy, 2)
+                                        round(accuracy, 2),
+                                        round(cover_mean, 2),
+                                        round(cover_median, 2)
                                         ]],
                                       columns = output_variables)
         continuous_performance = continuous_performance.append(region_results, ignore_index=True)

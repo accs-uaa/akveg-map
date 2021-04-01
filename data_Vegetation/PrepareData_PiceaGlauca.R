@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Prepare Class Data - Picea glauca
 # Author: Timm Nawrocki
-# Last Updated: 2021-03-15
+# Last Updated: 2021-03-21
 # Usage: Must be executed in R 4.0.0+.
 # Description: "Prepare Class Data - Picea glauca" prepares the map class data for statistical modeling.
 # ---------------------------------------------------------------------------
@@ -116,7 +116,7 @@ map_class = combined_data %>%
            (perspective == 'aerial' &
               cover >= 5)) %>%
   filter(year > fireYear) %>%
-  filter(year >= 1994) %>%
+  filter(year >= 2000) %>%
   filter(cover_method != 'braun-blanquet visual estimate' |
            cover_method != 'custom classification visual estimate') %>%
   filter(project != 'AIM Fortymile') %>%
@@ -140,7 +140,7 @@ map_class = combined_data %>%
 remove_sites = cover_data %>%
   filter((name_accepted == 'Picea' |
            name_accepted == 'Coniferous Tree') &
-           cover > 1) %>%
+           cover >= 0.5) %>%
   distinct(site_code)
 
 # Remove inappropriate sites from site data

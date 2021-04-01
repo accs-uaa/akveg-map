@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Add Categorical Map Data to Model Validation Results
 # Author: Timm Nawrocki
-# Last Updated: 2020-11-30
+# Last Updated: 2021-04-01
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Add Categorical Map Data to Model Validation Results" extracts categorical map classes to model validation results for the NLCD, the coarse classes of the Alaska Vegetation and Wetland Composite, and the fine classes of the Alaska Vegetation and Wetland Composite. This script also assigns the units for the 10x10 km and landscape scale accuracy assessments.
 # ---------------------------------------------------------------------------
@@ -19,10 +19,12 @@ root_folder = 'ACCS_Work'
 # Define data folder
 data_folder = os.path.join(drive,
                            root_folder,
-                           'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Output/model_results/final')
-aux_folder = os.path.join(drive,
-                          root_folder,
-                          'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/auxiliary_data')
+                           'Projects/VegetationEcology/AKVEG_QuantitativeMap',
+                           'Data/Data_Output/model_results/round_20210316/final')
+ancillary_folder = os.path.join(drive,
+                                root_folder,
+                                'Projects/VegetationEcology/AKVEG_QuantitativeMap',
+                                'Data/Data_Input/ancillary_data')
 map_folder = os.path.join(drive,
                           root_folder,
                           'Data/biota/vegetation')
@@ -30,18 +32,26 @@ map_folder = os.path.join(drive,
 # Define work environment
 work_geodatabase = os.path.join(drive,
                                 root_folder,
-                                'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/BeringiaVegetation.gdb')
+                                'Projects/VegetationEcology/AKVEG_QuantitativeMap',
+                                'Data/BeringiaVegetation.gdb')
 
 # Define categorical maps
-nlcd = os.path.join(map_folder, 'Alaska_NationalLandCoverDatabase_2011.img')
-coarse = os.path.join(map_folder, 'AlaskaVegetationWetlandComposite_20180412_Coarse.tif')
-fine = os.path.join(map_folder, 'AlaskaVegetationWetlandComposite_20180412_Fine.tif')
-minor_grid = os.path.join(aux_folder, 'NorthAmericanBeringia_GridIndex_Minor_10km_Selected.tif')
-ecoregions = os.path.join(aux_folder, 'NorthAmericanBeringia_UnifiedEcoregions.tif')
+nlcd = os.path.join(map_folder,
+                    'Alaska_NationalLandCoverDatabase/Alaska_NationalLandCoverDatabase_2016_20200213.img')
+coarse = os.path.join(map_folder,
+                      'Alaska_VegetationWetlandComposite/AlaskaVegetationWetlandComposite_20180412_Coarse.tif')
+fine = os.path.join(map_folder,
+                    'Alaska_VegetationWetlandComposite/AlaskaVegetationWetlandComposite_20180412_Fine.tif')
+minor_grid = os.path.join(ancillary_folder,
+                          'NorthAmericanBeringia_GridIndex_Minor_10km_Selected.tif')
+ecoregions = os.path.join(ancillary_folder,
+                          'NorthAmericanBeringia_UnifiedEcoregions.tif')
 categorical_maps = [nlcd, coarse, fine, minor_grid, ecoregions]
 
 # Define model output folders
-class_folders = ['alnus_nmse', 'betshr_nmse', 'bettre_nmse', 'calcan_nmse', 'cladon_nmse', 'dectre_nmse', 'empnig_nmse', 'erivag_nmse', 'picgla_nmse', 'picmar_nmse', 'rhotom_nmse', 'salshr_nmse', 'sphagn_nmse', 'vaculi_nmse', 'vacvit_nmse', 'wetsed_nmse']
+class_folders = ['alnus', 'betshr', 'bettre', 'dectre', 'dryas',
+                 'empnig', 'erivag', 'picgla', 'picmar', 'rhoshr',
+                 'salshr', 'sphagn', 'vaculi', 'vacvit', 'wetsed']
 
 # Loop through model output folders and partition results for each region
 count = 1
@@ -55,7 +65,7 @@ for class_folder in class_folders:
     input_table = os.path.join(input_folder, 'prediction.csv')
 
     # Define output table
-    output_table = os.path.join(input_folder, 'mapRegion_Statewide.csv')
+    output_table = os.path.join(input_folder, 'NorthAmericanBeringia_Region.csv')
 
     # Define input and output arrays
     categorical_inputs = [input_table] + categorical_maps
@@ -63,7 +73,7 @@ for class_folder in class_folders:
 
     # Create key word arguments
     categorical_kwargs = {'work_geodatabase': work_geodatabase,
-                          'input_projection': 4269,
+                          'input_projection': 3338,
                           'input_array': categorical_inputs,
                           'output_array': categorical_outputs
                           }
