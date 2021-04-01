@@ -11,21 +11,21 @@
 map_classes = c('alnus', 'betshr', 'bettre', 'dectre', 'dryas',
                 'empnig', 'erivag', 'picgla', 'picmar', 'rhoshr',
                 'salshr', 'sphagn', 'vaculi', 'vacvit', 'wetsed')
-upper_limits = c(60,
-                 200,
+upper_limits = c(50,
+                 180,
+                 30,
+                 30,
                  40,
-                 40,
-                 40,
-                 200,
+                 180,
+                 60,
+                 120,
                  100,
-                 150,
-                 150,
                  250,
-                 250,
-                 100,
+                 200,
+                 80,
                  200,
                  200,
-                 100
+                 80
                  )
 
 # Set root directory

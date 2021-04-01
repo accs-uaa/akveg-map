@@ -63,7 +63,7 @@ for (map_class in map_classes) {
     summarize(cover = mean(cover),
               prediction = mean(prediction),
               num_sites = n()) %>%
-    filter(num_sites >= 5)
+    filter(num_sites >= 3)
   
   # Summarize model results by ecoregion
   ecoregion_results = model_results %>%
@@ -71,7 +71,7 @@ for (map_class in map_classes) {
     summarize(cover = mean(cover),
               prediction = mean(prediction),
               num_sites = n()) %>%
-    filter(num_sites >= 25)
+    filter(num_sites >= 15)
   
   # Save output files
   write.csv(grid_results, file = grid_file, fileEncoding = 'UTF-8')
