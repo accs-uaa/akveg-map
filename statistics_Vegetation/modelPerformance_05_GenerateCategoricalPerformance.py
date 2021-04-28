@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Generate Categorical Performance
 # Author: Timm Nawrocki
-# Last Updated: 2021-04-01
+# Last Updated: 2021-04-18
 # Usage: Must be executed in an Anaconda Python 3.7+ installation.
 # Description: "Generate Categorical Performance" calculates the r squared, mean absolute error, and root mean squared error of the categorical vegetation maps.
 # ---------------------------------------------------------------------------
@@ -31,15 +31,15 @@ root_folder = 'ACCS_Work'
 data_folder = os.path.join(drive,
                            root_folder,
                            'Projects/VegetationEcology/AKVEG_QuantitativeMap',
-                           'Data/Data_Output/model_results/round_20210316/final')
+                           'Data/Data_Output/model_results/round_20210402/final')
 
 # Define output csv file
 categorical_csv = os.path.join(data_folder, 'performance_categorical.csv')
 
 # Define model output folders
-class_folders = ['alnus', 'betshr', 'bettre', 'dectre', 'dryas',
-                 'empnig', 'erivag', 'picgla', 'picmar', 'rhoshr',
-                 'salshr', 'sphagn', 'vaculi', 'vacvit', 'wetsed']
+class_folders = ['alnus', 'betshr_nojan', 'bettre', 'dectre', 'dryas_nojan_noprec',
+                 'empnig_nojan', 'erivag_noswi', 'picgla', 'picmar', 'rhoshr',
+                 'salshr', 'sphagn', 'vaculi_nojan', 'vacvit', 'wetsed']
 
 # Define vegetation map variables and regions
 vegetation_maps = [['nlcd'], ['coarse'], ['fine']]

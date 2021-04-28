@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Partition Model Validation Results by Region
 # Author: Timm Nawrocki
-# Last Updated: 2021-04-01
+# Last Updated: 2021-04-18
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Partition Model Validation Results by Region" extracts a set of predictor raster datasets to a study area to enforce the same extent on all rasters.
 # ---------------------------------------------------------------------------
@@ -20,7 +20,7 @@ root_folder = 'ACCS_Work'
 data_folder = os.path.join(drive,
                            root_folder,
                            'Projects/VegetationEcology/AKVEG_QuantitativeMap',
-                           'Data/Data_Output/model_results/round_20210316/final')
+                           'Data/Data_Output/model_results/round_20210402/final')
 
 # Define work environment
 work_geodatabase = os.path.join(drive,
@@ -38,9 +38,9 @@ interior = os.path.join(work_geodatabase,
 regions = [northern, western, interior]
 
 # Define model output folders
-class_folders = ['alnus', 'betshr', 'bettre', 'dectre', 'dryas',
-                 'empnig', 'erivag', 'picgla', 'picmar', 'rhoshr',
-                 'salshr', 'sphagn', 'vaculi', 'vacvit', 'wetsed']
+class_folders = ['alnus', 'betshr_nojan', 'bettre', 'dectre', 'dryas_nojan_noprec',
+                 'empnig_nojan', 'erivag_noswi', 'picgla', 'picmar', 'rhoshr',
+                 'salshr', 'sphagn', 'vaculi_nojan', 'vacvit', 'wetsed']
 
 # Loop through model output folders and partition results for each region
 count = 1

@@ -26,6 +26,11 @@ raster_folder = paste(root_folder,
                       sep = '/'
                       )
 
+# Create raster directory if it does not exist
+if (!file.exists(raster_folder)) {
+  dir.create(raster_folder)
+}
+
 # Import required libraries for geospatial processing: sp, raster, rgdal, and stringr.
 library(sp)
 library(raster)

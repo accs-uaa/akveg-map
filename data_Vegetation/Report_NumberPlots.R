@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Prepare Class Data - Dryas
+# Report Number of Available Plots
 # Author: Timm Nawrocki
-# Last Updated: 2021-04-04
+# Last Updated: 2021-04-02
 # Usage: Must be executed in R 4.0.0+.
-# Description: "Prepare Class Data - Dryas" prepares the map class data for statistical modeling.
+# Description: "Report Number of Available Plots" finds the number of plots from merged data sources between a specified year range.
 # ---------------------------------------------------------------------------
 
 # Set root directory
@@ -52,57 +52,17 @@ site_visit = cover_data %>%
   select(site_code, year, day) %>%
   distinct()
 
-#### CREATE PRESENCE DATA
-
-# Filter the cover data to include only the map class
-presence_data = cover_data %>%
-  filter(genus == 'Dryas') %>%
-  group_by(site_code, project, year, day, name_accepted, genus) %>%
-  summarize(cover = max(cover))
-
-# Sum multiple taxa to single summary
-presence_data = presence_data %>%
-  group_by(site_code, project, year, day) %>%
-  summarize(cover = sum(cover)) %>%
-  mutate(name_accepted = 'Dryas Shrubs') %>%
-  mutate(genus = 'Dryas') %>%
-  mutate(zero = ifelse(cover < 0.5, 0, 1))
-
-#### CREATE ABSENCE DATA
-
-# Remove presences from all sites to create observed absences
-absence_data = site_data %>%
-  select(site_code, initial_project) %>%
-  distinct() %>%
-  anti_join(presence_data, by = 'site_code') %>%
-  inner_join(site_visit, by = 'site_code') %>%
-  rename(project = initial_project)
-
-# Add map class information to absences
-absence_data = absence_data %>%
-  mutate(name_accepted = 'Dryas Shrubs') %>%
-  mutate(genus = 'Dryas') %>%
-  mutate(cover = 0) %>%
-  mutate(zero = 0)
-
-#### MERGE PRESENCES AND ABSENCES
-
-# Bind rows from ground data
-combined_data = bind_rows(presence_data, absence_data)
-
-# Join site data to map class data
-combined_data = combined_data %>%
+# Join site data to cover data
+combined_data = cover_data %>%
   inner_join(site_data, by = 'site_code') %>%
   select(-initial_project)
 
-# Control for aerial data, fire year, year, cover type, and project
-map_class = combined_data %>%
+# Control for year, method, and target groups
+plots_general = combined_data %>%
   filter(perspective == 'ground' |
-           perspective == 'generated' |
-           (perspective == 'aerial' &
-              cover >= 10)) %>%
-  filter(year > fireYear) %>%
-  filter(year >= 2000) %>%
+           perspective == 'aerial') %>%
+  filter(year >= 2000 &
+           year <= 2019) %>%
   filter(cover_method != 'braun-blanquet visual estimate' |
            cover_method != 'custom classification visual estimate') %>%
   filter(project != 'AIM Fortymile') %>%
@@ -118,28 +78,36 @@ map_class = combined_data %>%
   filter(project != 'USFWS Interior') %>%
   filter(project != 'USFWS SELA PA') %>%
   filter(project != 'USFWS Selawik LC') %>%
-  filter(project != 'Wrangell LC')
-  
-# Remove NPS I&M Data for non-spruce species/groups
-map_class = map_class %>%
+  filter(project != 'Wrangell LC') %>%
   filter(project != 'NPS ARCN I&M') %>%
-  filter(project != 'NPS CAKN I&M')
+  filter(project != 'NPS CAKN I&M') %>%
+  select(site_code, project, year, day) %>%
+  distinct()
 
-#### REMOVE INAPPROPRIATE SITES
+plots_spruce = combined_data %>%
+  filter(perspective == 'ground' |
+           perspective == 'aerial') %>%
+  filter(year >= 2000 &
+           year <= 2019) %>%
+  filter(project == 'NPS ARCN I&M' |
+           project == 'NPS CAKN I&M') %>%
+  select(site_code, project, year, day) %>%
+  distinct()
 
-# Identify sites that are inappropriate for the modeled class
-remove_sites = cover_data %>%
-  filter((name_accepted == 'Dwarf Shrub' |
-            name_accepted == 'Shrub') &
-           cover >= 0.5) %>%
-  distinct(site_code)
+#### COUNT DISTINCT SITE TOTALS
 
-# Remove inappropriate sites from site data
-map_class = map_class %>%
-  anti_join(remove_sites, by = 'site_code')
+# Count number of sites
+number_general = nrow(plots_general)
+number_spruce = nrow(plots_spruce)
 
-#### EXPORT DATA
+# Print number of sites
+print(number_general)
+print(number_spruce)
 
-# Export map class data as csv
-output_csv = paste(data_folder, 'species_data/mapClass_dryas.csv', sep = '/')
-write.csv(map_class, file = output_csv, fileEncoding = 'UTF-8')
+#### SUMMARIZE DISTINCT SITES BY PROJECT
+projects_general = plots_general %>%
+  group_by(project) %>%
+  summarize(num_sites = n())
+projects_spruce = plots_spruce %>%
+  group_by(project) %>%
+  summarize(num_sites = n())

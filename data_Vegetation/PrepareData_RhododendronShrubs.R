@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Prepare Class Data - Rhododendron Shrubs
 # Author: Timm Nawrocki
-# Last Updated: 2021-03-21
+# Last Updated: 2021-04-04
 # Usage: Must be executed in R 4.0.0+.
 # Description: "Prepare Class Data - Rhododendron Shrubs" prepares the map class data for statistical modeling.
 # ---------------------------------------------------------------------------
@@ -75,24 +75,12 @@ presence_data = presence_data %>%
 #### CREATE ABSENCE DATA
 
 # Remove presences from all sites to create observed absences
-absence_observed = site_data %>%
+absence_data = site_data %>%
   select(site_code, initial_project) %>%
   distinct() %>%
   anti_join(presence_data, by = 'site_code') %>%
   inner_join(site_visit, by = 'site_code') %>%
   rename(project = initial_project)
-
-# Add synthetic absences
-absence_synthetic = site_data %>%
-  filter(initial_project == 'Lake Absences' |
-           initial_project == 'Glacier Absences') %>%
-  select(site_code, initial_project) %>%
-  mutate(year = 9999) %>%
-  mutate(day = 196) %>%
-  rename(project = initial_project)
-
-# Merge observed and synthetic absences
-absence_data = rbind(absence_observed, absence_synthetic)
 
 # Add map class information to absences
 absence_data = absence_data %>%
@@ -116,7 +104,7 @@ map_class = combined_data %>%
   filter(perspective == 'ground' |
            perspective == 'generated' |
            (perspective == 'aerial' &
-              cover >= 5)) %>%
+              cover >= 10)) %>%
   filter(year > fireYear) %>%
   filter(year >= 2000) %>%
   filter(cover_method != 'braun-blanquet visual estimate' |

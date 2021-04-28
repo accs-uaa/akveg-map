@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Generate Continuous Performance
 # Author: Timm Nawrocki
-# Last Updated: 2021-04-01
+# Last Updated: 2021-04-18
 # Usage: Must be executed in an Anaconda Python 3.7+ installation.
 # Description: "Generate Continuous Performance" calculates the r squared, mean absolute error, root mean squared error, auc, percentage distribution accuracy, mean cover, and median cover of the continuous vegetation maps at the native map resolution.
 # ---------------------------------------------------------------------------
@@ -26,15 +26,15 @@ root_folder = 'ACCS_Work'
 data_folder = os.path.join(drive,
                            root_folder,
                            'Projects/VegetationEcology/AKVEG_QuantitativeMap',
-                           'Data/Data_Output/model_results/round_20210316/final')
+                           'Data/Data_Output/model_results/round_20210402/final')
 
 # Define output csv file
 continuous_csv = os.path.join(data_folder, 'performance_continuous.csv')
 
 # Define model output folders
-class_folders = ['alnus', 'betshr', 'bettre', 'dectre', 'dryas',
-                 'empnig', 'erivag', 'picgla', 'picmar', 'rhoshr',
-                 'salshr', 'sphagn', 'vaculi', 'vacvit', 'wetsed']
+class_folders = ['alnus', 'betshr_nojan', 'bettre', 'dectre', 'dryas_nojan_noprec',
+                 'empnig_nojan', 'erivag_noswi', 'picgla', 'picmar', 'rhoshr',
+                 'salshr', 'sphagn', 'vaculi_nojan', 'vacvit', 'wetsed']
 
 # Define vegetation map variables and regions
 regions = ['Region',

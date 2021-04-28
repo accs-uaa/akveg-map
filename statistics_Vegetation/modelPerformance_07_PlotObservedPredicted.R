@@ -2,26 +2,26 @@
 # ---------------------------------------------------------------------------
 # Plot observed vs mean predicted foliar cover per scale
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Last Updated: 2020-11-30
+# Last Updated: 2021-04-18
 # Usage: Script should be executed in R 4.0.0+.
 # Description: "Plot observed vs mean predicted foliar cover per scale" creates a plot showing the observed vs mean predicted foliar cover values with theoretical 1:1 ratio line and loess smoothed conditional mean.
 # ---------------------------------------------------------------------------
 
 # Set map classes
-map_classes = c('alnus', 'betshr', 'bettre', 'dectre', 'dryas',
-                'empnig', 'erivag', 'picgla', 'picmar', 'rhoshr',
-                'salshr', 'sphagn', 'vaculi', 'vacvit', 'wetsed')
-upper_limits = c(50,
+map_classes = c('alnus', 'betshr_nojan', 'bettre', 'dectre', 'dryas_nojan_noprec',
+                'empnig_nojan', 'erivag_noswi', 'picgla', 'picmar', 'rhoshr',
+                'salshr', 'sphagn', 'vaculi_nojan', 'vacvit', 'wetsed')
+upper_limits = c(80,
                  180,
-                 30,
-                 30,
+                 50,
+                 50,
                  40,
-                 180,
-                 60,
+                 150,
+                 50,
                  120,
-                 100,
+                 120,
                  250,
-                 200,
+                 180,
                  80,
                  200,
                  200,
@@ -36,7 +36,7 @@ root_folder = 'ACCS_Work'
 data_folder = paste(drive,
                     root_folder,
                     'Projects/VegetationEcology/AKVEG_QuantitativeMap',
-                    'Data/Data_Output/model_results/round_20210316/final',
+                    'Data/Data_Output/model_results/round_20210402/final',
                     sep = '/')
 
 # Import required libraries

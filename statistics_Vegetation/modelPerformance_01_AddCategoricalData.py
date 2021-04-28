@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Add Categorical Map Data to Model Validation Results
 # Author: Timm Nawrocki
-# Last Updated: 2021-04-01
+# Last Updated: 2021-04-18
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Add Categorical Map Data to Model Validation Results" extracts categorical map classes to model validation results for the NLCD, the coarse classes of the Alaska Vegetation and Wetland Composite, and the fine classes of the Alaska Vegetation and Wetland Composite. This script also assigns the units for the 10x10 km and landscape scale accuracy assessments.
 # ---------------------------------------------------------------------------
@@ -20,7 +20,7 @@ root_folder = 'ACCS_Work'
 data_folder = os.path.join(drive,
                            root_folder,
                            'Projects/VegetationEcology/AKVEG_QuantitativeMap',
-                           'Data/Data_Output/model_results/round_20210316/final')
+                           'Data/Data_Output/model_results/round_20210402/final')
 ancillary_folder = os.path.join(drive,
                                 root_folder,
                                 'Projects/VegetationEcology/AKVEG_QuantitativeMap',
@@ -49,9 +49,9 @@ ecoregions = os.path.join(ancillary_folder,
 categorical_maps = [nlcd, coarse, fine, minor_grid, ecoregions]
 
 # Define model output folders
-class_folders = ['alnus', 'betshr', 'bettre', 'dectre', 'dryas',
-                 'empnig', 'erivag', 'picgla', 'picmar', 'rhoshr',
-                 'salshr', 'sphagn', 'vaculi', 'vacvit', 'wetsed']
+class_folders = ['alnus', 'betshr_nojan', 'bettre', 'dectre', 'dryas_nojan_noprec',
+                 'empnig_nojan', 'erivag_noswi', 'picgla', 'picmar', 'rhoshr',
+                 'salshr', 'sphagn', 'vaculi_nojan', 'vacvit', 'wetsed']
 
 # Loop through model output folders and partition results for each region
 count = 1
