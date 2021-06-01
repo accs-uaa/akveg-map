@@ -11,7 +11,7 @@
 import arcpy
 import os
 from package_GeospatialProcessing import arcpy_geoprocessing
-from package_GeospatialProcessing import extract_to_study_area
+from package_GeospatialProcessing import extract_raster
 
 # Set root directory
 drive = 'N:/'
@@ -33,11 +33,6 @@ grid_list = ['A5', 'A6', 'A7', 'A8',
              'C4', 'C5', 'C6', 'C7', 'C8',
              'D4', 'D5', 'D6',
              'E4', 'E5', 'E6']
-
-# Define input datasets
-study_area = os.path.join(drive,
-                          root_folder,
-                          'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/northAmericanBeringia_TotalArea.tif')
 
 # Loop through each grid in list and extract all predictors to study area
 for grid in grid_list:
@@ -73,7 +68,7 @@ for grid in grid_list:
         # Check if output already exists
         if arcpy.Exists(output_raster) == 0:
             # Define input and output arrays
-            extract_inputs = [input_raster, study_area, grid_raster]
+            extract_inputs = [input_raster, grid_raster]
             extract_outputs = [output_raster]
 
             # Create key word arguments
@@ -84,7 +79,7 @@ for grid in grid_list:
 
             # Extract raster to study area
             print(f'\tExtracting raster {count} of {total} for Grid {grid}...')
-            arcpy_geoprocessing(extract_to_study_area, **extract_kwargs)
+            arcpy_geoprocessing(extract_raster, **extract_kwargs)
             print('\t----------')
         else:
             print(f'\tRaster {count} of {total} for Grid {grid} already exists.')
