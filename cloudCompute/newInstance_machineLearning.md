@@ -93,8 +93,8 @@ sudo apt-get install build-essential bzip2 cmake git libxml2-dev python3-dev vim
 Install latest Anaconda release. The version referenced in the example below may need to be updated. The repository version should match the Ubuntu Linux release version.
 
 ```
-wget https://repo.anaconda.com/archive/Anaconda3-2020.11-Linux-x86_64.sh
-bash Anaconda3-2020.11-Linux-x86_64.sh
+wget https://repo.anaconda.com/archive/Anaconda3-2021.05-Linux-x86_64.sh
+bash Anaconda3-2021.05-Linux-x86_64.sh
 ```
 
 At the option to prepend the Anaconda3 install location to PATH in your home directory, hit enter. At the option to  initialize Anaconda 3, type "yes".
@@ -102,7 +102,7 @@ At the option to prepend the Anaconda3 install location to PATH in your home dir
 Remove the installation file, start bashrc, and update all packages using conda.
 
 ```
-rm Anaconda3-2020.11-Linux-x86_64.sh
+rm Anaconda3-2021.05-Linux-x86_64.sh
 source ~/.bashrc
 conda update --all
 ```
