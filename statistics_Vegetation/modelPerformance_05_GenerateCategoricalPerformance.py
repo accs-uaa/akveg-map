@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Generate Categorical Performance
 # Author: Timm Nawrocki
-# Last Updated: 2021-04-18
+# Last Updated: 2021-10-12
 # Usage: Must be executed in an Anaconda Python 3.7+ installation.
 # Description: "Generate Categorical Performance" calculates the r squared, mean absolute error, and root mean squared error of the categorical vegetation maps.
 # ---------------------------------------------------------------------------
@@ -21,7 +21,6 @@ from sklearn.metrics import mean_absolute_error
 from sklearn.metrics import mean_squared_error
 # Import timing packages
 import time
-import datetime
 
 # Set root directory
 drive = 'N:/'
@@ -31,7 +30,7 @@ root_folder = 'ACCS_Work'
 data_folder = os.path.join(drive,
                            root_folder,
                            'Projects/VegetationEcology/AKVEG_QuantitativeMap',
-                           'Data/Data_Output/model_results/round_20210402/final')
+                           'Data/Data_Output/model_results/round_20211012/final')
 
 # Define output csv file
 categorical_csv = os.path.join(data_folder, 'performance_categorical.csv')
@@ -42,7 +41,7 @@ class_folders = ['alnus', 'betshr_nojan', 'bettre', 'dectre', 'dryas_nojan_nopre
                  'salshr', 'sphagn', 'vaculi_nojan', 'vacvit', 'wetsed']
 
 # Define vegetation map variables and regions
-vegetation_maps = [['nlcd'], ['coarse'], ['fine']]
+vegetation_maps = [['nlcd'], ['coarse'], ['fine'], ['above'], ['landfire']]
 regions = ['Region',
            'Subregion_Northern',
            'Subregion_Western',
@@ -52,7 +51,7 @@ regions = ['Region',
 output_variables = ['mapClass', 'region', 'vegMap', 'r2', 'mae', 'rmse', 'cover_mean', 'cover_median']
 
 # Create empty data frame
-categorical_performance = pd.DataFrame(columns = output_variables)
+categorical_performance = pd.DataFrame(columns=output_variables)
 
 # Define static variables
 cover = ['cover']
@@ -80,9 +79,12 @@ for class_folder in class_folders:
         cover_median = presence_data['cover'].median()
 
         # Loop through categorical maps
-        for map in vegetation_maps:
+        for vegetation_map in vegetation_maps:
+            # Remove no data values
+            analysis_data = input_data[input_data[vegetation_map[0]] != -99999]
+
             # Set the discrete X data
-            X_discrete = input_data[map[0]]
+            X_discrete = analysis_data[vegetation_map[0]]
             # Convert the X data to numpy array
             X_discrete_array = np.asarray(X_discrete)
             X_discrete_array = np.reshape(X_discrete_array, (-1, 1))
@@ -94,16 +96,16 @@ for class_folder in class_folders:
             X_transformed_array = encoder.transform(X_discrete_array)
 
             # Create an empty data frame to store the outer test results
-            outer_results = pd.DataFrame(columns=cover + map + discrete_response + ['iteration'])
+            outer_results = pd.DataFrame(columns=cover + vegetation_map + discrete_response + ['iteration'])
 
             # Iterate through outer cross-validation splits
             i = 1
-            for train_index, test_index in outer_cv_splits.split(input_data):
+            for train_index, test_index in outer_cv_splits.split(analysis_data):
                 #### CONDUCT MODEL TRAIN
 
                 # Partition the outer train split by iteration number
                 iteration_start = time.time()
-                train_iteration = input_data.iloc[train_index]
+                train_iteration = analysis_data.iloc[train_index]
 
                 # Identify X and y train splits for the regressor
                 X_train_regress = X_transformed_array[train_index]
@@ -116,7 +118,7 @@ for class_folder in class_folders:
                 #### CONDUCT MODEL TEST
 
                 # Partition the outer test split by iteration number
-                test_iteration = input_data.iloc[test_index]
+                test_iteration = analysis_data.iloc[test_index]
 
                 # Identify X test split
                 X_test = X_transformed_array[test_index]
@@ -124,10 +126,10 @@ for class_folder in class_folders:
                 # Use the regressor to predict foliar cover response
                 response_prediction = regression.predict(X_test)
                 # Concatenate predicted values to test data frame
-                test_iteration = test_iteration.assign(discrete_response = response_prediction)
+                test_iteration = test_iteration.assign(discrete_response=response_prediction)
 
                 # Add iteration number to test iteration
-                test_iteration = test_iteration.assign(iteration = i)
+                test_iteration = test_iteration.assign(iteration=i)
 
                 # Add the test results to output data frame
                 outer_results = outer_results.append(test_iteration, ignore_index=True, sort=True)
@@ -150,14 +152,14 @@ for class_folder in class_folders:
             # Create row in performance data frame to store results
             iteration_results = pd.DataFrame([[class_folder,
                                                region,
-                                               map[0],
+                                               vegetation_map[0],
                                                round(r_score, 2),
                                                round(mae, 2),
                                                round(rmse, 2),
                                                round(cover_mean, 2),
                                                round(cover_median, 2)
                                                ]],
-                                             columns = output_variables)
+                                             columns=output_variables)
             categorical_performance = categorical_performance.append(iteration_results, ignore_index=True)
 
 # Export categorical performance to csv

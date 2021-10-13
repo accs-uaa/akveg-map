@@ -13,7 +13,7 @@ def extract_categorical_maps(**kwargs):
     Description: extracts categorical map values to a set of x and y values in a table
     Inputs: 'work_geodatabase' -- path to a file geodatabase that will serve as the workspace
             'input_projection' -- the machine number for the input projection
-            'input_array' -- an array containing the input table (must be first) and the NLCD, Coarse Classes, and Fine Classes rasters (in that order)
+            'input_array' -- an array containing the input table (must be first) and the NLCD, AKVWC Coarse Classes, AKVWC Fine Classes, NASA ABoVE Land Cover, and Landfire Existing Vegetation (in that order)
             'output_array' -- an array containing an output csv table for the extracted data results
     Returned Value: Returns a csv table containing the extracted data results
     Preconditions: requires results from a statistical model in csv format
@@ -24,6 +24,7 @@ def extract_categorical_maps(**kwargs):
     from arcpy.sa import ExtractMultiValuesToPoints
     import datetime
     import os
+    import pandas as pd
     import time
 
     # Parse key word argument inputs
@@ -33,18 +34,17 @@ def extract_categorical_maps(**kwargs):
     nlcd = kwargs['input_array'][1]
     coarse = kwargs['input_array'][2]
     fine = kwargs['input_array'][3]
-    minor_grid = kwargs['input_array'][4]
-    ecoregions = kwargs['input_array'][5]
-    output_table = kwargs['output_array'][0]
+    above = kwargs['input_array'][4]
+    landfire = kwargs['input_array'][5]
+    minor_grid = kwargs['input_array'][6]
+    ecoregions = kwargs['input_array'][7]
+    output_file = kwargs['output_array'][0]
 
     # Set overwrite option
     arcpy.env.overwriteOutput = True
 
     # Set workspace
     arcpy.env.workspace = work_geodatabase
-
-    # Split output table into location and name
-    output_location, output_name = os.path.split(output_table)
 
     # Define intermediate dataset
     points_feature = os.path.join(work_geodatabase, 'points_feature')
@@ -62,11 +62,18 @@ def extract_categorical_maps(**kwargs):
                                     '',
                                     input_system)
     ExtractMultiValuesToPoints(points_feature,
-                               [[nlcd, 'nlcd'], [coarse, 'coarse'], [fine, 'fine'], [minor_grid, 'minor'], [ecoregions, 'ecoregion']],
+                               [[nlcd, 'nlcd'], [coarse, 'coarse'], [fine, 'fine'], [above, 'above'],
+                                [landfire, 'landfire'], [minor_grid, 'minor'], [ecoregions, 'ecoregion']],
                                'NONE')
-    arcpy.conversion.TableToTable(points_feature,
-                                  output_location,
-                                  output_name)
+    # Export table
+    final_fields = [field.name for field in arcpy.ListFields(points_feature)
+                    if field.name != arcpy.Describe(points_feature).shapeFieldName]
+    output_data = pd.DataFrame(arcpy.da.TableToNumPyArray(points_feature,
+                                                          final_fields,
+                                                          '',
+                                                          False,
+                                                          -99999))
+    output_data.to_csv(output_file, header=True, index=False, sep=',', encoding='utf-8')
     # Delete intermediate datasets
     if arcpy.Exists(points_feature) == 1:
         arcpy.management.Delete(points_feature)

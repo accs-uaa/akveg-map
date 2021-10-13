@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Prepare Scaled Data for Accuracy Assessment
 # Author: Timm Nawrocki
-# Last Updated: 2021-04-18
+# Last Updated: 2021-10-12
 # Usage: Should be executed in R 4.0.0+.
 # Description: "Prepare Scaled Data for Accuracy Assessment" calculates the mean observed and predicted foliar cover grouped by the minor grid units and ecoregions for input into an accuracy assessment script.
 # ---------------------------------------------------------------------------
@@ -20,7 +20,7 @@ root_folder = 'ACCS_Work'
 data_folder = paste(drive,
                     root_folder,
                     'Projects/VegetationEcology/AKVEG_QuantitativeMap',
-                    'Data/Data_Output/model_results/round_20210402/final',
+                    'Data/Data_Output/model_results/round_20211012/final',
                     sep = '/')
 
 # Install required libraries if they are not already installed.

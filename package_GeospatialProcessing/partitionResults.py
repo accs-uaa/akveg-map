@@ -23,6 +23,7 @@ def partition_results(**kwargs):
     import arcpy
     import datetime
     import os
+    import pandas as pd
     import time
 
     # Parse key word argument inputs
@@ -30,16 +31,13 @@ def partition_results(**kwargs):
     input_projection = kwargs['input_projection']
     region = kwargs['input_array'][0]
     input_table = kwargs['input_array'][1]
-    output_table = kwargs['output_array'][0]
+    output_file = kwargs['output_array'][0]
 
     # Set overwrite option
     arcpy.env.overwriteOutput = True
 
     # Set workspace
     arcpy.env.workspace = work_geodatabase
-
-    # Split output table into location and name
-    output_location, output_name = os.path.split(output_table)
 
     # Define intermediate datasets
     points_feature = os.path.join(work_geodatabase, 'points_feature')
@@ -58,7 +56,15 @@ def partition_results(**kwargs):
                                     '',
                                     input_system)
     arcpy.analysis.Clip(points_feature, region, clip_feature)
-    arcpy.conversion.TableToTable(clip_feature, output_location, output_name)
+    # Export table
+    final_fields = [field.name for field in arcpy.ListFields(clip_feature)
+                    if field.name != arcpy.Describe(clip_feature).shapeFieldName]
+    output_data = pd.DataFrame(arcpy.da.TableToNumPyArray(clip_feature,
+                                                          final_fields,
+                                                          '',
+                                                          False,
+                                                          -99999))
+    output_data.to_csv(output_file, header=True, index=False, sep=',', encoding='utf-8')
     # Delete intermediate datasets
     if arcpy.Exists(points_feature) == 1:
         arcpy.management.Delete(points_feature)

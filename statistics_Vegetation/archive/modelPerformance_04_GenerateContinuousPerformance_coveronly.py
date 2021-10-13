@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Generate Continuous Performance
 # Author: Timm Nawrocki
-# Last Updated: 2021-10-12
+# Last Updated: 2021-04-18
 # Usage: Must be executed in an Anaconda Python 3.7+ installation.
 # Description: "Generate Continuous Performance" calculates the r squared, mean absolute error, root mean squared error, auc, percentage distribution accuracy, mean cover, and median cover of the continuous vegetation maps at the native map resolution.
 # ---------------------------------------------------------------------------
@@ -26,10 +26,10 @@ root_folder = 'ACCS_Work'
 data_folder = os.path.join(drive,
                            root_folder,
                            'Projects/VegetationEcology/AKVEG_QuantitativeMap',
-                           'Data/Data_Output/model_results/round_20211012/final')
+                           'Data/Data_Output/model_results/round_20210402/final')
 
 # Define output csv file
-continuous_csv = os.path.join(data_folder, 'performance_continuous.csv')
+continuous_csv = os.path.join(data_folder, 'performance_continuous_coveronly.csv')
 
 # Define model output folders
 class_folders = ['alnus', 'betshr_nojan', 'bettre', 'dectre', 'dryas_nojan_noprec',
@@ -37,23 +37,20 @@ class_folders = ['alnus', 'betshr_nojan', 'bettre', 'dectre', 'dryas_nojan_nopre
                  'salshr', 'sphagn', 'vaculi_nojan', 'vacvit', 'wetsed']
 
 # Define vegetation map variables and regions
-regions = ['Region',
-           'Subregion_Northern',
-           'Subregion_Western',
-           'Subregion_Interior']
+regions = ['Region']
 
 # Define output variables
 output_variables = ['mapClass', 'region', 'vegMap', 'r2', 'mae', 'rmse',
                     'auc', 'acc', 'cover_mean', 'cover_median']
 
 # Create empty data frame
-continuous_performance = pd.DataFrame(columns=output_variables)
+continuous_performance = pd.DataFrame(columns = output_variables)
 
 # Define static variables
 cover = ['cover']
-prediction = ['prediction']
+prediction = ['response']
 zero_variable = ['zero']
-distribution = ['distribution']
+distribution = ['cover_distribution']
 presence = ['presence']
 
 # Loop through model output folders and calculate map performance
@@ -66,6 +63,11 @@ for class_folder in class_folders:
         # Convert values to floats
         input_data[cover[0]] = input_data[cover[0]].astype(float)
         input_data[prediction[0]] = input_data[prediction[0]].astype(float)
+
+        # Convert cover to distribution
+        input_data['cover_distribution'] = 0
+        input_data.loc[input_data['response'] >= 0.5, 'cover_distribution'] = 1
+        input_data.loc[input_data['response'] < 0.5, 'response'] = 0
 
         # Partition output results to presence-absence observed and predicted
         y_classify_observed = input_data[zero_variable[0]].astype('int32')
@@ -97,7 +99,7 @@ for class_folder in class_folders:
 
         # Calculate performance metrics from output_results
         r_score = r2_score(y_regress_observed, y_regress_predicted, sample_weight=None,
-                           multioutput='uniform_average')
+                               multioutput='uniform_average')
         mae = mean_absolute_error(y_regress_observed, y_regress_predicted)
         rmse = np.sqrt(mean_squared_error(y_regress_observed, y_regress_predicted))
 
@@ -113,7 +115,7 @@ for class_folder in class_folders:
                                         round(cover_mean, 2),
                                         round(cover_median, 2)
                                         ]],
-                                      columns=output_variables)
+                                      columns = output_variables)
         continuous_performance = continuous_performance.append(region_results, ignore_index=True)
 
 # Export categorical performance to csv
