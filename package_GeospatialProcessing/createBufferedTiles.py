@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Create Buffered Tiles
+# Create buffered tiles
 # Author: Timm Nawrocki
-# Last Updated: 2021-03-10
+# Last Updated: 2021-11-03
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Create Buffered Tiles" is a function that extracts, buffers, and clips a set of grids from a grid index to form individual raster tiles.
+# Description: "Create buffered tiles" is a function that extracts, buffers, and clips a set of grids from a grid index to form individual raster tiles.
 # ---------------------------------------------------------------------------
 
 # Define a function to create buffered tiles for a grid index
@@ -14,7 +14,7 @@ def create_buffered_tiles(**kwargs):
     Inputs: 'tile_name' -- a field name in the grid index that stores the tile name
             'distance' -- a string representing a number and units for buffer distance
             'work_geodatabase' -- a geodatabase to store temporary results
-            'input_array' -- an array containing the input grid index and a clip area
+            'input_array' -- an array containing the input grid index and a study area raster
             'output_folder' -- an empty folder to store the output tiles
     Returned Value: Returns a raster dataset for each grid in grid index
     Preconditions: grid index must have been generated using create_grid_indices
@@ -60,7 +60,7 @@ def create_buffered_tiles(**kwargs):
         for row in cursor:
             # Define an output and temporary raster
             buffer_feature = os.path.join(arcpy.env.workspace, 'Grid_' + row[1] + '_Buffer')
-            output_grid = os.path.join(output_folder, 'Grid_' + row[1] + '.tif')
+            output_grid = os.path.join(output_folder, row[1] + '.tif')
 
             # If tile does not exist, then create tile
             if arcpy.Exists(output_grid) == 0:
@@ -69,13 +69,17 @@ def create_buffered_tiles(**kwargs):
                 # Define feature
                 feature = row[0]
                 # Buffer feature by user specified distance
-                arcpy.analysis.Buffer(feature, buffer_feature, distance)
+                arcpy.analysis.PairwiseBuffer(feature,
+                                              buffer_feature,
+                                              distance,
+                                              'NONE',
+                                              '',
+                                              'PLANAR',
+                                              '')
                 # Extract snap raster to buffered tile feature
                 extract_raster = ExtractByMask(snap_raster, buffer_feature)
-                # Reclassify values to 1
-                reclassify_raster = Reclassify(extract_raster, 'Value', RemapRange([[1,100000,1]]))
                 # Copy raster to output
-                arcpy.management.CopyRaster(reclassify_raster,
+                arcpy.management.CopyRaster(extract_raster,
                                             output_grid,
                                             '',
                                             '',
@@ -95,8 +99,7 @@ def create_buffered_tiles(**kwargs):
                 iteration_elapsed = int(iteration_end - iteration_start)
                 iteration_success_time = datetime.datetime.now()
                 # Report success
-                print(
-                    f'\tOutput grid {os.path.split(output_grid)[1]} completed at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
+                print(f'\tOutput grid {os.path.split(output_grid)[1]} completed at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
                 print('\t----------')
             else:
                 print(f'\tOutput grid {os.path.split(output_grid)[1]} already exists...')
