@@ -1,158 +1,128 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Create Mean Annual Total Precipitation Composite for 2000-2015
+# Create mean annual total precipitation composite for 2000-2015
 # Author: Timm Nawrocki
-# Last Updated: 2021-01-09
+# Last Updated: 2021-11-04
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Create Mean Annual Total Precipitation Composite for 2000-2015" calculates the mean annual precipitation from all months for years 2000-2015. The primary data are the SNAP Alaska-Yukon 2km data. The SNAP Alaska-Canada 10 minute data fill in the included portion of Northwest Territories.
+# Description: "Create mean annual total precipitation composite for 2000-2015" calculates the mean annual precipitation from all months for years 2000-2015. The primary data are the SNAP Alaska-Yukon 2km data with the included portion of the Northwest Territories interpolated by geographic nearest neighbors.
 # ---------------------------------------------------------------------------
 
 # Import packages
 import arcpy
-import datetime
 import os
 from package_GeospatialProcessing import arcpy_geoprocessing
 from package_GeospatialProcessing import calculate_climate_mean
 from package_GeospatialProcessing import format_climate_grids
 from package_GeospatialProcessing import interpolate_raster
-import time
 
 # Set root directory
 drive = 'N:/'
 root_folder = 'ACCS_Work'
 
-# Define data folder
+# Define folder structure
 data_folder = os.path.join(drive, root_folder, 'Data/climatology/precipitation')
-data_2km = os.path.join(data_folder, 'unprocessed/2km')
-processed_2km = os.path.join(data_folder, 'processed/2km')
-processed_10m = os.path.join(data_folder, 'processed/10m')
-gridded_folder = os.path.join(data_folder, 'gridded')
+project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data')
+grid_folder = os.path.join(drive, root_folder, 'Data/analyses/grid_major/nab')
+unprocessed_folder = os.path.join(data_folder, 'unprocessed/2km')
+processed_folder = os.path.join(data_folder, 'processed')
+output_folder = os.path.join(data_folder, 'gridded/nab')
 
 # Define input datasets
-grid_major = os.path.join(drive, root_folder, 'Data/analyses/gridMajor')
-study_area = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/northAmericanBeringia_ModelArea.tif')
+study_area = os.path.join(project_folder, 'Data_Input/NorthAmericanBeringia_ModelArea.tif')
 
 # Define output datasets
-raw_2km = os.path.join(processed_2km, 'Precipitation_MeanAnnual_Raw_2km_2000-2015.tif')
-interpolated_2km = os.path.join(processed_2km, 'Precipitation_MeanAnnual_Interpolated_2km_2000-2015.tif')
+mean_raw = os.path.join(processed_folder, 'full/Precipitation_MeanAnnual_Raw_2km_2000-2015.tif')
+mean_interpolated = os.path.join(processed_folder, 'nab/Precipitation_MeanAnnual_Interpolated_2km_2000-2015.tif')
 
-# Define working geodatabase
-geodatabase = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/BeringiaVegetation.gdb')
-# Set environment workspace
-arcpy.env.workspace = geodatabase
+# Define work geodatabase
+work_geodatabase = os.path.join(project_folder, 'BeringiaVegetation.gdb')
 
-# Set overwrite option
-arcpy.env.overwriteOutput = True
-
-# Define month and property values
-property_2km = 'pr_total_mm_CRU_TS40_historical'
-months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
-years = ['2000', '2001', '2002', '2003', '2004', '2005', '2006', '2007', '2008', '2009', '2010', '2011', '2012', '2013', '2014', '2015']
-denominator = len(years)
-
-# Create a list of all 2km raster data
-rasters_2km = []
-for year in years:
-    for month in months:
-        raster = os.path.join(data_2km, property_2km + '_' + month + '_' + year + '.tif')
-        rasters_2km.append(raster)
-
-# Define input and output arrays for the 2km data
-inputs_2km = rasters_2km
-outputs_2km = [raw_2km]
-
-# Create key word arguments for the 2km data
-kwargs_2km = {'input_array': inputs_2km,
-              'output_array': outputs_2km,
-              'denominator': denominator}
-
-# Create a composite raster for the 2km data
-if arcpy.Exists(raw_2km) == 0:
-    print('Calculating 2km mean annual precipitation...')
-    arcpy_geoprocessing(calculate_climate_mean, **kwargs_2km)
-    print('----------')
-else:
-    print('Mean annual precipitation at 2 km resolution already exists...')
-    print('----------')
-
-# Define input and output arrays to interpolate raster
-interpolate_inputs = [study_area, raw_2km]
-interpolate_outputs = [interpolated_2km]
-
-# Create key word arguments to interpolate raster
-interpolate_kwargs = {'input_array': interpolate_inputs,
-                      'output_array': interpolate_outputs}
-
-# Interpolate raw minimum January Temperature raster
-if arcpy.Exists(interpolated_2km) == 0:
-    print('Interpolating missing data...')
-    arcpy_geoprocessing(interpolate_raster, **interpolate_kwargs)
-    print('----------')
-else:
-    print('Interpolated data already exists...')
-    print('----------')
-
-# List grid rasters
-print('Searching for grid rasters...')
-# Start timing function
-iteration_start = time.time()
-# Create a list of included grids
+# Define grids
 grid_list = ['A5', 'A6', 'A7', 'A8',
              'B4', 'B5', 'B6', 'B7', 'B8',
              'C4', 'C5', 'C6', 'C7', 'C8',
              'D4', 'D5', 'D6',
              'E4', 'E5', 'E6']
-# Append file names to rasters in list
-grids = []
-for grid in grid_list:
-    raster_path = os.path.join(grid_major, 'Grid_' + grid + '.tif')
-    grids.append(raster_path)
-grids_length = len(grids)
-print(f'Mean annual precipitation will be created for {grids_length} grids...')
-# End timing
-iteration_end = time.time()
-iteration_elapsed = int(iteration_end - iteration_start)
-iteration_success_time = datetime.datetime.now()
-# Report success
-print(f'Completed at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
-print('----------')
 
-# Set initial grid count
-grid_count = 1
+# Define month and property values
+climate_property = 'pr_total_mm_CRU_TS40_historical'
+months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
+years = ['2000', '2001', '2002', '2003', '2004', '2005', '2006', '2007',
+         '2008', '2009', '2010', '2011', '2012', '2013', '2014', '2015']
+denominator = len(years)
+
+# Create a list of all climate raster data
+raster_list = []
+for year in years:
+    for month in months:
+        raster = os.path.join(unprocessed_folder, climate_property + '_' + month + '_' + year + '.tif')
+        raster_list.append(raster)
+
+#### CALCULATE CLIMATE MEAN
+
+# Create key word arguments for the climate mean
+kwargs_mean = {'denominator': denominator,
+               'input_array': raster_list,
+               'output_array': [mean_raw]
+               }
+
+# Create a composite raster of the climate mean
+if arcpy.Exists(mean_raw) == 0:
+    print('Calculating mean annual precipitation...')
+    arcpy_geoprocessing(calculate_climate_mean, **kwargs_mean)
+    print('----------')
+else:
+    print('Mean annual precipitation already exists.')
+    print('----------')
+
+#### FILL MISSING DATA
+
+# Create key word arguments to interpolate raster
+kwargs_interpolate = {'input_array': [study_area, mean_raw],
+                      'output_array': [mean_interpolated]
+                      }
+
+# Interpolate climate raster
+if arcpy.Exists(mean_interpolated) == 0:
+    print('Filling missing data...')
+    arcpy_geoprocessing(interpolate_raster, **kwargs_interpolate)
+    print('----------')
+else:
+    print('Filled data already exists.')
+    print('----------')
+
+#### PARSE DATA TO GRIDS
+
+# Set initial count
+count = 1
 
 # For each grid, process the climate metric
-for grid in grids:
+for grid in grid_list:
     # Define folder structure
-    grid_title = os.path.splitext(os.path.split(grid)[1])[0]
-    grid_folder = os.path.join(gridded_folder, grid_title)
+    output_path = os.path.join(output_folder, grid)
+    output_raster = os.path.join(output_path, 'Precipitation_MeanAnnual_AKALB_' + grid + '.tif')
 
     # Make grid folder if it does not already exist
-    if os.path.exists(grid_folder) == 0:
-        os.mkdir(grid_folder)
+    if os.path.exists(output_path) == 0:
+        os.mkdir(output_path)
 
-    # Define processed grid raster
-    climate_grid = os.path.join(grid_folder, 'Precipitation_MeanAnnual' + '_AKALB_' + grid_title + '.tif')
+    # Define the grid raster
+    grid_raster = os.path.join(grid_folder, grid + '.tif')
 
-    # If climate grid does not exist then create climate grid
-    if arcpy.Exists(climate_grid) == 0:
-        print(f'Processing {grid_count} of {grids_length}...')
-
-        # Define input and output arrays
-        climate_grid_inputs = [study_area, grid, interpolated_2km]
-        climate_grid_outputs = [climate_grid]
-
+    # If output raster does not exist then create output raster
+    if arcpy.Exists(output_raster) == 0:
         # Create key word arguments
-        climate_grid_kwargs = {'input_array': climate_grid_inputs,
-                               'output_array': climate_grid_outputs
-                               }
+        kwargs_grid = {'input_array': [study_area, grid_raster, mean_interpolated],
+                       'output_array': [output_raster]
+                       }
 
-        # Process the reproject integer function
-        arcpy_geoprocessing(format_climate_grids, **climate_grid_kwargs)
+        # Extract climate data to grid
+        print(f'Processing grid {count} of {len(grid_list)}...')
+        arcpy_geoprocessing(format_climate_grids, **kwargs_grid)
         print('----------')
-
     else:
-        print(f'Climate grid {grid_count} of {grids_length} already exists.')
+        print(f'Grid {count} of {len(grid_list)} already exists.')
         print('----------')
 
     # Increase counter
-    grid_count += 1
+    count += 1

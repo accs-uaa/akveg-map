@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Merge Source Elevation Tiles
+# Merge source elevation tiles
 # Author: Timm Nawrocki
-# Last Updated: 2021-03-10
+# Last Updated: 2021-11-04
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Merge Source Elevation Tiles" is a function that creates single merged DEM from input tiles of the same source with new projection, snap raster, and cell size.
+# Description: "Merge source elevation tiles" is a function that creates single merged DEM from input tiles of the same source with new projection, snap raster, and cell size.
 # ---------------------------------------------------------------------------
 
 # Define function to merge source elevation tiles
@@ -100,7 +100,7 @@ def merge_elevation_tiles(**kwargs):
                                            '',
                                            input_system)
             # Enforce new projection
-            arcpy.management.DefineProjection(output_raster, composite_projection)
+            arcpy.management.DefineProjection(output_raster, output_system)
             # End timing
             iteration_end = time.time()
             iteration_elapsed = int(iteration_end - iteration_start)
@@ -144,14 +144,14 @@ def merge_elevation_tiles(**kwargs):
     arcpy.management.MosaicToNewRaster(projected_rasters,
                                        mosaic_location,
                                        mosaic_name,
-                                       composite_projection,
+                                       output_system,
                                        '32_BIT_FLOAT',
                                        cell_size,
                                        '1',
                                        'MAXIMUM',
                                        'FIRST')
     # Enforce correct projection
-    arcpy.management.DefineProjection(dem_composite, composite_projection)
+    arcpy.management.DefineProjection(dem_composite, output_system)
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)

@@ -1,31 +1,37 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Calculate Topographic Properties
+# Calculate topographic properties
 # Author: Timm Nawrocki
-# Last Updated: 2021-02-25
+# Last Updated: 2021-11-04
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Calculate Topographic Properties" calculates integer versions of ten topographic indices for each grid using elevation float rasters.
+# Description: "Calculate topographic properties" calculates integer versions of ten topographic indices for each grid using elevation float rasters.
 # ---------------------------------------------------------------------------
 
 # Import packages
-import arcpy
-import datetime
 import os
 from package_GeospatialProcessing import arcpy_geoprocessing
 from package_GeospatialProcessing import calculate_topographic_properties
-import time
 
 # Set root directory
 drive = 'N:/'
 root_folder = 'ACCS_Work'
 
-# Define data folder
-data_folder = os.path.join(drive, root_folder, 'Data/topography/Composite_10m_Beringia')
-data_input = os.path.join(data_folder, 'float/gridded_full')
-data_output = os.path.join(data_folder, 'integer/gridded_full')
+# Define folder structure
+data_folder = os.path.join(drive, root_folder, 'Data/topography/Composite_10m/full')
+project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data')
+grid_folder = os.path.join(drive, root_folder, 'Data/analyses/grid_major/full')
+input_folder = os.path.join(data_folder, 'float')
+output_folder = os.path.join(data_folder, 'integer')
 
-# Define input datasets
-grid_major = os.path.join(drive, root_folder, 'Data/analyses/gridMajor')
+# Define work geodatabase
+work_geodatabase = os.path.join(project_folder, 'BeringiaVegetation.gdb')
+
+# Define grids
+grid_list = ['A5', 'A6', 'A7', 'A8',
+             'B4', 'B5', 'B6', 'B7', 'B8',
+             'C4', 'C5', 'C6', 'C7', 'C8',
+             'D4', 'D5', 'D6',
+             'E4', 'E5', 'E6']
 
 # Define root names
 elevation_name_root = 'Elevation_Composite_10m_Beringia_AKALB_'
@@ -39,74 +45,51 @@ surfaceRelief_name_root = 'SurfaceRelief_Composite_10m_Beringia_AKALB_'
 topographicPosition_name_root = 'TopographicPosition_Composite_10m_Beringia_AKALB_'
 topographicRadiation_name_root = 'TopographicRadiation_Composite_10m_Beringia_AKALB_'
 
-# Set overwrite option
-arcpy.env.overwriteOutput = True
+#### CREATE TOPOGRAPHY RASTERS
 
-# List grid rasters
-print('Searching for grid rasters...')
-# Start timing function
-iteration_start = time.time()
-# Create a list of included grids
-grid_list = ['A5', 'A6', 'A7', 'A8',
-             'B4', 'B5', 'B6', 'B7', 'B8',
-             'C4', 'C5', 'C6', 'C7', 'C8',
-             'D4', 'D5', 'D6',
-             'E4', 'E5', 'E6']
-# Append file names to rasters in list
-grids = []
+# Set initial count
+count = 1
+
+# Iterate through each buffered grid and calculate topography
 for grid in grid_list:
-    raster_path = os.path.join(grid_major, 'Grid_' + grid + '.tif')
-    grids.append(raster_path)
-grids_length = len(grids)
-print(f'Topographic indices will be calculated for {grids_length} grids...')
-# End timing
-iteration_end = time.time()
-iteration_elapsed = int(iteration_end - iteration_start)
-iteration_success_time = datetime.datetime.now()
-# Report success
-print(f'Completed at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
-print('----------')
+    # Define folder structure
+    output_path = os.path.join(output_folder, grid)
+    input_raster = os.path.join(input_folder, grid, 'Elevation_AKALB_' + grid + '.tif')
+    output_elevation = os.path.join(output_path, 'Elevation_AKALB_' + grid + '.tif')
+    output_aspect = os.path.join(output_path, 'Aspect_AKALB_' + grid + '.tif')
+    output_wetness = os.path.join(output_path, 'Wetness_AKALB_' + grid + '.tif')
+    output_roughness = os.path.join(output_path, 'Roughness_AKALB_' + grid + '.tif')
+    output_exposure = os.path.join(output_path, 'Exposure_AKALB_' + grid + '.tif')
+    output_slope = os.path.join(output_path, 'Slope_AKALB_' + grid + '.tif')
+    output_area = os.path.join(output_path, 'SurfaceArea_AKALB_' + grid + '.tif')
+    output_relief = os.path.join(output_path, 'Relief_AKALB_' + grid + '.tif')
+    output_position = os.path.join(output_path, 'Position_AKALB_' + grid + '.tif')
+    output_radiation = os.path.join(output_path, 'Radiation_AKALB_' + grid + '.tif')
+    output_heat = os.path.join(output_path, 'HeatLoad_AKALB_' + grid + '.tif')
 
-# Iterate through each buffered grid and create elevation composite
-for grid in grids:
-    # Define composite raster name
-    grid_title = os.path.splitext(os.path.split(grid)[1])[0]
-    print(f'Calculating topographic properties for {grid_title}...')
+    # Make grid folder if it does not already exist
+    if os.path.exists(output_path) == 0:
+        os.mkdir(output_path)
 
-    # Define input elevation dataset
-    elevation_input = os.path.join(data_input, grid_title, elevation_name_root + grid_title + '.tif')
-
-    # Define output topographic datasets
-    elevation_output = os.path.join(data_output, grid_title, elevation_name_root + grid_title + '.tif')
-    aspect = os.path.join(data_output, grid_title, aspect_name_root + grid_title + '.tif')
-    compoundTopographic = os.path.join(data_output, grid_title, compoundTopographic_name_root + grid_title + '.tif')
-    roughness = os.path.join(data_output, grid_title, roughness_name_root + grid_title + '.tif')
-    siteExposure = os.path.join(data_output, grid_title, siteExposure_name_root + grid_title + '.tif')
-    slope = os.path.join(data_output, grid_title, slope_name_root + grid_title + '.tif')
-    surfaceArea = os.path.join(data_output, grid_title, surfaceArea_name_root + grid_title + '.tif')
-    surfaceRelief = os.path.join(data_output, grid_title, surfaceRelief_name_root + grid_title + '.tif')
-    topographicPosition = os.path.join(data_output, grid_title, topographicPosition_name_root + grid_title + '.tif')
-    topographicRadiation = os.path.join(data_output, grid_title, topographicRadiation_name_root + grid_title + '.tif')
-
-    # Define input and output arrays
-    topographic_inputs = [grid, elevation_input]
-    topographic_outputs = [elevation_output,
-                           aspect,
-                           compoundTopographic,
-                           roughness,
-                           siteExposure,
-                           slope,
-                           surfaceArea,
-                           surfaceRelief,
-                           topographicPosition,
-                           topographicRadiation]
+    # Define the grid raster
+    grid_raster = os.path.join(grid_folder, grid + '.tif')
 
     # Create key word arguments
-    topographic_kwargs = {'z_unit': 'METER',
-                          'input_array': topographic_inputs,
-                          'output_array': topographic_outputs
-                          }
+    kwargs_topography = {'z_unit': 'METER',
+                         'input_array': [grid_raster, input_raster],
+                         'output_array': [output_elevation,
+                                          output_aspect,
+                                          output_wetness,
+                                          output_roughness,
+                                          output_exposure,
+                                          output_slope,
+                                          output_area,
+                                          output_relief,
+                                          output_position,
+                                          output_radiation]
+                         }
 
     # Process the topographic calculations
-    arcpy_geoprocessing(calculate_topographic_properties, **topographic_kwargs, check_output=False)
+    print(f'Processing topography for grid {count} of {len(grid_list)}...')
+    arcpy_geoprocessing(calculate_topographic_properties, **kwargs_topography, check_output=False)
     print('----------')

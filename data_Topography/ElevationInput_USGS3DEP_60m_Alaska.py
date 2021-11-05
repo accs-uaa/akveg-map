@@ -1,14 +1,13 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Create Composite USGS 3DEP 60 m Alaska
+# Create composite USGS 3DEP 60 m Alaska
 # Author: Timm Nawrocki
-# Last Updated: 2021-02-20
+# Last Updated: 2021-11-04
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Create Composite USGS 3DEP 60 m Alaska" combines individual DEM tiles, reprojects to NAD 1983 Alaska Albers, and resamples to 10 m.
+# Description: "Create composite USGS 3DEP 60 m Alaska" combines individual DEM tiles, reprojects to NAD 1983 Alaska Albers, and resamples to 10 m.
 # ---------------------------------------------------------------------------
 
 # Import packages
-import arcpy
 from package_GeospatialProcessing import arcpy_geoprocessing
 from package_GeospatialProcessing import merge_elevation_tiles
 import os
@@ -17,37 +16,34 @@ import os
 drive = 'N:/'
 root_folder = 'ACCS_Work'
 
-# Define data folder
-data_folder = os.path.join(drive, root_folder, 'Data/topography/USGS3DEP_60m_Alaska')
-
-# Set arcpy working environment
-work_geodatabase = os.path.join(drive, root_folder,
-                                'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/BeringiaVegetation.gdb')
-
-# Define input datasets
+# Define folder structure
+data_folder = os.path.join(drive, root_folder, 'Data/topography/USGS_3DEP_60m')
+project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data')
 tile_folder = os.path.join(data_folder, 'tiles')
 projected_folder = os.path.join(data_folder, 'tiles_projected')
-snap_raster = os.path.join(drive,
-                           'ACCS_Work/Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/northAmericanBeringia_ModelArea.tif')
 
-# Define output raster
-alaska60m_composite = os.path.join(data_folder, 'Elevation_USGS3DEP_60m_Alaska_AKALB.tif')
+# Define input datasets
+study_area = os.path.join(project_folder, 'Data_Input/AlaskaCombined_TotalArea.tif')
 
-# Define input and output arrays
-merge_tiles_inputs = [snap_raster]
-merge_tiles_outputs = [alaska60m_composite]
+# Define output datasets
+output_raster = os.path.join(data_folder, 'Elevation_USGS3DEP_60m_Alaska_AKALB.tif')
+
+# Define work geodatabase
+work_geodatabase = os.path.join(project_folder, 'BeringiaVegetation.gdb')
+
+#### CREATE COMPOSITE DEM
 
 # Create key word arguments
-merge_tiles_kwargs = {'tile_folder': tile_folder,
-                      'projected_folder': projected_folder,
-                      'workspace': work_geodatabase,
-                      'cell_size': 10,
-                      'input_projection': 4269,
-                      'output_projection': 3338,
-                      'geographic_transformation': '',
-                      'input_array': merge_tiles_inputs,
-                      'output_array': merge_tiles_outputs
-                      }
+kwargs_merge = {'tile_folder': tile_folder,
+                'projected_folder': projected_folder,
+                'workspace': work_geodatabase,
+                'cell_size': 10,
+                'input_projection': 4269,
+                'output_projection': 3338,
+                'geographic_transformation': '',
+                'input_array': [study_area],
+                'output_array': [output_raster]
+                }
 
 # Merge source tiles
-arcpy_geoprocessing(merge_elevation_tiles, **merge_tiles_kwargs)
+arcpy_geoprocessing(merge_elevation_tiles, **kwargs_merge)

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Process Sentinel-1 Tiles
+# Process Sentinel-1 tiles
 # Author: Timm Nawrocki
-# Last Updated: 2020-11-30
+# Last Updated: 2021-11-04
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Process Sentinel-1 Tiles" reprojects tiles and converts to integer.
+# Description: "Process Sentinel-1 tiles" reprojects tiles and converts to integer.
 # ---------------------------------------------------------------------------
 
 # Import packages
@@ -19,19 +19,17 @@ import time
 drive = 'N:/'
 root_folder = 'ACCS_Work'
 
-# Define data folder
+# Define folder structure
 data_folder = os.path.join(drive, root_folder, 'Data/imagery/sentinel-1')
-unprocessed_folder = os.path.join(data_folder, 'unprocessed')
-processed_folder = os.path.join(data_folder, 'processed')
+project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data')
+unprocessed_folder = os.path.join(data_folder, 'unprocessed/nab')
+processed_folder = os.path.join(data_folder, 'processed/nab')
 
 # Define input datasets
-snap_raster = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/northAmericanBeringia_ModelArea.tif')
+study_area = os.path.join(project_folder, 'Data_Input/NorthAmericanBeringia_ModelArea.tif')
 
-# Define working geodatabase
-geodatabase = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/BeringiaVegetation.gdb')
-
-# Set overwrite option
-arcpy.env.overwriteOutput = True
+# Define work geodatabase
+work_geodatabase = os.path.join(project_folder, 'BeringiaVegetation.gdb')
 
 # List imagery tiles
 print('Searching for imagery tiles...')
@@ -57,9 +55,12 @@ print(f'Completed at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapse
 print('----------')
 
 # Reset environment workspace
-arcpy.env.workspace = geodatabase
+arcpy.env.workspace = work_geodatabase
+
+#### PROCESS IMAGERY TILES
+
 # Set initial tile count
-tile_count = 1
+count = 1
 
 # Reproject all imagery tiles
 for tile in unprocessed_tiles:
@@ -68,29 +69,23 @@ for tile in unprocessed_tiles:
 
     # Reproject and convert tile if processed tile does not already exist
     if arcpy.Exists(processed_tile) == 0:
-        print(f'Processing tile {tile_count} of {tiles_length}...')
-
-        # Define input and output arrays
-        reproject_inputs = [tile, snap_raster]
-        reproject_outputs = [processed_tile]
-
         # Create key word arguments
-        reproject_kwargs = {'cell_size': 10,
+        kwargs_reproject = {'cell_size': 10,
                             'input_projection': 4326,
                             'output_projection': 3338,
                             'geographic_transformation': 'WGS_1984_(ITRF00)_To_NAD_1983',
                             'conversion_factor': 100,
-                            'input_array': reproject_inputs,
-                            'output_array': reproject_outputs
+                            'input_array': [tile, study_area],
+                            'output_array': [processed_tile]
                             }
 
         # Process the reproject integer function
-        arcpy_geoprocessing(reproject_integer, **reproject_kwargs)
+        print(f'Processing tile {count} of {tiles_length}...')
+        arcpy_geoprocessing(reproject_integer, **kwargs_reproject)
         print('----------')
-
     else:
-        print(f'Tile {tile_count} of {tiles_length} already exists.')
+        print(f'Tile {count} of {tiles_length} already exists.')
         print('----------')
 
     # Increase counter
-    tile_count += 1
+    count += 1

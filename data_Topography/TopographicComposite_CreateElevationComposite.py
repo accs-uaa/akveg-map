@@ -1,97 +1,77 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Create Elevation Composite
+# Create elevation composite
 # Author: Timm Nawrocki
-# Last Updated: 2021-02-24
+# Last Updated: 2021-11-04
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Create Elevation Composite" creates a composite from multiple source DEMs based on order of priority. All sources must be in the same projection with the same cell size and grid. The grid tiles must be predefined as rasters.
+# Description: "Create elevation composite" creates a composite from multiple source DEMs based on order of priority. All sources must be in the same projection with the same cell size and grid. The grid tiles must be predefined as rasters.
 # ---------------------------------------------------------------------------
 
 # Import packages
-import arcpy
-import datetime
 import os
 from package_GeospatialProcessing import arcpy_geoprocessing
 from package_GeospatialProcessing import create_composite_dem
-import time
 
 # Set root directory
 drive = 'N:/'
 root_folder = 'ACCS_Work'
 
-# Define data folders
+# Define folder structure
 data_folder = os.path.join(drive, root_folder, 'Data/topography')
-grid_major = os.path.join(drive, root_folder, 'Data/analyses/gridMajor')
+project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data')
+grid_folder = os.path.join(drive, root_folder, 'Data/analyses/grid_major/full')
+output_folder = os.path.join(data_folder, 'Composite_10m/full/float')
 
-# Define source_rasters
-source_USGS_5m = os.path.join(data_folder, 'USGS3DEP_5m_Alaska/Elevation_USGS3DEP_5m_Alaska_AKALB_Corrected.tif')
-source_USGS_10m = os.path.join(data_folder, 'USGS3DEP_10m_Alaska/Elevation_USGS3DEP_10m_Alaska_AKALB.tif')
-source_USGS_30m = os.path.join(data_folder, 'USGS3DEP_30m_Alaska/Elevation_USGS3DEP_30m_Alaska_AKALB.tif')
-source_USGS_60m = os.path.join(data_folder, 'USGS3DEP_60m_Alaska/Elevation_USGS3DEP_60m_Alaska_AKALB.tif')
+# Define input datasets
+source_USGS_5m = os.path.join(data_folder, 'USGS_3DEP_5m/Elevation_USGS3DEP_5m_Alaska_AKALB_Corrected.tif')
+source_USGS_10m = os.path.join(data_folder, 'USGS_3DEP_10m/Elevation_USGS3DEP_10m_Alaska_AKALB.tif')
+source_USGS_30m = os.path.join(data_folder, 'USGS_3DEP_30m/Elevation_USGS3DEP_30m_Alaska_AKALB.tif')
+source_USGS_60m = os.path.join(data_folder, 'USGS_3DEP_60m/Elevation_USGS3DEP_60m_Alaska_AKALB.tif')
 
-# Define prioritized list of elevation inputs
-elevation_inputs = [source_USGS_5m, source_USGS_10m, source_USGS_30m, source_USGS_60m]
+# Define work geodatabase
+work_geodatabase = os.path.join(project_folder, 'BeringiaVegetation.gdb')
 
-# Define root output name
-mosaic_name_root = 'Elevation_Composite_10m_Beringia_AKALB_'
-
-# Set overwrite option
-arcpy.env.overwriteOutput = True
-
-# List grid rasters
-print('Searching for grid rasters...')
-# Start timing function
-iteration_start = time.time()
-# Create a list of included grids
+# Define grids
 grid_list = ['A5', 'A6', 'A7', 'A8',
              'B4', 'B5', 'B6', 'B7', 'B8',
              'C4', 'C5', 'C6', 'C7', 'C8',
              'D4', 'D5', 'D6',
              'E4', 'E5', 'E6']
-# Append file names to rasters in list
-grids = []
-for grid in grid_list:
-    raster_path = os.path.join(grid_major, 'Grid_' + grid + '.tif')
-    grids.append(raster_path)
-grids_length = len(grids)
-print(f'Elevation composites will be created for {grids_length} grids...')
-# End timing
-iteration_end = time.time()
-iteration_elapsed = int(iteration_end - iteration_start)
-iteration_success_time = datetime.datetime.now()
-# Report success
-print(f'Completed at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
-print('----------')
+
+#### CREATE COMPOSITE DEM
+
+# Define prioritized list of elevation inputs
+elevation_inputs = [source_USGS_5m, source_USGS_10m, source_USGS_30m, source_USGS_60m]
+
+# Set initial count
+count = 1
 
 # Iterate through each buffered grid and create elevation composite
-for grid in grids:
-    # Define composite raster name
-    grid_title = os.path.splitext(os.path.split(grid)[1])[0]
+for grid in grid_list:
+    # Define folder structure
+    output_path = os.path.join(output_folder, grid)
+    output_raster = os.path.join(output_path, 'Elevation_AKALB_' + grid + '.tif')
 
-    # Define mosaic name and location
-    mosaic_location = os.path.join(data_folder, 'Composite_10m_Beringia/float/gridded_full', grid_title)
-    mosaic_name = mosaic_name_root + grid_title + '.tif'
-    output_mosaic = os.path.join(mosaic_location, mosaic_name)
+    # Make grid folder if it does not already exist
+    if os.path.exists(output_path) == 0:
+        os.mkdir(output_path)
 
-    # Create elevation composite for grid if one does not already exist
-    if os.path.exists(output_mosaic) == 0:
-        print(f'Creating elevation composite for {grid_title}...')
+    # Define the grid raster
+    grid_raster = os.path.join(grid_folder, grid + '.tif')
 
-        # Define input and output arrays
-        elevation_composite_inputs = [grid] + elevation_inputs
-        elevation_composite_outputs = [output_mosaic]
-
+    # If output raster does not exist then create output raster
+    if os.path.exists(output_raster) == 0:
         # Create key word arguments
-        elevation_composite_kwargs = {'cell_size': 10,
-                                      'output_projection': 3338,
-                                      'input_array': elevation_composite_inputs,
-                                      'output_array': elevation_composite_outputs
-                                      }
+        kwargs_composite = {'cell_size': 10,
+                            'output_projection': 3338,
+                            'input_array': [grid_raster] + elevation_inputs,
+                            'output_array': [output_raster]
+                            }
 
         # Process the elevation composite
-        arcpy_geoprocessing(create_composite_dem, **elevation_composite_kwargs, check_output=False)
+        print(f'Processing grid {count} of {len(grid_list)}...')
+        arcpy_geoprocessing(create_composite_dem, **kwargs_composite, check_output=False)
         print('----------')
-
     else:
-        print(f'Elevation composite already exists for {grid_title}...')
+        print(f'Elevation grid {count} of {len(grid_list)} already exists.')
         print('----------')

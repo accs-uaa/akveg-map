@@ -1,96 +1,74 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Create Sentinel-2 Composite
+# Create Sentinel-2 composite
 # Author: Timm Nawrocki
-# Last Updated: 2020-12-13
+# Last Updated: 2021-11-04
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Create Sentinel-2 Composite" merges Sentinel-2 tiles by month and property per predefined grid.
+# Description: "Create Sentinel-2 composite" merges Sentinel-2 tiles by month and property per predefined grid.
 # ---------------------------------------------------------------------------
 
 # Import packages
 import arcpy
-import datetime
 import glob
 import os
 from package_GeospatialProcessing import arcpy_geoprocessing
 from package_GeospatialProcessing import merge_spectral_tiles
-import time
 
 # Set root directory
-drive = 'K:/'
+drive = 'N:/'
 root_folder = 'ACCS_Work'
 
-# Define data folder
+# Define folder structure
 data_folder = os.path.join(drive, root_folder, 'Data/imagery/sentinel-2')
-processed_folder = os.path.join(data_folder, 'processed')
-gridded_folder = os.path.join(data_folder, 'gridded')
+project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data')
+grid_folder = os.path.join(drive, root_folder, 'Data/analyses/grid_major/nab')
+processed_folder = os.path.join(data_folder, 'processed/nab')
+output_folder = os.path.join(data_folder, 'gridded/nab')
 
 # Define input datasets
-grid_major = os.path.join(drive, root_folder, 'Data/analyses/gridMajor')
-study_area = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/Data_Input/northAmericanBeringia_ModelArea.tif')
+study_area = os.path.join(project_folder, 'Data_Input/NorthAmericanBeringia_ModelArea.tif')
 
-# Define working geodatabase
-geodatabase = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data/BeringiaVegetation.gdb')
-# Set environment workspace
-arcpy.env.workspace = geodatabase
+# Define work geodatabase
+work_geodatabase = os.path.join(project_folder, 'BeringiaVegetation.gdb')
 
-# Set overwrite option
-arcpy.env.overwriteOutput = True
-
-# Define month and property values
-months = ['06',
-          '07'
-          ]
-properties = ['2_blue',
-              '3_green',
-              '4_red',
-              '5_redEdge1',
-              '6_redEdge2',
-              '7_redEdge3',
-              '8_nearInfrared',
-              '8a_redEdge4',
-              '11_shortInfrared1',
-              '12_shortInfrared2',
-              'evi2',
-              'nbr',
-              'ndmi',
-              'ndsi',
-              'ndvi',
-              'ndwi'
-              ]
-
-# Create a list of all month-property combinations
-metrics_list = []
-for month in months:
-    for property in properties:
-        month_property = month + '_' + property
-        metrics_list.append(month_property)
-metrics_length = len(metrics_list)
-
-# List grid rasters
-print('Searching for grid rasters...')
-# Start timing function
-iteration_start = time.time()
-# Create a list of included grids
+# Define grids
 grid_list = ['A5', 'A6', 'A7', 'A8',
              'B4', 'B5', 'B6', 'B7', 'B8',
              'C4', 'C5', 'C6', 'C7', 'C8',
              'D4', 'D5', 'D6',
              'E4', 'E5', 'E6']
-# Append file names to rasters in list
-grids = []
-for grid in grid_list:
-    raster_path = os.path.join(grid_major, 'Grid_' + grid + '.tif')
-    grids.append(raster_path)
-grids_length = len(grids)
-print(f'Spectral composites will be created for {grids_length} grids and {metrics_length} metrics...')
-# End timing
-iteration_end = time.time()
-iteration_elapsed = int(iteration_end - iteration_start)
-iteration_success_time = datetime.datetime.now()
-# Report success
-print(f'Completed at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
-print('----------')
+
+# Define month and property values
+months = ['06',
+          '07',
+          '08',
+          '09']
+bands = ['2_blue',
+         '3_green',
+         '4_red',
+         '5_redEdge1',
+         '6_redEdge2',
+         '7_redEdge3',
+         '8_nearInfrared',
+         '8a_redEdge4',
+         '11_shortInfrared1',
+         '12_shortInfrared2',
+         'evi2',
+         'nbr',
+         'ndmi',
+         'ndsi',
+         'ndvi',
+         'ndwi']
+
+# Create a list of all month-property combinations
+metrics_list = []
+for month in months:
+    for band in bands:
+        month_band = month + '_' + band
+        metrics_list.append(month_band)
+metrics_length = len(metrics_list)
+
+#### CREATE COMPOSITE DATA
 
 # Iterate through each buffered grid and create spectral composite
 for metric in metrics_list:
@@ -98,46 +76,39 @@ for metric in metrics_list:
     file_search = 'Sent2_' + metric + '*.tif'
     metric_tiles = glob.glob(os.path.join(processed_folder, file_search))
 
-    # Set initial grid count
-    grid_count = 1
+    # Set initial count
+    count = 1
 
     # For each grid, process the spectral metric
-    for grid in grids:
+    for grid in grid_list:
         # Define folder structure
-        grid_title = os.path.splitext(os.path.split(grid)[1])[0]
-        grid_folder = os.path.join(gridded_folder, grid_title)
+        output_path = os.path.join(output_folder, grid)
+        output_raster = os.path.join(output_path, 'Sent2' + metric + '_AKALB_' + grid + '.tif')
 
         # Make grid folder if it does not already exist
-        if os.path.exists(grid_folder) == 0:
-            os.mkdir(grid_folder)
+        if os.path.exists(output_path) == 0:
+            os.mkdir(output_path)
 
-        # Define processed grid raster
-        spectral_grid = os.path.join(grid_folder, 'Sent2_' + metric + '_AKALB_' + grid_title + '.tif')
+        # Define the grid raster
+        grid_raster = os.path.join(grid_folder, grid + '.tif')
 
-        # If spectral grid does not exist then create spectral grid
-        if arcpy.Exists(spectral_grid) == 0:
-            print(f'Processing {metric} grid {grid_count} of {grids_length}...')
-
-            # Define input and output arrays
-            merge_inputs = [grid, study_area] + metric_tiles
-            merge_outputs = [spectral_grid]
-
+        # If output raster does not exist then create output_raster
+        if arcpy.Exists(output_raster) == 0:
             # Create key word arguments
             merge_kwargs = {'cell_size': 10,
                             'output_projection': 3338,
-                            'work_geodatabase': geodatabase,
-                            'input_array': merge_inputs,
-                            'output_array': merge_outputs
+                            'work_geodatabase': work_geodatabase,
+                            'input_array': [grid, study_area] + metric_tiles,
+                            'output_array': [output_raster]
                             }
 
             # Process the merge tiles function
+            print(f'Processing {metric} grid {count} of {len(grid_list)}...')
             arcpy_geoprocessing(merge_spectral_tiles, **merge_kwargs)
             print('----------')
-
-        # If output already exists then report message
         else:
-            print(f'Spectral grid {grid_count} of {grids_length} for {metric} already exists.')
+            print(f'Spectral grid {count} of {len(grid_list)} for {metric} already exists.')
             print('----------')
 
         # Increase counter
-        grid_count += 1
+        count += 1

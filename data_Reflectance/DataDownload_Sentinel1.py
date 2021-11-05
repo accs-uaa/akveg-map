@@ -2,9 +2,9 @@
 # ---------------------------------------------------------------------------
 # Download Sentinel-1 Data from Drive
 # Author: Timm Nawrocki
-# Last Updated: 2020-05-23
-# Usage: Must be executed in a Python 3.7 installation with Google API Python Client and PyDrive installed.
-# Description: "Download Sentinel-1 Data from Drive" programmatically downloads Sentinel-1 tiles from a Google Drive folder. The spectral composites must first be calculated in Google Earth Engine and exported to the Google Drive folder.
+# Last Updated: 2021-11-04
+# Usage: Must be executed in a Python 3.8 installation with Google API Python Client and PyDrive installed.
+# Description: "Download Sentinel-1 Data from Drive" programmatically downloads Sentinel-1 tiles from a Google Drive folder. The composites must first be calculated in Google Earth Engine and exported to the Google Drive folder.
 # ---------------------------------------------------------------------------
 
 # Import packages
@@ -18,18 +18,18 @@ from package_GeospatialProcessing import list_from_drive
 import pickle
 import time
 
+# Define target Google Drive folder
+google_folder = '1S4EknWLWn7ZQr0bsF366sThw2dBMuyB_'
+
 # Set root directory
 drive = 'N:/'
-root_folder = os.path.join(drive, 'ACCS_Work')
+root_folder = 'ACCS_Work'
 
-# Set data folder
-data_folder = os.path.join(root_folder, 'Data/imagery/sentinel-1/unprocessed')
-
-# Define target Google Drive folder
-google_folder = '1S4EknWLWn7ZQr0bsF366sThw2dBMuyB_' # Beringia_Sentinel-1
+# Define folder structure
+data_folder = os.path.join(drive, root_folder, 'Data/imagery/sentinel-1/unprocessed/nab')
+credentials_folder = os.path.join(drive, root_folder, 'Administrative/Credentials')
 
 # Change working directory to credentials folder
-credentials_folder = os.path.join(root_folder, 'Administrative/Credentials')
 os.chdir(credentials_folder)
 
 # Set scopes
@@ -38,11 +38,11 @@ scopes = ['https://www.googleapis.com/auth/drive']
 # Reiterate download process until manually stopped in case errors occur in individual downloads
 reiterate = True
 while reiterate == True:
-
     # Create persistent credentials
     credentials = None
-    # The file token.pickle stores the user's access and refresh tokens, and is created automatically when the authorization flow completes for the first time.
-    if os.path.exists('token.pickle'):
+
+    # Create file token.pickle to store the user's access and refresh tokens.
+    if os.path.exists('token.pickle') == 1:
         with open('token.pickle', 'rb') as token:
             credentials = pickle.load(token)
     # If there are no (valid) credentials available, let the user log in.
@@ -67,20 +67,19 @@ while reiterate == True:
     file_id_list = list_from_drive(drive_service, google_folder)
 
     # Subset list
-    file_id_subset = file_id_list[:]
+    file_id_subset = file_id_list[0:5]
     total = len(file_id_subset)
 
     # Download all files in Google Drive Folder
-
     count = 1
     for file_id in file_id_subset:
-
         # Refresh the access token
         credentials.refresh(Request())
 
         # Get file title metadata by file id
         file_meta = drive_service.files().get(fileId=file_id).execute()
         file_title = file_meta['title']
+
         # Generate download file path
         output_file = os.path.join(data_folder, file_title)
 
