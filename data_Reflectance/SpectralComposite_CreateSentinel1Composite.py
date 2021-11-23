@@ -56,7 +56,7 @@ for band in bands:
     for grid in grid_list:
         # Define folder structure
         output_path = os.path.join(output_folder, grid)
-        output_raster = os.path.join(output_path, 'Sent1_' + band + '_AKALB_' + grid + '.tif')
+        output_raster = os.path.join(output_path, 'Sent1_' + band + '_' + grid + '.tif')
 
         # Make grid folder if it does not already exist
         if os.path.exists(output_path) == 0:
@@ -71,7 +71,7 @@ for band in bands:
             kwargs_merge = {'cell_size': 10,
                             'output_projection': 3338,
                             'work_geodatabase': work_geodatabase,
-                            'input_array': [grid, nab_raster] + metric_tiles,
+                            'input_array': [nab_raster, grid_raster] + metric_tiles,
                             'output_array': [output_raster]
                             }
 

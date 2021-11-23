@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Process Sentinel-2 tiles
 # Author: Timm Nawrocki
-# Last Updated: 2021-11-20
+# Last Updated: 2021-11-22
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Process Sentinel-2 tiles" reprojects tiles and converts to integer.
 # ---------------------------------------------------------------------------
@@ -75,7 +75,7 @@ for tile in unprocessed_tiles:
                             'output_projection': 3338,
                             'geographic_transformation': 'WGS_1984_(ITRF00)_To_NAD_1983',
                             'conversion_factor': 10,
-                            'input_array': [tile, nab_raster],
+                            'input_array': [nab_raster, tile],
                             'output_array': [processed_tile]
                             }
 

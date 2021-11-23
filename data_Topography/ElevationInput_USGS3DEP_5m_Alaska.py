@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Create composite USGS 3DEP 5 m Alaska
+# Create composite USGS 3DEP 5m Alaska
 # Author: Timm Nawrocki
 # Last Updated: 2021-11-20
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Create composite USGS 3DEP 5 m Alaska" combines individual DEM tiles, reprojects to NAD 1983 Alaska Albers, and resamples to 10 m.
+# Description: "Create composite USGS 3DEP 5m Alaska" combines individual DEM tiles, reprojects to NAD 1983 Alaska Albers, and resamples to 10 m.
 # ---------------------------------------------------------------------------
 
 # Import packages

@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Create Sentinel-2 composite
 # Author: Timm Nawrocki
-# Last Updated: 2021-11-20
+# Last Updated: 2021-11-22
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Create Sentinel-2 composite" merges Sentinel-2 tiles by month and property per predefined grid.
 # ---------------------------------------------------------------------------
@@ -83,7 +83,7 @@ for metric in metrics_list:
     for grid in grid_list:
         # Define folder structure
         output_path = os.path.join(output_folder, grid)
-        output_raster = os.path.join(output_path, 'Sent2' + metric + '_AKALB_' + grid + '.tif')
+        output_raster = os.path.join(output_path, 'Sent2' + metric + '_' + grid + '.tif')
 
         # Make grid folder if it does not already exist
         if os.path.exists(output_path) == 0:
@@ -95,16 +95,16 @@ for metric in metrics_list:
         # If output raster does not exist then create output_raster
         if arcpy.Exists(output_raster) == 0:
             # Create key word arguments
-            merge_kwargs = {'cell_size': 10,
+            kwargs_merge = {'cell_size': 10,
                             'output_projection': 3338,
                             'work_geodatabase': work_geodatabase,
-                            'input_array': [grid, nab_raster] + metric_tiles,
+                            'input_array': [nab_raster, grid_raster] + metric_tiles,
                             'output_array': [output_raster]
                             }
 
             # Process the merge tiles function
             print(f'Processing {metric} grid {count} of {len(grid_list)}...')
-            arcpy_geoprocessing(merge_spectral_tiles, **merge_kwargs)
+            arcpy_geoprocessing(merge_spectral_tiles, **kwargs_merge)
             print('----------')
         else:
             print(f'Spectral grid {count} of {len(grid_list)} for {metric} already exists.')

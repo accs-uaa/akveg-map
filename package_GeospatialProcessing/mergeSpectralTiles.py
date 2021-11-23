@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Merge Spectral Tiles
 # Author: Timm Nawrocki
-# Last Updated: 2021-03-10
+# Last Updated: 2021-11-22
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Merge spectral tiles" is a function that merges tiles of a spectral metric within a predefined grid.
 # ---------------------------------------------------------------------------
@@ -14,7 +14,7 @@ def merge_spectral_tiles(**kwargs):
     Inputs: 'cell_size' -- a cell size for the output spectral raster
             'output_projection' -- the machine number for the output projection
             'work_geodatabase' -- a geodatabase to store temporary results
-            'input_array' -- an array containing the grid raster (must be first), the study area raster (must be second), and the list of spectral tiles
+            'input_array' -- an array containing the study area raster (must be first), the grid raster (must be second), and the list of spectral tiles
             'output_array' -- an array containing the output spectral grid raster
     Returned Value: Returns a raster dataset on disk containing the merged spectral grid raster
     Preconditions: requires processed source spectral tiles and predefined grid
@@ -36,8 +36,8 @@ def merge_spectral_tiles(**kwargs):
     output_projection = kwargs['output_projection']
     work_geodatabase = kwargs['work_geodatabase']
     tile_inputs = kwargs['input_array']
+    area_raster = tile_inputs.pop(0)
     grid_raster = tile_inputs.pop(0)
-    study_area = tile_inputs.pop(0)
     spectral_grid = kwargs['output_array'][0]
 
     # Set overwrite option
@@ -47,7 +47,7 @@ def merge_spectral_tiles(**kwargs):
     arcpy.env.parallelProcessingFactor = "75%"
 
     # Set snap raster and extent
-    arcpy.env.snapRaster = study_area
+    arcpy.env.snapRaster = area_raster
     arcpy.env.extent = Raster(grid_raster).extent
 
     # Define the output coordinate system
@@ -104,8 +104,8 @@ def merge_spectral_tiles(**kwargs):
 
             # Save tile polygon
             tile_feature = os.path.join(work_geodatabase, 'tile_polygon')
-            arcpy.CopyFeatures_management(tile_polygon, tile_feature)
-            arcpy.DefineProjection_management(tile_feature, output_system)
+            arcpy.management.CopyFeatures(tile_polygon, tile_feature)
+            arcpy.management.DefineProjection(tile_feature, output_system)
 
             # Select tile extent with grid extent
             selection = int(arcpy.GetCount_management(
@@ -129,10 +129,10 @@ def merge_spectral_tiles(**kwargs):
                                             output_raster,
                                             '',
                                             '0',
-                                            '-32768',
+                                            '-2147483648',
                                             'NONE',
                                             'NONE',
-                                            '16_BIT_SIGNED',
+                                            '32_BIT_SIGNED',
                                             'NONE',
                                             'NONE',
                                             'TIFF',
@@ -178,7 +178,7 @@ def merge_spectral_tiles(**kwargs):
                                        mosaic_location,
                                        mosaic_name,
                                        output_system,
-                                       '16_BIT_SIGNED',
+                                       '32_BIT_SIGNED',
                                        cell_size,
                                        '1',
                                        'MAXIMUM',
@@ -217,10 +217,10 @@ def merge_spectral_tiles(**kwargs):
                                 nibble_raster,
                                 '',
                                 '0',
-                                '-32768',
+                                '-2147483648',
                                 'NONE',
                                 'NONE',
-                                '16_BIT_SIGNED',
+                                '32_BIT_SIGNED',
                                 'NONE',
                                 'NONE',
                                 'TIFF',
@@ -239,16 +239,16 @@ def merge_spectral_tiles(**kwargs):
     # Remove overflow fill from the study area
     print('\tRemoving overflow fill from study area...')
     iteration_start = time.time()
-    raster_preliminary = ExtractByMask(nibble_raster, study_area)
+    raster_preliminary = ExtractByMask(nibble_raster, area_raster)
     # Copy preliminary extracted raster to output
     arcpy.management.CopyRaster(raster_preliminary,
                                 spectral_area,
                                 '',
                                 '0',
-                                '-32768',
+                                '-2147483648',
                                 'NONE',
                                 'NONE',
-                                '16_BIT_SIGNED',
+                                '32_BIT_SIGNED',
                                 'NONE',
                                 'NONE',
                                 'TIFF',
@@ -272,10 +272,10 @@ def merge_spectral_tiles(**kwargs):
                                 spectral_grid,
                                 '',
                                 '0',
-                                '-32768',
+                                '-2147483648',
                                 'NONE',
                                 'NONE',
-                                '16_BIT_SIGNED',
+                                '32_BIT_SIGNED',
                                 'NONE',
                                 'NONE',
                                 'TIFF',

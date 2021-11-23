@@ -25,7 +25,7 @@ project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AK
 unprocessed_folder = os.path.join(data_folder, 'unprocessed/nab')
 processed_folder = os.path.join(data_folder, 'processed/nab')
 
-# Define work geodatabase
+# Define geodatabases
 work_geodatabase = os.path.join(project_folder, 'AKVEG_Map.gdb')
 
 # Define input datasets
@@ -75,7 +75,7 @@ for tile in unprocessed_tiles:
                             'output_projection': 3338,
                             'geographic_transformation': 'WGS_1984_(ITRF00)_To_NAD_1983',
                             'conversion_factor': 10,
-                            'input_array': [tile, nab_raster],
+                            'input_array': [nab_raster, tile],
                             'output_array': [processed_tile]
                             }
 
