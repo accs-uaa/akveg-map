@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Convert fire history to gridded burn year
 # Author: Timm Nawrocki
-# Last Updated: 2021-11-04
+# Last Updated: 2021-11-20
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Convert fire history to gridded burn year" converts the Fire History polygons from 2000-2021 to a raster with most recent burn year as the value per major grid.
 # ---------------------------------------------------------------------------
@@ -20,21 +20,20 @@ root_folder = 'ACCS_Work'
 
 # Define data folder structure
 data_folder = os.path.join(drive, root_folder, 'Data/climatology/fire')
-project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data')
+project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_Map/Data')
 grid_folder = os.path.join(drive, root_folder, 'Data/analyses/grid_major/nab')
 output_folder = os.path.join(data_folder, 'gridded/nab')
 
+# Define geodatabases
+work_geodatabase = os.path.join(project_folder, 'AKVEG_Map.gdb')
+fire_geodatabase = os.path.join(data_folder, 'unprocessed/AlaskaFireHistoryPerimeters_NWCG_AICC.gdb')
+
 # Define input datasets
-fire_history = os.path.join(data_folder,
-                            'unprocessed/AlaskaFireHistoryPerimeters_NWCG_AICC.gdb/AlaskaFireHistoryPerimeters_20201113')
+fire_history = os.path.join(fire_geodatabase, 'AlaskaFireHistoryPerimeters_20201113')
 study_area = os.path.join(project_folder, 'Data_Input/NorthAmericanBeringia_ModelArea.tif')
 
 # Define output datasets
-recent_fire = os.path.join(data_folder,
-                           'unprocessed/AlaskaFireHistoryPerimeters_NWCG_AICC.gdb/AlaskaFireHistoryPerimeters_1990_2021')
-
-# Define work geodatabase
-work_geodatabase = os.path.join(project_folder, 'BeringiaVegetation.gdb')
+recent_fire = os.path.join(fire_geodatabase, 'AlaskaFireHistoryPerimeters_1990_2021')
 
 # Define grids
 grid_list = ['A5', 'A6', 'A7', 'A8',

@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Create elevation composite
 # Author: Timm Nawrocki
-# Last Updated: 2021-11-04
+# Last Updated: 2021-11-22
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Create elevation composite" creates a composite from multiple source DEMs based on order of priority. All sources must be in the same projection with the same cell size and grid. The grid tiles must be predefined as rasters.
 # ---------------------------------------------------------------------------
@@ -18,18 +18,18 @@ root_folder = 'ACCS_Work'
 
 # Define folder structure
 data_folder = os.path.join(drive, root_folder, 'Data/topography')
-project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data')
+project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_Map/Data')
 grid_folder = os.path.join(drive, root_folder, 'Data/analyses/grid_major/full')
 output_folder = os.path.join(data_folder, 'Composite_10m/full/float')
 
-# Define input datasets
-source_USGS_5m = os.path.join(data_folder, 'USGS_3DEP_5m/Elevation_USGS3DEP_5m_Alaska_AKALB_Corrected.tif')
-source_USGS_10m = os.path.join(data_folder, 'USGS_3DEP_10m/Elevation_USGS3DEP_10m_Alaska_AKALB.tif')
-source_USGS_30m = os.path.join(data_folder, 'USGS_3DEP_30m/Elevation_USGS3DEP_30m_Alaska_AKALB.tif')
-source_USGS_60m = os.path.join(data_folder, 'USGS_3DEP_60m/Elevation_USGS3DEP_60m_Alaska_AKALB.tif')
-
-# Define work geodatabase
+# Define geodatabases
 work_geodatabase = os.path.join(project_folder, 'BeringiaVegetation.gdb')
+
+# Define input datasets
+source_USGS_5m = os.path.join(data_folder, 'USGS_3DEP_5m/Elevation_5m_Alaska_AKALB_Corrected.tif')
+source_USGS_10m = os.path.join(data_folder, 'USGS_3DEP_10m/Elevation_10m_Alaska_AKALB.tif')
+source_USGS_30m = os.path.join(data_folder, 'USGS_3DEP_30m/Elevation_30m_Alaska_AKALB.tif')
+source_USGS_60m = os.path.join(data_folder, 'USGS_3DEP_60m/Elevation_60m_Alaska_AKALB.tif')
 
 # Define grids
 grid_list = ['A5', 'A6', 'A7', 'A8',
@@ -50,7 +50,7 @@ count = 1
 for grid in grid_list:
     # Define folder structure
     output_path = os.path.join(output_folder, grid)
-    output_raster = os.path.join(output_path, 'Elevation_AKALB_' + grid + '.tif')
+    output_raster = os.path.join(output_path, 'Elevation_' + grid + '.tif')
 
     # Make grid folder if it does not already exist
     if os.path.exists(output_path) == 0:

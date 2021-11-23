@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Create mean annual total precipitation composite for 2000-2015
 # Author: Timm Nawrocki
-# Last Updated: 2021-11-04
+# Last Updated: 2021-11-20
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Create mean annual total precipitation composite for 2000-2015" calculates the mean annual precipitation from all months for years 2000-2015. The primary data are the SNAP Alaska-Yukon 2km data with the included portion of the Northwest Territories interpolated by geographic nearest neighbors.
 # ---------------------------------------------------------------------------
@@ -21,21 +21,21 @@ root_folder = 'ACCS_Work'
 
 # Define folder structure
 data_folder = os.path.join(drive, root_folder, 'Data/climatology/precipitation')
-project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data')
+project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_Map/Data')
 grid_folder = os.path.join(drive, root_folder, 'Data/analyses/grid_major/nab')
 unprocessed_folder = os.path.join(data_folder, 'unprocessed/2km')
 processed_folder = os.path.join(data_folder, 'processed')
 output_folder = os.path.join(data_folder, 'gridded/nab')
 
+# Define geodatabases
+work_geodatabase = os.path.join(project_folder, 'AKVEG_Map.gdb')
+
 # Define input datasets
-study_area = os.path.join(project_folder, 'Data_Input/NorthAmericanBeringia_ModelArea.tif')
+nab_raster = os.path.join(project_folder, 'Data_Input/NorthAmericanBeringia_ModelArea.tif')
 
 # Define output datasets
 mean_raw = os.path.join(processed_folder, 'full/Precipitation_MeanAnnual_Raw_2km_2000-2015.tif')
 mean_interpolated = os.path.join(processed_folder, 'nab/Precipitation_MeanAnnual_Interpolated_2km_2000-2015.tif')
-
-# Define work geodatabase
-work_geodatabase = os.path.join(project_folder, 'BeringiaVegetation.gdb')
 
 # Define grids
 grid_list = ['A5', 'A6', 'A7', 'A8',
@@ -78,7 +78,7 @@ else:
 #### FILL MISSING DATA
 
 # Create key word arguments to interpolate raster
-kwargs_interpolate = {'input_array': [study_area, mean_raw],
+kwargs_interpolate = {'input_array': [nab_raster, mean_raw],
                       'output_array': [mean_interpolated]
                       }
 
@@ -112,7 +112,7 @@ for grid in grid_list:
     # If output raster does not exist then create output raster
     if arcpy.Exists(output_raster) == 0:
         # Create key word arguments
-        kwargs_grid = {'input_array': [study_area, grid_raster, mean_interpolated],
+        kwargs_grid = {'input_array': [nab_raster, grid_raster, mean_interpolated],
                        'output_array': [output_raster]
                        }
 

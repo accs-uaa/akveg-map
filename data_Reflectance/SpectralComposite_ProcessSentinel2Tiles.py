@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Process Sentinel-2 tiles
 # Author: Timm Nawrocki
-# Last Updated: 2020-11-30
+# Last Updated: 2021-11-20
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Process Sentinel-2 tiles" reprojects tiles and converts to integer.
 # ---------------------------------------------------------------------------
@@ -21,15 +21,15 @@ root_folder = 'ACCS_Work'
 
 # Define folder structure
 data_folder = os.path.join(drive, root_folder, 'Data/imagery/sentinel-2')
-project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data')
+project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_Map/Data')
 unprocessed_folder = os.path.join(data_folder, 'unprocessed/nab')
 processed_folder = os.path.join(data_folder, 'processed/nab')
 
-# Define input datasets
-study_area = os.path.join(project_folder, 'Data_Input/NorthAmericanBeringia_ModelArea.tif')
+# Define geodatabases
+work_geodatabase = os.path.join(project_folder, 'AKVEG_Map.gdb')
 
-# Define work geodatabase
-work_geodatabase = os.path.join(project_folder, 'BeringiaVegetation.gdb')
+# Define input datasets
+nab_raster = os.path.join(project_folder, 'Data_Input/NorthAmericanBeringia_ModelArea.tif')
 
 # List imagery tiles
 print('Searching for imagery tiles...')
@@ -75,7 +75,7 @@ for tile in unprocessed_tiles:
                             'output_projection': 3338,
                             'geographic_transformation': 'WGS_1984_(ITRF00)_To_NAD_1983',
                             'conversion_factor': 10,
-                            'input_array': [tile, study_area],
+                            'input_array': [tile, nab_raster],
                             'output_array': [processed_tile]
                             }
 

@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Create Analysis Grids
 # Author: Timm Nawrocki
-# Last Updated: 2021-11-03
+# Last Updated: 2021-11-20
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Create Analysis Grids" creates major and minor grid indices and overlapping grid tiles from a manually-generated study area polygon.
 # ---------------------------------------------------------------------------
@@ -22,24 +22,25 @@ root_folder = os.path.join(drive, 'ACCS_Work')
 
 # Set data folder
 data_folder = os.path.join(root_folder, 'Data/analyses')
-project_folder = os.path.join(root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data')
+project_folder = os.path.join(root_folder, 'Projects/VegetationEcology/AKVEG_Map/Data')
 
-# Define work geodatabase
-work_geodatabase = os.path.join(project_folder, 'BeringiaVegetation.gdb')
+# Define geodatabases
+work_geodatabase = os.path.join(project_folder, 'AKVEG_Map.gdb')
+regions_geodatabase = os.path.join(project_folder, 'Alaska_Regions.gdb')
 
 # Define input raster datasets
-total_feature = os.path.join(work_geodatabase, 'AlaskaCombined_TotalArea')
+total_feature = os.path.join(regions_geodatabase, 'AlaskaCombined_TotalArea')
 total_raster = os.path.join(project_folder, 'Data_Input/AlaskaCombined_TotalArea.tif')
-nab_feature = os.path.join(work_geodatabase, 'NorthAmericanBeringia_ModelArea')
+nab_feature = os.path.join(regions_geodatabase, 'NorthAmericanBeringia_ModelArea')
 nab_raster = os.path.join(project_folder, 'Data_Input/NorthAmericanBeringia_ModelArea.tif')
 
 # Define output grid datasets
-major_grid = os.path.join(work_geodatabase, 'AlaskaCombined_GridIndex_Major_400km')
-major_nab = os.path.join(work_geodatabase, 'NorthAmericanBeringia_GridIndex_Major_400km')
-minor_grid = os.path.join(work_geodatabase, 'AlaskaCombined_GridIndex_Minor_10km')
-minor_nab = os.path.join(work_geodatabase, 'NorthAmericanBeringia_GridIndex_Minor_10km')
-validation_grid = os.path.join(work_geodatabase, 'AlaskaCombined_GridIndex_Validation_100km')
-validation_nab = os.path.join(work_geodatabase, 'NorthAmericanBeringia_GridIndex_Validation_100km')
+major_grid = os.path.join(regions_geodatabase, 'AlaskaCombined_GridIndex_Major_400km')
+major_nab = os.path.join(regions_geodatabase, 'NorthAmericanBeringia_GridIndex_Major_400km')
+minor_grid = os.path.join(regions_geodatabase, 'AlaskaCombined_GridIndex_Minor_10km')
+minor_nab = os.path.join(regions_geodatabase, 'NorthAmericanBeringia_GridIndex_Minor_10km')
+validation_grid = os.path.join(regions_geodatabase, 'AlaskaCombined_GridIndex_Validation_100km')
+validation_nab = os.path.join(regions_geodatabase, 'NorthAmericanBeringia_GridIndex_Validation_100km')
 validation_raster = os.path.join(data_folder, 'validation/NorthAmericanBeringia_ValidationGroups.tif')
 
 #### GENERATE MAJOR GRID INDEX

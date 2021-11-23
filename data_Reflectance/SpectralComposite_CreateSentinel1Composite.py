@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Create Sentinel-1 composite
 # Author: Timm Nawrocki
-# Last Updated: 2021-11-04
+# Last Updated: 2021-11-20
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Create Sentinel-1 composite" merges Sentinel-1 tiles by month and property per predefined grid.
 # ---------------------------------------------------------------------------
@@ -20,16 +20,16 @@ root_folder = 'ACCS_Work'
 
 # Define folder structure
 data_folder = os.path.join(drive, root_folder, 'Data/imagery/sentinel-1')
-project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data')
+project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_Map/Data')
 grid_folder = os.path.join(drive, root_folder, 'Data/analyses/grid_major/nab')
 processed_folder = os.path.join(data_folder, 'processed/nab')
 output_folder = os.path.join(data_folder, 'gridded/nab')
 
-# Define input datasets
-study_area = os.path.join(project_folder, 'Data_Input/NorthAmericanBeringia_ModelArea.tif')
+# Define geodatabases
+work_geodatabase = os.path.join(project_folder, 'AKVEG_Map.gdb')
 
-# Define work geodatabase
-work_geodatabase = os.path.join(project_folder, 'BeringiaVegetation.gdb')
+# Define input datasets
+nab_raster = os.path.join(project_folder, 'Data_Input/NorthAmericanBeringia_ModelArea.tif')
 
 # Define grids
 grid_list = ['A5', 'A6', 'A7', 'A8',
@@ -71,7 +71,7 @@ for band in bands:
             kwargs_merge = {'cell_size': 10,
                             'output_projection': 3338,
                             'work_geodatabase': work_geodatabase,
-                            'input_array': [grid, study_area] + metric_tiles,
+                            'input_array': [grid, nab_raster] + metric_tiles,
                             'output_array': [output_raster]
                             }
 

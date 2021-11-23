@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Reproject to Integer Raster
 # Author: Timm Nawrocki
-# Last Updated: 2021-03-10
+# Last Updated: 2021-11-20
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Reproject to Integer Raster" is a function that reprojects and resamples a raster and converts the output to 16 bit signed integers with some conversion factor representing the number of decimal points to preserve.
 # ---------------------------------------------------------------------------
@@ -35,14 +35,14 @@ def reproject_integer(**kwargs):
     geographic_transformation = kwargs['geographic_transformation']
     conversion_factor = kwargs['conversion_factor']
     input_raster = kwargs['input_array'][0]
-    snap_raster = kwargs['input_array'][1]
+    area_raster = kwargs['input_array'][1]
     output_raster = kwargs['output_array'][0]
 
     # Set overwrite option
     arcpy.env.overwriteOutput = True
 
     # Set snap raster
-    arcpy.env.snapRaster = snap_raster
+    arcpy.env.snapRaster = area_raster
 
     # Define the input and output coordinate systems
     input_system = arcpy.SpatialReference(input_projection)
@@ -80,10 +80,10 @@ def reproject_integer(**kwargs):
                                 output_raster,
                                 '',
                                 '',
-                                '-32768',
+                                '-2147483648',
                                 'NONE',
                                 'NONE',
-                                '16_BIT_SIGNED',
+                                '32_BIT_SIGNED',
                                 'NONE',
                                 'NONE',
                                 'TIFF',

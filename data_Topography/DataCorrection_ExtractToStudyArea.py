@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Extract predictor data to study area
 # Author: Timm Nawrocki
-# Last Updated: 2021-11-04
+# Last Updated: 2021-11-20
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Extract predictor data to study area" extracts a set of topographic predictor raster datasets to a study area to enforce the same extent on all rasters.
 # ---------------------------------------------------------------------------
@@ -19,16 +19,16 @@ root_folder = 'ACCS_Work'
 
 # Define folder structure
 data_folder = os.path.join(drive, root_folder, 'Data/topography/Composite_10m')
-project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_QuantitativeMap/Data')
+project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_Map/Data')
 grid_folder = os.path.join(drive, root_folder, 'Data/analyses/grid_major/nab')
 input_folder = os.path.join(data_folder, 'full/integer')
 output_folder = os.path.join(data_folder, 'nab')
 
-# Define input datasets
-study_area = os.path.join(project_folder, 'Data_Input/NorthAmericanBeringia_ModelArea.tif')
-
-# Define work geodatabase
+# Define geodatabases
 work_geodatabase = os.path.join(project_folder, 'BeringiaVegetation.gdb')
+
+# Define input datasets
+area_raster = os.path.join(project_folder, 'Data_Input/NorthAmericanBeringia_ModelArea.tif')
 
 # Define grids
 grid_list = ['A5', 'A6', 'A7', 'A8',
@@ -76,7 +76,7 @@ for grid in grid_list:
         if arcpy.Exists(output_raster) == 0:
             # Create key word arguments
             kwargs_extract = {'work_geodatabase': work_geodatabase,
-                              'input_array': [input_raster, study_area, grid_raster],
+                              'input_array': [input_raster, area_raster, grid_raster],
                               'output_array': [output_raster]
                               }
 

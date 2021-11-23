@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Create composite USGS 3DEP 10 m Alaska
+# Create composite USGS 3DEP 10m Alaska
 # Author: Timm Nawrocki
-# Last Updated: 2021-11-04
+# Last Updated: 2021-11-22
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Create composite USGS 3DEP 10 m Alaska" combines individual DEM tiles, reprojects to NAD 1983 Alaska Albers, and resamples to 10 m.
+# Description: "Create composite USGS 3DEP 10m Alaska" combines individual DEM tiles, reprojects to NAD 1983 Alaska Albers, and resamples to 10 m.
 # ---------------------------------------------------------------------------
 
 # Import packages
@@ -22,14 +22,14 @@ project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AK
 tile_folder = os.path.join(data_folder, 'tiles')
 projected_folder = os.path.join(data_folder, 'tiles_projected')
 
+# Define geodatabases
+work_geodatabase = os.path.join(project_folder, 'AKVEG_Map.gdb')
+
 # Define input datasets
-study_area = os.path.join(project_folder, 'Data_Input/AlaskaCombined_TotalArea.tif')
+alaska_raster = os.path.join(project_folder, 'Data_Input/AlaskaCombined_TotalArea.tif')
 
 # Define output datasets
-output_raster = os.path.join(data_folder, 'Elevation_USGS3DEP_10m_Alaska_AKALB.tif')
-
-# Define work geodatabase
-work_geodatabase = os.path.join(project_folder, 'BeringiaVegetation.gdb')
+output_raster = os.path.join(data_folder, 'Elevation_10m_Alaska_AKALB.tif')
 
 #### CREATE COMPOSITE DEM
 
@@ -41,7 +41,7 @@ kwargs_merge = {'tile_folder': tile_folder,
                 'input_projection': 4269,
                 'output_projection': 3338,
                 'geographic_transformation': '',
-                'input_array': [study_area],
+                'input_array': [alaska_raster],
                 'output_array': [output_raster]
                 }
 
