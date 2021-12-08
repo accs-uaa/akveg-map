@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Process Sentinel-2 tiles
 # Author: Timm Nawrocki
-# Last Updated: 2021-11-22
+# Last Updated: 2021-12-08
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Process Sentinel-2 tiles" reprojects tiles and converts to integer.
 # ---------------------------------------------------------------------------
@@ -10,6 +10,7 @@
 # Import packages
 import arcpy
 import datetime
+import fnmatch
 import os
 from package_GeospatialProcessing import arcpy_geoprocessing
 from package_GeospatialProcessing import reproject_integer
@@ -69,18 +70,29 @@ for tile in unprocessed_tiles:
 
     # Reproject and convert tile if processed tile does not already exist
     if arcpy.Exists(processed_tile) == 0:
+        # Determine conversion factor
+        if (fnmatch.fnmatch(processed_tile, '*evi2*')
+                or fnmatch.fnmatch(processed_tile, '*nbr*')
+                or fnmatch.fnmatch(processed_tile, '*ndmi*')
+                or fnmatch.fnmatch(processed_tile, '*ndsi*')
+                or fnmatch.fnmatch(processed_tile, '*ndvi*')
+                or fnmatch.fnmatch(processed_tile, '*ndwi*')):
+            conversion_factor = 1000000
+        else:
+            conversion_factor = 10
+
         # Create key word arguments
         kwargs_reproject = {'cell_size': 10,
                             'input_projection': 4326,
                             'output_projection': 3338,
                             'geographic_transformation': 'WGS_1984_(ITRF00)_To_NAD_1983',
-                            'conversion_factor': 10,
+                            'conversion_factor': conversion_factor,
                             'input_array': [nab_raster, tile],
                             'output_array': [processed_tile]
                             }
 
         # Process the reproject integer function
-        print(f'Processing tile {count} of {tiles_length}...')
+        print(f'Processing tile {count} of {tiles_length} using conversion factor {conversion_factor}...')
         arcpy_geoprocessing(reproject_integer, **kwargs_reproject)
         print('----------')
     else:
