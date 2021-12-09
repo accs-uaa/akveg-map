@@ -49,7 +49,7 @@ def calculate_topographic_properties(**kwargs):
     elevation_input = kwargs['input_array'][1]
     elevation_output = kwargs['output_array'][0]
     aspect_output = kwargs['output_array'][1]
-    cti_output = kwargs['output_array'][2]
+    wetness_output = kwargs['output_array'][2]
     roughness_output = kwargs['output_array'][3]
     exposure_output = kwargs['output_array'][4]
     slope_output = kwargs['output_array'][5]
@@ -57,6 +57,7 @@ def calculate_topographic_properties(**kwargs):
     relief_output = kwargs['output_array'][7]
     position_output = kwargs['output_array'][8]
     radiation_output = kwargs['output_array'][9]
+    heatload_output = kwargs['output_array'][10]
 
     # Set overwrite option
     arcpy.env.overwriteOutput = True
