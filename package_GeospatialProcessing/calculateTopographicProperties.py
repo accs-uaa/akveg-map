@@ -2,62 +2,59 @@
 # ---------------------------------------------------------------------------
 # Calculate Topographic Properties
 # Author: Timm Nawrocki
-# Last Updated: 2021-03-10
-# Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Calculate Topographic Properties" is a function that calculates multiple topographic properties from an elevation raster using the Geomorphometry and Gradient Metrics Toolbox 2.0.
+# Last Updated: 2022-01-01
+# Usage: Must be executed in an ArcGIS Pro Python 3.7 installation.
+# Description: "Calculate Topographic Properties" is a function that calculates multiple integer topographic properties from a float elevation raster.
 # ---------------------------------------------------------------------------
 
-# Define a function to calculate aspect, compound topographic index, heat load index, integrated moisture index, roughness, site exposure, slope, surface area ratio, and surface relief ratio
+# Define a function to calculate topographic properties.
 def calculate_topographic_properties(**kwargs):
     """
-    Description: calculates topographic properties from an elevation raster
+    Description: calculates integer topographic properties from a float elevation raster
     Inputs: 'z_unit' -- a string value of either 'Meter' or 'Foot' representing the vertical unit of the elevation raster
-            'input_array' -- an array containing the grid raster (must be first) and the elevation raster
-            'output_array' -- an array containing the output rasters for aspect, compound topographic index, heat load index, integrated moisture index, roughness, site exposure, slope, surface area ratio, and surface relief ratio (in that order)
+            'position_width' -- an integer value of the distance to consider for topographic position in the same units as the input raster
+            'input_array' -- an array containing the grid raster (must be first) and the float elevation raster
+            'output_array' -- an array containing the output rasters for elevation (integer), aspect, wetness, roughness, exposure, slope, area, relief, position, radiation, and heat load (in that order).
     Returned Value: Returns a raster dataset on disk for each topographic property
     Preconditions: requires an input DEM that can be created through other scripts in this repository
     """
 
     # Import packages
     import arcpy
-    from arcpy.sa import Con
-    from arcpy.sa import IsNull
-    from arcpy.sa import ExtractByMask
     from arcpy.sa import Raster
-    from arcpy.sa import Int
-    from arcpy.sa import FlowDirection
-    from arcpy.sa import FlowAccumulation
-    from arcpy.sa import Slope
-    from arcpy.sa import Aspect
-    from package_Geomorphometry import compound_topographic
-    from package_Geomorphometry import getZFactor
-    from package_Geomorphometry import linear_aspect
-    from package_Geomorphometry import mean_slope
-    from package_Geomorphometry import roughness
-    from package_Geomorphometry import site_exposure
-    from package_Geomorphometry import surface_area
-    from package_Geomorphometry import surface_relief
-    from package_Geomorphometry import topographic_position
-    from package_Geomorphometry import topographic_radiation
+    from package_Geomorphometry import calculate_aspect
+    from package_Geomorphometry import calculate_exposure
+    from package_Geomorphometry import calculate_flow
+    from package_Geomorphometry import calculate_heat_load
+    from package_Geomorphometry import calculate_integer_elevation
+    from package_Geomorphometry import calculate_position
+    from package_Geomorphometry import calculate_radiation
+    from package_Geomorphometry import calculate_roughness
+    from package_Geomorphometry import calculate_slope
+    from package_Geomorphometry import calculate_surface_area
+    from package_Geomorphometry import calculate_surface_relief
+    from package_Geomorphometry import calculate_wetness
+    from package_Geomorphometry import get_z_factor
     import datetime
     import os
     import time
 
     # Parse key word argument inputs
     z_unit = kwargs['z_unit']
-    grid_raster = kwargs['input_array'][0]
-    elevation_input = kwargs['input_array'][1]
-    elevation_output = kwargs['output_array'][0]
-    aspect_output = kwargs['output_array'][1]
-    wetness_output = kwargs['output_array'][2]
-    roughness_output = kwargs['output_array'][3]
-    exposure_output = kwargs['output_array'][4]
-    slope_output = kwargs['output_array'][5]
-    area_output = kwargs['output_array'][6]
-    relief_output = kwargs['output_array'][7]
-    position_output = kwargs['output_array'][8]
-    radiation_output = kwargs['output_array'][9]
-    heatload_output = kwargs['output_array'][10]
+    position_width = kwargs['position_width']
+    area_raster = kwargs['input_array'][0]
+    elevation_float = kwargs['input_array'][1]
+    elevation_integer = kwargs['output_array'][0]
+    slope_integer = kwargs['output_array'][1]
+    aspect_output = kwargs['output_array'][2]
+    exposure_output = kwargs['output_array'][3]
+    heatload_output = kwargs['output_array'][4]
+    position_output = kwargs['output_array'][5]
+    radiation_output = kwargs['output_array'][6]
+    roughness_output = kwargs['output_array'][7]
+    surfacearea_output = kwargs['output_array'][8]
+    surfacerelief_output = kwargs['output_array'][9]
+    wetness_output = kwargs['output_array'][10]
 
     # Set overwrite option
     arcpy.env.overwriteOutput = True
@@ -66,38 +63,27 @@ def calculate_topographic_properties(**kwargs):
     arcpy.env.parallelProcessingFactor = "75%"
 
     # Set snap raster and extent
-    arcpy.env.snapRaster = grid_raster
-    arcpy.env.extent = Raster(grid_raster).extent
+    arcpy.env.snapRaster = area_raster
+    arcpy.env.extent = Raster(area_raster).extent
 
     # Define folder structure
-    grid_title = os.path.splitext(os.path.split(grid_raster)[1])[0]
-    raster_folder = os.path.split(elevation_output)[0]
-    intermediate_folder = os.path.join(raster_folder, 'intermediate')
-    # Create raster folder if it does not already exist
-    if os.path.exists(raster_folder) == 0:
-        os.mkdir(raster_folder)
-    # Create intermediate folder if it does not already exist
-    if os.path.exists(intermediate_folder) == 0:
-        os.mkdir(intermediate_folder)
+    float_folder = os.path.split(elevation_float)[0]
 
     # Define intermediate datasets
-    flow_direction_raster = os.path.join(intermediate_folder, 'flow_direction.tif')
-    flow_accumulation_raster = os.path.join(intermediate_folder, 'flow_accumulation.tif')
-    raw_slope_raster = os.path.join(intermediate_folder, 'raw_slope.tif')
-    raw_aspect_raster = os.path.join(intermediate_folder, 'raw_aspect.tif')
+    flow_accumulation = os.path.join(float_folder, 'flow_accumulation.tif')
+    slope_float = os.path.join(float_folder, 'slope.tif')
+    aspect_raw = os.path.join(float_folder, 'aspect.tif')
 
     # Get the z factor appropriate to the xy and z units
-    zFactor = getZFactor(elevation_input, z_unit)
+    z_factor = get_z_factor(elevation_float, z_unit)
 
-    #### CALCULATE INTERMEDIATE DATASETS
+    #### CALCULATE FOUNDATIONAL TOPOGRAPHY DATASETS
 
-    # Calculate flow direction if it does not already exist
-    if os.path.exists(flow_direction_raster) == 0:
-        # Calculate flow direction
-        print(f'\tCalculating flow direction for {grid_title}...')
+    # Calculate integer elevation if it does not already exist
+    if arcpy.Exists(elevation_integer) == 0:
+        print(f'\tCalculating integer elevation...')
         iteration_start = time.time()
-        flow_direction = FlowDirection(elevation_input, 'NORMAL', '', 'D8')
-        flow_direction.save(flow_direction_raster)
+        calculate_integer_elevation(elevation_float, elevation_integer)
         # End timing
         iteration_end = time.time()
         iteration_elapsed = int(iteration_end - iteration_start)
@@ -107,16 +93,51 @@ def calculate_topographic_properties(**kwargs):
             f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
         print('\t----------')
     else:
-        print(f'\tFlow direction already exists for {grid_title}.')
+        print(f'\tInteger elevation already exists.')
+        print('\t----------')
+
+    # Calculate slope in degrees if it does not already exist
+    if os.path.exists(slope_integer) == 0:
+        # Calculate slope
+        print(f'\tCalculating slope...')
+        iteration_start = time.time()
+        calculate_slope(elevation_float, z_factor, slope_float, slope_integer)
+        # End timing
+        iteration_end = time.time()
+        iteration_elapsed = int(iteration_end - iteration_start)
+        iteration_success_time = datetime.datetime.now()
+        # Report success
+        print(
+            f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
+        print('\t----------')
+    else:
+        print(f'\tRaw slope already exists.')
+        print('\t----------')
+
+    # Calculate aspect if it does not already exist
+    if os.path.exists(aspect_output) == 0:
+        # Calculate aspect
+        print(f'\tCalculating aspect...')
+        iteration_start = time.time()
+        calculate_aspect(elevation_float, z_unit, aspect_raw, aspect_output)
+        # End timing
+        iteration_end = time.time()
+        iteration_elapsed = int(iteration_end - iteration_start)
+        iteration_success_time = datetime.datetime.now()
+        # Report success
+        print(
+            f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
+        print('\t----------')
+    else:
+        print(f'\tAspect already exists.')
         print('\t----------')
 
     # Calculate flow accumulation if it does not already exist
-    if os.path.exists(flow_accumulation_raster) == 0:
-        # Calculate flow accumulation
-        print(f'\tCalculating flow accumulation for {grid_title}...')
+    if arcpy.Exists(flow_accumulation) == 0:
+        # Calculate flow direction
+        print(f'\tCalculating flow direction...')
         iteration_start = time.time()
-        flow_accumulation = FlowAccumulation(flow_direction_raster, '', 'FLOAT', 'D8')
-        flow_accumulation.save(flow_accumulation_raster)
+        calculate_flow(elevation_float, flow_accumulation)
         # End timing
         iteration_end = time.time()
         iteration_elapsed = int(iteration_end - iteration_start)
@@ -126,506 +147,145 @@ def calculate_topographic_properties(**kwargs):
             f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
         print('\t----------')
     else:
-        print(f'\tFlow accumulation already exists for {grid_title}.')
+        print(f'\tFlow direction already exists.')
         print('\t----------')
 
-    # Calculate raw slope in degrees if it does not already exist
-    if os.path.exists(raw_slope_raster) == 0:
-        # Calculate slope
-        print(f'\tCalculating raw slope for {grid_title}...')
-        iteration_start = time.time()
-        raw_slope = Slope(elevation_input, "DEGREE", zFactor)
-        raw_slope.save(raw_slope_raster)
-        # End timing
-        iteration_end = time.time()
-        iteration_elapsed = int(iteration_end - iteration_start)
-        iteration_success_time = datetime.datetime.now()
-        # Report success
-        print(
-            f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
-        print('\t----------')
-    else:
-        print(f'\tRaw slope already exists for {grid_title}.')
-        print('\t----------')
+    #### CALCULATE DERIVED TOPOGRAPHY DATASETS
 
-    # Calculate raw aspect if it does not already exist
-    if os.path.exists(raw_aspect_raster) == 0:
-        # Calculate aspect
-        print(f'\tCalculating raw aspect for {grid_title}...')
-        iteration_start = time.time()
-        raw_aspect = Aspect(elevation_input, 'PLANAR', z_unit)
-        raw_aspect.save(raw_aspect_raster)
-        # End timing
-        iteration_end = time.time()
-        iteration_elapsed = int(iteration_end - iteration_start)
-        iteration_success_time = datetime.datetime.now()
-        # Report success
-        print(
-            f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
-        print('\t----------')
-    else:
-        print(f'\tRaw aspect already exists for {grid_title}.')
-        print('\t----------')
-
-    #### CALCULATE INTEGER ELEVATION
-
-    # Calculate integer elevation if it does not already exist
-    if arcpy.Exists(elevation_output) == 0:
-        print(f'\tCalculating integer elevation for {grid_title}...')
-        iteration_start = time.time()
-        # Round to integer
-        print(f'\t\tConverting values to integers...')
-        integer_elevation = Int(Raster(elevation_input) + 0.5)
-        # Copy extracted raster to output
-        print(f'\t\tCreating output raster...')
-        arcpy.management.CopyRaster(integer_elevation,
-                                    elevation_output,
-                                    '',
-                                    '',
-                                    '-32768',
-                                    'NONE',
-                                    'NONE',
-                                    '16_BIT_SIGNED',
-                                    'NONE',
-                                    'NONE',
-                                    'TIFF',
-                                    'NONE')
-        # End timing
-        iteration_end = time.time()
-        iteration_elapsed = int(iteration_end - iteration_start)
-        iteration_success_time = datetime.datetime.now()
-        # Report success
-        print(
-            f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
-        print('\t----------')
-    else:
-        print(f'\tInteger elevation already exists for {grid_title}.')
-        print('\t----------')
-
-    #### CALCULATE LINEAR ASPECT
-
-    # Calculate linear aspect if it does not already exist
-    if arcpy.Exists(aspect_output) == 0:
-        print(f'\tCalculating linear aspect for {grid_title}...')
-        iteration_start = time.time()
-        # Create an initial linear aspect calculation using the linear aspect function
-        aspect_intermediate = os.path.splitext(aspect_output)[0] + '_intermediate.tif'
-        linear_aspect(raw_aspect_raster, aspect_intermediate)
-        # Round to integer
-        print(f'\t\tConverting values to integers...')
-        integer_aspect = Int(Raster(aspect_intermediate) + 0.5)
-        # Fill missing data (no aspect) with values of -1
-        print(f'\t\tFilling values of no aspect...')
-        conditional_aspect = Con(IsNull(integer_aspect), -1, integer_aspect)
-        # Extract filled raster to grid mask
-        print(f'\t\tExtracting filled raster to grid...')
-        extract_aspect = ExtractByMask(conditional_aspect, grid_raster)
-        # Copy extracted raster to output
-        print(f'\t\tCreating output raster...')
-        arcpy.management.CopyRaster(extract_aspect,
-                                    aspect_output,
-                                    '',
-                                    '',
-                                    '-32768',
-                                    'NONE',
-                                    'NONE',
-                                    '16_BIT_SIGNED',
-                                    'NONE',
-                                    'NONE',
-                                    'TIFF',
-                                    'NONE')
-        # End timing
-        iteration_end = time.time()
-        iteration_elapsed = int(iteration_end - iteration_start)
-        iteration_success_time = datetime.datetime.now()
-        # Delete intermediate dataset if possible
-        try:
-            arcpy.management.Delete(aspect_intermediate)
-        except:
-            print('\t\tCould not delete intermediate dataset...')
-        # Report success
-        print(f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
-        print('\t----------')
-    else:
-        print(f'\tLinear aspect already exists for {grid_title}.')
-        print('\t----------')
-
-    #### CALCULATE COMPOUND TOPOGRAPHIC INDEX
-
-    # Calculate compound topographic index if it does not already exist
-    if arcpy.Exists(cti_output) == 0:
-        print(f'\tCalculating compound topographic index for {grid_title}...')
-        iteration_start = time.time()
-        # Create an intermediate compound topographic index calculation
-        cti_intermediate = os.path.splitext(cti_output)[0] + '_intermediate.tif'
-        compound_topographic(elevation_input,
-                             flow_accumulation_raster,
-                             raw_slope_raster,
-                             cti_intermediate)
-        # Convert to integer values
-        print(f'\t\tConverting values to integers...')
-        integer_compound = Int((Raster(cti_intermediate)*100) + 0.5)
-        # Copy integer raster to output
-        print(f'\t\tCreating output raster...')
-        arcpy.management.CopyRaster(integer_compound,
-                                    cti_output,
-                                    '',
-                                    '',
-                                    '-32768',
-                                    'NONE',
-                                    'NONE',
-                                    '16_BIT_SIGNED',
-                                    'NONE',
-                                    'NONE',
-                                    'TIFF',
-                                    'NONE')
-        # End timing
-        iteration_end = time.time()
-        iteration_elapsed = int(iteration_end - iteration_start)
-        iteration_success_time = datetime.datetime.now()
-        # Delete intermediate dataset if possible
-        try:
-            arcpy.management.Delete(cti_intermediate)
-        except:
-            print('\t\tCould not delete intermediate dataset...')
-        # Report success
-        print(f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
-        print('\t----------')
-    else:
-        print(f'\tCompound topographic index already exists for {grid_title}.')
-        print('\t----------')
-
-    #### CALCULATE ROUGHNESS
-
-    # Calculate roughness if it does not already exist
-    if arcpy.Exists(roughness_output) == 0:
-        print(f'\tCalculating roughness for {grid_title}...')
-        iteration_start = time.time()
-        # Create an intermediate compound topographic index calculation
-        roughness_intermediate = os.path.splitext(roughness_output)[0] + '_intermediate.tif'
-        roughness(elevation_input,
-                  roughness_intermediate)
-        # Convert to integer values
-        print(f'\t\tConverting values to integers...')
-        integer_roughness = Int(Raster(roughness_intermediate) + 0.5)
-        # Fill missing data (no aspect) with values of 0
-        print(f'\t\tFilling values of roughness...')
-        conditional_roughness = Con(IsNull(integer_roughness), 0, integer_roughness)
-        # Extract filled raster to grid mask
-        print(f'\t\tExtracting filled raster to grid...')
-        extract_roughness = ExtractByMask(conditional_roughness, grid_raster)
-        # Copy extracted raster to output
-        print(f'\t\tCreating output raster...')
-        arcpy.management.CopyRaster(extract_roughness,
-                                    roughness_output,
-                                    '',
-                                    '',
-                                    '-32768',
-                                    'NONE',
-                                    'NONE',
-                                    '16_BIT_SIGNED',
-                                    'NONE',
-                                    'NONE',
-                                    'TIFF',
-                                    'NONE')
-        # End timing
-        iteration_end = time.time()
-        iteration_elapsed = int(iteration_end - iteration_start)
-        iteration_success_time = datetime.datetime.now()
-        # Delete intermediate dataset if possible
-        try:
-            arcpy.management.Delete(roughness_intermediate)
-        except:
-            print('\t\tCould not delete intermediate dataset...')
-        # Report success
-        print(
-            f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
-        print('\t----------')
-    else:
-        print(f'\tRoughness already exists for {grid_title}.')
-        print('\t----------')
-
-    #### CALCULATE SITE EXPOSURE
-
-    # Calculate site exposure if it does not already exist
+    # Calculate solar exposure index if it does not already exist
     if arcpy.Exists(exposure_output) == 0:
-        print(f'\tCalculating site exposure for {grid_title}...')
+        print(f'\tCalculating solar exposure...')
         iteration_start = time.time()
-        # Create an intermediate compound topographic index calculation
-        exposure_intermediate = os.path.splitext(exposure_output)[0] + '_intermediate.tif'
-        site_exposure(raw_aspect_raster,
-                      raw_slope_raster,
-                      exposure_intermediate)
-        # Convert to integer values
-        print(f'\t\tConverting values to integers...')
-        integer_exposure = Int((Raster(exposure_intermediate) * 100) + 0.5)
-        # Copy extracted raster to output
-        print(f'\t\tCreating output raster...')
-        arcpy.management.CopyRaster(integer_exposure,
-                                    exposure_output,
-                                    '',
-                                    '',
-                                    '-32768',
-                                    'NONE',
-                                    'NONE',
-                                    '16_BIT_SIGNED',
-                                    'NONE',
-                                    'NONE',
-                                    'TIFF',
-                                    'NONE')
+        calculate_exposure(aspect_raw, slope_float, 10, exposure_output)
         # End timing
         iteration_end = time.time()
         iteration_elapsed = int(iteration_end - iteration_start)
         iteration_success_time = datetime.datetime.now()
-        # Delete intermediate dataset if possible
-        try:
-            arcpy.management.Delete(exposure_intermediate)
-        except:
-            print('\t\tCould not delete intermediate dataset...')
         # Report success
         print(
             f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
         print('\t----------')
     else:
-        print(f'\tSite exposure already exists for {grid_title}.')
+        print(f'\tSite exposure already exists.')
         print('\t----------')
 
-    #### CALCULATE MEAN SLOPE
-
-    # Calculate mean slope if it does not already exist
-    if arcpy.Exists(slope_output) == 0:
-        print(f'\tCalculating mean slope for {grid_title}...')
+    # Calculate heat load index if it does not already exist
+    if arcpy.Exists(heatload_output) == 0:
+        print('\tCalculating heat load index...')
         iteration_start = time.time()
-        # Create an intermediate mean slope calculation
-        slope_intermediate = os.path.splitext(slope_output)[0] + '_intermediate.tif'
-        mean_slope(raw_slope_raster,
-                   slope_intermediate)
-        # Convert to integer values
-        print(f'\t\tConverting values to integers...')
-        integer_slope = Int(Raster(slope_intermediate) + 0.5)
-        # Copy extracted raster to output
-        print(f'\t\tCreating output raster...')
-        arcpy.management.CopyRaster(integer_slope,
-                                    slope_output,
-                                    '',
-                                    '',
-                                    '-128',
-                                    'NONE',
-                                    'NONE',
-                                    '8_BIT_SIGNED',
-                                    'NONE',
-                                    'NONE',
-                                    'TIFF',
-                                    'NONE')
+        calculate_heat_load(elevation_float, slope_float, aspect_raw, 10, heatload_output)
         # End timing
         iteration_end = time.time()
         iteration_elapsed = int(iteration_end - iteration_start)
         iteration_success_time = datetime.datetime.now()
-        # Delete intermediate dataset if possible
-        try:
-            arcpy.management.Delete(slope_intermediate)
-        except:
-            print('\t\tCould not delete intermediate dataset...')
         # Report success
         print(
             f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
         print('\t----------')
     else:
-        print(f'\tMean slope already exists for {grid_title}.')
+        print(f'\tHeat load index already exists.')
         print('\t----------')
-
-    #### CALCULATE SURFACE AREA RATIO
-
-    # Calculate surface area ratio if it does not already exist
-    if os.path.exists(area_output) == 0:
-        print(f'\tCalculating surface area ratio for {grid_title}...')
-        iteration_start = time.time()
-        # Create an intermediate surface area ratio calculation
-        area_intermediate = os.path.splitext(area_output)[0] + '_intermediate.tif'
-        surface_area(raw_slope_raster,
-                     area_intermediate)
-        # Convert to integer values
-        print(f'\t\tConverting values to integers...')
-        integer_area = Int((Raster(area_intermediate) * 10) + 0.5)
-        # Copy extracted raster to output
-        print(f'\t\tCreating output raster...')
-        arcpy.management.CopyRaster(integer_area,
-                                    area_output,
-                                    '',
-                                    '',
-                                    '-32768',
-                                    'NONE',
-                                    'NONE',
-                                    '16_BIT_SIGNED',
-                                    'NONE',
-                                    'NONE',
-                                    'TIFF',
-                                    'NONE')
-        # End timing
-        iteration_end = time.time()
-        iteration_elapsed = int(iteration_end - iteration_start)
-        iteration_success_time = datetime.datetime.now()
-        # Delete intermediate dataset if possible
-        try:
-            arcpy.management.Delete(area_intermediate)
-        except:
-            print('\t\tCould not delete intermediate dataset...')
-        # Report success
-        print(
-            f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
-        print('\t----------')
-    else:
-        print(f'\tSurface area ratio already exists for {grid_title}.')
-        print('\t----------')
-
-    #### CALCULATE SURFACE RELIEF RATIO
-
-    # Calculate surface relief ratio if it does not already exist
-    if arcpy.Exists(relief_output) == 0:
-        print(f'\tCalculating surface relief ratio for {grid_title}...')
-        iteration_start = time.time()
-        # Create an intermediate surface relief ratio calculation
-        relief_intermediate = os.path.splitext(relief_output)[0] + '_intermediate.tif'
-        surface_relief(elevation_input,
-                       relief_intermediate)
-        # Convert to integer values
-        print(f'\t\tConverting values to integers...')
-        integer_relief = Int((Raster(relief_intermediate) * 1000) + 0.5)
-        # Copy extracted raster to output
-        print(f'\t\tCreating output raster...')
-        arcpy.management.CopyRaster(integer_relief,
-                                    relief_output,
-                                    '',
-                                    '',
-                                    '-32768',
-                                    'NONE',
-                                    'NONE',
-                                    '16_BIT_SIGNED',
-                                    'NONE',
-                                    'NONE',
-                                    'TIFF',
-                                    'NONE')
-        # End timing
-        iteration_end = time.time()
-        iteration_elapsed = int(iteration_end - iteration_start)
-        iteration_success_time = datetime.datetime.now()
-        # Delete intermediate dataset if possible
-        try:
-            arcpy.management.Delete(relief_intermediate)
-        except:
-            print('\t\tCould not delete intermediate dataset...')
-        # Report success
-        print(
-            f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
-        print('\t----------')
-    else:
-        print(f'\tSurface relief ratio already exists for {grid_title}.')
-        print('\t----------')
-
-    #### CALCULATE TOPOGRAPHIC POSITION
 
     # Calculate topographic position if it does not already exist
     if arcpy.Exists(position_output) == 0:
-        print(f'\tCalculating topographic position for {grid_title}...')
+        print(f'\tCalculating topographic position...')
         iteration_start = time.time()
-        # Create an intermediate topographic position calculation
-        position_intermediate = os.path.splitext(position_output)[0] + '_intermediate.tif'
-        topographic_position(elevation_input,
-                             position_intermediate)
-        # Convert to integer values
-        print(f'\t\tConverting values to integers...')
-        integer_position = Int((Raster(position_intermediate) * 100) + 0.5)
-        # Copy extracted raster to output
-        print(f'\t\tCreating output raster...')
-        arcpy.management.CopyRaster(integer_position,
-                                    position_output,
-                                    '',
-                                    '',
-                                    '-32768',
-                                    'NONE',
-                                    'NONE',
-                                    '16_BIT_SIGNED',
-                                    'NONE',
-                                    'NONE',
-                                    'TIFF',
-                                    'NONE')
+        calculate_position(elevation_float, position_width, position_output)
         # End timing
         iteration_end = time.time()
         iteration_elapsed = int(iteration_end - iteration_start)
         iteration_success_time = datetime.datetime.now()
-        # Delete intermediate dataset if possible
-        try:
-            arcpy.management.Delete(position_intermediate)
-        except:
-            print('\t\tCould not delete intermediate dataset...')
         # Report success
         print(
             f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
         print('\t----------')
     else:
-        print(f'\tTopographic position already exists for {grid_title}.')
+        print(f'\tTopographic position already exists.')
         print('\t----------')
-
-    #### CALCULATE TOPOGRAPHIC RADIATION
 
     # Calculate topographic radiation if it does not already exist
     if arcpy.Exists(radiation_output) == 0:
-        print(f'\tCalculating topographic radiation for {grid_title}...')
+        print(f'\tCalculating topographic radiation...')
         iteration_start = time.time()
-        # Create an intermediate topographic position calculation
-        radiation_intermediate = os.path.splitext(radiation_output)[0] + '_intermediate.tif'
-        radiation_integer = os.path.splitext(radiation_output)[0] + '_integer.tif'
-        topographic_radiation(elevation_input,
-                              radiation_intermediate)
-        # Convert to integer values
-        print(f'\t\tConverting values to integers...')
-        integer_radiation = Int((Raster(radiation_intermediate) * 1000) + 0.5)
-        arcpy.management.CopyRaster(integer_radiation,
-                                    radiation_integer,
-                                    '',
-                                    '',
-                                    '-32768',
-                                    'NONE',
-                                    'NONE',
-                                    '16_BIT_SIGNED',
-                                    'NONE',
-                                    'NONE',
-                                    'TIFF',
-                                    'NONE')
-        # Extract filled raster to grid mask
-        print(f'\t\tExtracting integer raster to grid...')
-        extract_radiation = ExtractByMask(radiation_integer, grid_raster)
-        # Copy extracted raster to output
-        print(f'\t\tCreating output raster...')
-        arcpy.management.CopyRaster(extract_radiation,
-                                    radiation_output,
-                                    '',
-                                    '',
-                                    '-32768',
-                                    'NONE',
-                                    'NONE',
-                                    '16_BIT_SIGNED',
-                                    'NONE',
-                                    'NONE',
-                                    'TIFF',
-                                    'NONE')
+        calculate_radiation(aspect_raw, 1000, radiation_output)
         # End timing
         iteration_end = time.time()
         iteration_elapsed = int(iteration_end - iteration_start)
         iteration_success_time = datetime.datetime.now()
-        # Delete intermediate dataset if possible
-        try:
-            arcpy.management.Delete(radiation_intermediate)
-            arcpy.management.Delete(radiation_integer)
-        except:
-            print('\t\tCould not delete intermediate dataset...')
         # Report success
         print(
             f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
         print('\t----------')
     else:
-        print(f'\tTopographic radiation already exists for {grid_title}.')
+        print(f'\tTopographic radiation already exists.')
         print('\t----------')
 
-    outprocess = f'Finished topographic properties for {grid_title}.'
+    # Calculate roughness if it does not already exist
+    if arcpy.Exists(roughness_output) == 0:
+        print(f'\tCalculating roughness...')
+        iteration_start = time.time()
+        calculate_roughness(elevation_float, 10, roughness_output)
+        # End timing
+        iteration_end = time.time()
+        iteration_elapsed = int(iteration_end - iteration_start)
+        iteration_success_time = datetime.datetime.now()
+        # Report success
+        print(
+            f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
+        print('\t----------')
+    else:
+        print(f'\tRoughness already exists.')
+        print('\t----------')
+
+    # Calculate surface area ratio if it does not already exist
+    if os.path.exists(surfacearea_output) == 0:
+        print(f'\tCalculating surface area ratio...')
+        iteration_start = time.time()
+        calculate_surface_area(slope_float, 10, surfacearea_output)
+        # End timing
+        iteration_end = time.time()
+        iteration_elapsed = int(iteration_end - iteration_start)
+        iteration_success_time = datetime.datetime.now()
+        # Report success
+        print(
+            f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
+        print('\t----------')
+    else:
+        print(f'\tSurface area ratio already exists.')
+        print('\t----------')
+
+    # Calculate surface relief ratio if it does not already exist
+    if arcpy.Exists(surfacerelief_output) == 0:
+        print(f'\tCalculating surface relief ratio...')
+        iteration_start = time.time()
+        calculate_surface_relief(elevation_float, 1000, surfacerelief_output)
+        # End timing
+        iteration_end = time.time()
+        iteration_elapsed = int(iteration_end - iteration_start)
+        iteration_success_time = datetime.datetime.now()
+        # Report success
+        print(
+            f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
+        print('\t----------')
+    else:
+        print(f'\tSurface relief ratio already exists.')
+        print('\t----------')
+
+    # Calculate topographic wetness if it does not already exist
+    if arcpy.Exists(wetness_output) == 0:
+        print(f'\tCalculating topographic wetness...')
+        iteration_start = time.time()
+        calculate_wetness(elevation_float, flow_accumulation, slope_float, 100, wetness_output)
+        # End timing
+        iteration_end = time.time()
+        iteration_elapsed = int(iteration_end - iteration_start)
+        iteration_success_time = datetime.datetime.now()
+        # Report success
+        print(f'\tCompleted at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
+        print('\t----------')
+    else:
+        print(f'\tTopographic wetness already exists.')
+        print('\t----------')
+
+    outprocess = f'Finished calculating topographic properties.'
     return outprocess

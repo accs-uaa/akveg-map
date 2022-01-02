@@ -8,10 +8,10 @@
 # ---------------------------------------------------------------------------
 
 # Define function to select Z Factor
-def getZFactor(elevation, z_unit):
+def get_z_factor(elevation_float, z_unit):
     """
     Description: creates a DEM from individual DEM tiles
-    Inputs: 'elevation' -- an input raster digital elevation model in a projected spatial reference
+    Inputs: 'elevation_float' -- an input float elevation raster
             'z_unit' -- a string value of either 'Meter' or 'Foot' representing the vertical unit of the elevation raster
     Returned Value: Returns a raster dataset on disk
     Preconditions: requires an input DEM in a projected spatial reference
