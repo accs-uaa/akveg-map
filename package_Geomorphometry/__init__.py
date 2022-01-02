@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Initialization for Geomorphometry Module
 # Author: Timm Nawrocki
-# Last Updated: 2019-12-07
+# Last Updated: 2022-01-02
 # Usage: Individual functions have varying requirements. All functions that use arcpy must be executed in an ArcGIS Pro Python 3.6 distribution.
 # Description: This initialization file imports modules in the package so that the contents are accessible. The functions in this package are adapted from Geomorphometry and Gradient Metrics Toolbox 2.0 by Jeff Evans and Jim Oakleaf (2014) available at https://github.com/jeffreyevans/GradientMetrics
 # ---------------------------------------------------------------------------
@@ -20,4 +20,3 @@ from package_Geomorphometry.calculateSlope import calculate_slope
 from package_Geomorphometry.calculateSurfaceArea import calculate_surface_area
 from package_Geomorphometry.calculateSurfaceRelief import calculate_surface_relief
 from package_Geomorphometry.calculateWetness import calculate_wetness
-from package_Geomorphometry.getZFactor import get_z_factor

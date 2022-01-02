@@ -2,32 +2,44 @@
 # ---------------------------------------------------------------------------
 # Calculate slope
 # Author: Timm Nawrocki
-# Last Updated: 2022-01-01
+# Last Updated: 2022-01-02
 # Usage: Must be executed in an ArcGIS Pro Python 3.7 installation.
 # Description: "Calculate slope" is a function that calculates float and integer slope in degrees.
 # ---------------------------------------------------------------------------
 
 # Define function to calculate slope
-def calculate_slope(elevation_float, z_unit, slope_float, slope_integer):
+def calculate_slope(area_raster, elevation_float, z_unit, slope_float, slope_integer):
     """
     Description: calculates 32-bit float slope and 16-bit signed slope
-    Inputs: 'elevation_float' -- an input float elevation raster
-            'slope_raw' -- a file path for an output float slope raster
-            'slope_output' -- a file path for an output integer slope raster
+    Inputs: 'area_raster' -- a raster of the study area to set snap raster and extract area
+            'elevation_float' -- an input float elevation raster
+            'z-unit' -- a string of the elevation unit
+            'slope_raw' -- a file path for an output float slope raster in degrees
+            'slope_output' -- a file path for an output integer slope raster in degrees
     Returned Value: Returns a raster dataset on disk
     Preconditions: requires float input elevation raster
     """
 
     # Import packages
     import arcpy
+    from arcpy.sa import ExtractByMask
     from arcpy.sa import Int
+    from arcpy.sa import Raster
     from arcpy.sa import SurfaceParameters
 
     # Set overwrite option
     arcpy.env.overwriteOutput = True
 
-    # Determine input cell size
+    # Specify core usage
+    arcpy.env.parallelProcessingFactor = "75%"
+
+    # Set snap raster and extent
+    arcpy.env.snapRaster = area_raster
+    arcpy.env.extent = Raster(area_raster).extent
+
+    # Set cell size environment
     cell_size = arcpy.management.GetRasterProperties(elevation_float, 'CELLSIZEX', '').getOutput(0)
+    arcpy.env.cellSize = int(cell_size)
 
     # Calculate raw slope
     print('\t\tCalculating raw slope...')
@@ -42,8 +54,13 @@ def calculate_slope(elevation_float, z_unit, slope_float, slope_integer):
                                      'NORTH_POLE_ASPECT'
                                      )
 
-    # Convert float to integer
+    # Convert to integer
+    print('\t\tConverting to integer...')
     integer_raster = Int(slope_raster + 0.5)
+
+    # Extract to area raster
+    print('\t\tExtracting raster to area...')
+    extract_integer = ExtractByMask(integer_raster, area_raster)
 
     # Export rasters
     print('\t\tExporting slope as 32-bit float raster...')
@@ -62,10 +79,10 @@ def calculate_slope(elevation_float, z_unit, slope_float, slope_integer):
                                 'CURRENT_SLICE',
                                 'NO_TRANSPOSE')
     print('\t\tExporting slope as 16-bit integer raster...')
-    arcpy.management.CopyRaster(integer_raster,
+    arcpy.management.CopyRaster(extract_integer,
                                 slope_integer,
                                 '',
-                                '',
+                                '32767',
                                 '-32768',
                                 'NONE',
                                 'NONE',

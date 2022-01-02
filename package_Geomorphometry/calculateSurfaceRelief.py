@@ -2,16 +2,17 @@
 # ---------------------------------------------------------------------------
 # Calculate surface relief ratio
 # Author: Timm Nawrocki
-# Last Updated: 2022-01-01
+# Last Updated: 2022-01-02
 # Usage: Must be executed in an ArcGIS Pro Python 3.7 installation.
 # Description: "Calculate surface relief ratio" is a function that calculates surface relief ratio using a 5x5 cell window. This function is adapted from Geomorphometry and Gradient Metrics Toolbox 2.0 by Jeff Evans and Jim Oakleaf (2014) available at https://github.com/jeffreyevans/GradientMetrics.
 # ---------------------------------------------------------------------------
 
 # Define function to calculate surface relief ratio
-def calculate_surface_relief(elevation_float, conversion_factor, relief_output):
+def calculate_surface_relief(area_raster, elevation_float, conversion_factor, relief_output):
     """
     Description: calculates 16-bit signed surface relief ratio
-    Inputs: 'elevation_float' -- an input float elevation raster
+    Inputs: 'area_raster' -- a raster of the study area to set snap raster and extract area
+            'elevation_float' -- an input float elevation raster
             'relief_output' -- an output surface relief ratio raster
     Returned Value: Returns a raster dataset on disk
     Preconditions: requires an input elevation raster
@@ -20,13 +21,26 @@ def calculate_surface_relief(elevation_float, conversion_factor, relief_output):
     # Import packages
     import arcpy
     from arcpy.sa import Con
+    from arcpy.sa import ExtractByMask
     from arcpy.sa import Float
     from arcpy.sa import FocalStatistics
     from arcpy.sa import Int
     from arcpy.sa import NbrRectangle
+    from arcpy.sa import Raster
 
     # Set overwrite option
     arcpy.env.overwriteOutput = True
+
+    # Specify core usage
+    arcpy.env.parallelProcessingFactor = "75%"
+
+    # Set snap raster and extent
+    arcpy.env.snapRaster = area_raster
+    arcpy.env.extent = Raster(area_raster).extent
+
+    # Set cell size environment
+    cell_size = arcpy.management.GetRasterProperties(elevation_float, 'CELLSIZEX', '').getOutput(0)
+    arcpy.env.cellSize = int(cell_size)
 
     # Define a neighborhood variable
     neighborhood = NbrRectangle(5, 5, "CELL")
@@ -59,12 +73,16 @@ def calculate_surface_relief(elevation_float, conversion_factor, relief_output):
     print('\t\tConverting to integer...')
     integer_raster = Int((relief_raster * conversion_factor) + 0.5)
 
+    # Extract to area raster
+    print('\t\tExtracting raster to area...')
+    extract_integer = ExtractByMask(integer_raster, area_raster)
+
     # Export raster
     print('\t\tExporting relief raster as 16-bit signed...')
-    arcpy.management.CopyRaster(integer_raster,
+    arcpy.management.CopyRaster(extract_integer,
                                 relief_output,
                                 '',
-                                '',
+                                '32767',
                                 '-32768',
                                 'NONE',
                                 'NONE',

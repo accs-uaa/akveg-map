@@ -2,43 +2,43 @@
 # ---------------------------------------------------------------------------
 # Calculate aspect
 # Author: Timm Nawrocki
-# Last Updated: 2022-01-01
+# Last Updated: 2022-01-02
 # Usage: Must be executed in an ArcGIS Pro Python 3.7 installation.
-# Description: "Calculate aspect" is a function that calculates raw and linear aspect. This function is adapted from Geomorphometry and Gradient Metrics Toolbox 2.0 by Jeff Evans and Jim Oakleaf (2014) available at https://github.com/jeffreyevans/GradientMetrics.
+# Description: "Calculate aspect" is a function that calculates float and integer aspect.
 # ---------------------------------------------------------------------------
 
 # Define function to calculate aspect
-def calculate_aspect(elevation_float, z_unit, aspect_raw, aspect_output):
+def calculate_aspect(area_raster, elevation_float, z_unit, aspect_float, aspect_integer):
     """
     Description: calculates 32-bit float raw aspect and 16-bit signed linear aspect
-    Inputs: 'elevation_float' -- an input float elevation raster
-            'aspect_raw' -- a file path for an output float raw aspect raster
-            'aspect_output' -- a file path for an output integer linear aspect raster
+    Inputs: 'area_raster' -- a raster of the study area to set snap raster and extract area
+            'elevation_float' -- an input float elevation raster
+            'aspect_float' -- a file path for an output float aspect raster in degrees
+            'aspect_integer' -- a file path for an output integer aspect raster in degrees
     Returned Value: Returns a raster dataset on disk
     Preconditions: requires float input elevation raster
     """
 
     # Import packages
     import arcpy
-    from arcpy.sa import SurfaceParameters
-    from arcpy.sa import ATan2
-    from arcpy.sa import Con
-    from arcpy.sa import Cos
-    from arcpy.sa import FocalStatistics
-    from arcpy.sa import Mod
-    from arcpy.sa import NbrRectangle
-    from arcpy.sa import SetNull
-    from arcpy.sa import Sin
+    from arcpy.sa import ExtractByMask
+    from arcpy.sa import Int
     from arcpy.sa import Raster
+    from arcpy.sa import SurfaceParameters
 
     # Set overwrite option
     arcpy.env.overwriteOutput = True
 
-    # Determine input cell size
-    cell_size = arcpy.management.GetRasterProperties(elevation_float, 'CELLSIZEX', '').getOutput(0)
+    # Specify core usage
+    arcpy.env.parallelProcessingFactor = "75%"
 
-    # Define neighborhood
-    neighborhood = NbrRectangle(3, 3, 'CELL')
+    # Set snap raster and extent
+    arcpy.env.snapRaster = area_raster
+    arcpy.env.extent = Raster(area_raster).extent
+
+    # Set cell size environment
+    cell_size = arcpy.management.GetRasterProperties(elevation_float, 'CELLSIZEX', '').getOutput(0)
+    arcpy.env.cellSize = int(cell_size)
 
     # Calculate raw aspect in degrees
     print('\t\tCalculating raw aspect...')
@@ -53,24 +53,18 @@ def calculate_aspect(elevation_float, z_unit, aspect_raw, aspect_output):
                                       'NORTH_POLE_ASPECT'
                                       )
 
-    # Convert degrees to radians
-    print('\t\tConverting degrees to radians...')
-    aspect_radian = Raster(aspect_raster) * 0.0174533
+    # Convert to integer
+    print('\t\tConverting to integer...')
+    integer_raster = Int(aspect_raster + 0.5)
 
-    # Calculate linear aspect
-    print('\t\tCalculating linear aspect...')
-    null_aspect = SetNull(aspect_radian < 0, (7.8539514 - aspect_radian), '')
-    sin_aspect = Sin(null_aspect)
-    cos_aspect = Cos(null_aspect)
-    sin_sum = FocalStatistics(sin_aspect, neighborhood, 'SUM', 'DATA')
-    cos_sum = FocalStatistics(cos_aspect, neighborhood, 'SUM', 'DATA')
-    mod_aspect = Mod(((450 - (ATan2(sin_sum, cos_sum) * 57.296)) * 100), 36000) / 100
-    linear_aspect = Con((sin_sum == 0) & (cos_sum == 0), -1, mod_aspect)
+    # Extract to area raster
+    print('\t\tExtracting raster to area...')
+    extract_integer = ExtractByMask(integer_raster, area_raster)
 
     # Export rasters
-    print('\t\tExporting raw aspect as 32-bit float raster...')
+    print('\t\tExporting aspect as 32-bit float raster...')
     arcpy.management.CopyRaster(aspect_raster,
-                                aspect_raw,
+                                aspect_float,
                                 '',
                                 '0',
                                 '-2147483648',
@@ -83,11 +77,11 @@ def calculate_aspect(elevation_float, z_unit, aspect_raw, aspect_output):
                                 'NONE',
                                 'CURRENT_SLICE',
                                 'NO_TRANSPOSE')
-    print('\t\tExporting linear aspect as 16-bit integer raster...')
-    arcpy.management.CopyRaster(linear_aspect,
-                                aspect_output,
+    print('\t\tExporting aspect as 16-bit integer raster...')
+    arcpy.management.CopyRaster(extract_integer,
+                                aspect_integer,
                                 '',
-                                '',
+                                '32767',
                                 '-32768',
                                 'NONE',
                                 'NONE',

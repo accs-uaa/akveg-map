@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Calculate Topographic Properties
 # Author: Timm Nawrocki
-# Last Updated: 2022-01-01
+# Last Updated: 2022-01-02
 # Usage: Must be executed in an ArcGIS Pro Python 3.7 installation.
 # Description: "Calculate Topographic Properties" is a function that calculates multiple integer topographic properties from a float elevation raster.
 # ---------------------------------------------------------------------------
@@ -14,14 +14,13 @@ def calculate_topographic_properties(**kwargs):
     Inputs: 'z_unit' -- a string value of either 'Meter' or 'Foot' representing the vertical unit of the elevation raster
             'position_width' -- an integer value of the distance to consider for topographic position in the same units as the input raster
             'input_array' -- an array containing the grid raster (must be first) and the float elevation raster
-            'output_array' -- an array containing the output rasters for elevation (integer), aspect, wetness, roughness, exposure, slope, area, relief, position, radiation, and heat load (in that order).
+            'output_array' -- an array containing the output rasters for elevation (integer), slope, aspect, exposure, heat load, position, radiation, roughness, surface area, surface relief, wetness (in that order).
     Returned Value: Returns a raster dataset on disk for each topographic property
     Preconditions: requires an input DEM that can be created through other scripts in this repository
     """
 
     # Import packages
     import arcpy
-    from arcpy.sa import Raster
     from package_Geomorphometry import calculate_aspect
     from package_Geomorphometry import calculate_exposure
     from package_Geomorphometry import calculate_flow
@@ -34,7 +33,6 @@ def calculate_topographic_properties(**kwargs):
     from package_Geomorphometry import calculate_surface_area
     from package_Geomorphometry import calculate_surface_relief
     from package_Geomorphometry import calculate_wetness
-    from package_Geomorphometry import get_z_factor
     import datetime
     import os
     import time
@@ -46,7 +44,7 @@ def calculate_topographic_properties(**kwargs):
     elevation_float = kwargs['input_array'][1]
     elevation_integer = kwargs['output_array'][0]
     slope_integer = kwargs['output_array'][1]
-    aspect_output = kwargs['output_array'][2]
+    aspect_integer = kwargs['output_array'][2]
     exposure_output = kwargs['output_array'][3]
     heatload_output = kwargs['output_array'][4]
     position_output = kwargs['output_array'][5]
@@ -56,26 +54,39 @@ def calculate_topographic_properties(**kwargs):
     surfacerelief_output = kwargs['output_array'][9]
     wetness_output = kwargs['output_array'][10]
 
-    # Set overwrite option
-    arcpy.env.overwriteOutput = True
-
-    # Use two thirds of cores on processes that can be split.
-    arcpy.env.parallelProcessingFactor = "75%"
-
-    # Set snap raster and extent
-    arcpy.env.snapRaster = area_raster
-    arcpy.env.extent = Raster(area_raster).extent
-
     # Define folder structure
     float_folder = os.path.split(elevation_float)[0]
 
     # Define intermediate datasets
-    flow_accumulation = os.path.join(float_folder, 'flow_accumulation.tif')
-    slope_float = os.path.join(float_folder, 'slope.tif')
-    aspect_raw = os.path.join(float_folder, 'aspect.tif')
+    flow_accumulation = os.path.join(float_folder, 'Flow_Accumulation.tif')
+    slope_float = os.path.join(float_folder, 'Slope.tif')
+    aspect_float = os.path.join(float_folder, 'Aspect.tif')
 
-    # Get the z factor appropriate to the xy and z units
-    z_factor = get_z_factor(elevation_float, z_unit)
+    #### PERFORM UNITS CHECK
+
+    # Describe the type of spatial reference
+    print(f'\tChecking projection and units of elevation raster...')
+    description = arcpy.Describe(elevation_float)
+    spatial_reference = description.spatialReference
+    reference_type = spatial_reference.type
+
+    # Warn user and quit script if the elevation raster is in a geographic spatial reference
+    if reference_type == "Geographic":
+        print(
+            '\tERROR: Elevation raster must be in a projected spatial reference, not a geographic spatial reference.')
+        quit()
+    # Check units
+    else:
+        print('\tElevation raster is in a projected spatial reference.')
+    # Warn user and quit script if the vertical and horizontal units are not the same
+    reference_unit = spatial_reference.linearUnitName.upper()
+    if reference_unit != z_unit:
+        print(f'\tERROR: Vertical units ({z_unit}) and horizontal units ({reference_unit}) do not match.')
+        quit()
+    # If the vertical and horizontal units are the same, then proceed with calculations
+    else:
+        print(f'\tVertical units ({z_unit}) and horizontal units ({reference_unit}) match.')
+    print('\t----------')
 
     #### CALCULATE FOUNDATIONAL TOPOGRAPHY DATASETS
 
@@ -83,7 +94,7 @@ def calculate_topographic_properties(**kwargs):
     if arcpy.Exists(elevation_integer) == 0:
         print(f'\tCalculating integer elevation...')
         iteration_start = time.time()
-        calculate_integer_elevation(elevation_float, elevation_integer)
+        calculate_integer_elevation(area_raster, elevation_float, elevation_integer)
         # End timing
         iteration_end = time.time()
         iteration_elapsed = int(iteration_end - iteration_start)
@@ -101,7 +112,7 @@ def calculate_topographic_properties(**kwargs):
         # Calculate slope
         print(f'\tCalculating slope...')
         iteration_start = time.time()
-        calculate_slope(elevation_float, z_factor, slope_float, slope_integer)
+        calculate_slope(area_raster, elevation_float, z_unit, slope_float, slope_integer)
         # End timing
         iteration_end = time.time()
         iteration_elapsed = int(iteration_end - iteration_start)
@@ -115,11 +126,11 @@ def calculate_topographic_properties(**kwargs):
         print('\t----------')
 
     # Calculate aspect if it does not already exist
-    if os.path.exists(aspect_output) == 0:
+    if os.path.exists(aspect_integer) == 0:
         # Calculate aspect
         print(f'\tCalculating aspect...')
         iteration_start = time.time()
-        calculate_aspect(elevation_float, z_unit, aspect_raw, aspect_output)
+        calculate_aspect(area_raster, elevation_float, z_unit, aspect_float, aspect_integer)
         # End timing
         iteration_end = time.time()
         iteration_elapsed = int(iteration_end - iteration_start)
@@ -137,7 +148,7 @@ def calculate_topographic_properties(**kwargs):
         # Calculate flow direction
         print(f'\tCalculating flow direction...')
         iteration_start = time.time()
-        calculate_flow(elevation_float, flow_accumulation)
+        calculate_flow(area_raster, elevation_float, flow_accumulation)
         # End timing
         iteration_end = time.time()
         iteration_elapsed = int(iteration_end - iteration_start)
@@ -156,7 +167,7 @@ def calculate_topographic_properties(**kwargs):
     if arcpy.Exists(exposure_output) == 0:
         print(f'\tCalculating solar exposure...')
         iteration_start = time.time()
-        calculate_exposure(aspect_raw, slope_float, 10, exposure_output)
+        calculate_exposure(area_raster, aspect_float, slope_float, 100, exposure_output)
         # End timing
         iteration_end = time.time()
         iteration_elapsed = int(iteration_end - iteration_start)
@@ -173,7 +184,7 @@ def calculate_topographic_properties(**kwargs):
     if arcpy.Exists(heatload_output) == 0:
         print('\tCalculating heat load index...')
         iteration_start = time.time()
-        calculate_heat_load(elevation_float, slope_float, aspect_raw, 10, heatload_output)
+        calculate_heat_load(area_raster, elevation_float, slope_float, aspect_float, 10000, heatload_output)
         # End timing
         iteration_end = time.time()
         iteration_elapsed = int(iteration_end - iteration_start)
@@ -190,7 +201,7 @@ def calculate_topographic_properties(**kwargs):
     if arcpy.Exists(position_output) == 0:
         print(f'\tCalculating topographic position...')
         iteration_start = time.time()
-        calculate_position(elevation_float, position_width, position_output)
+        calculate_position(area_raster, elevation_float, position_width, position_output)
         # End timing
         iteration_end = time.time()
         iteration_elapsed = int(iteration_end - iteration_start)
@@ -207,7 +218,7 @@ def calculate_topographic_properties(**kwargs):
     if arcpy.Exists(radiation_output) == 0:
         print(f'\tCalculating topographic radiation...')
         iteration_start = time.time()
-        calculate_radiation(aspect_raw, 1000, radiation_output)
+        calculate_radiation(area_raster, aspect_float, 1000, radiation_output)
         # End timing
         iteration_end = time.time()
         iteration_elapsed = int(iteration_end - iteration_start)
@@ -224,7 +235,7 @@ def calculate_topographic_properties(**kwargs):
     if arcpy.Exists(roughness_output) == 0:
         print(f'\tCalculating roughness...')
         iteration_start = time.time()
-        calculate_roughness(elevation_float, 10, roughness_output)
+        calculate_roughness(area_raster, elevation_float, 10, roughness_output)
         # End timing
         iteration_end = time.time()
         iteration_elapsed = int(iteration_end - iteration_start)
@@ -241,7 +252,7 @@ def calculate_topographic_properties(**kwargs):
     if os.path.exists(surfacearea_output) == 0:
         print(f'\tCalculating surface area ratio...')
         iteration_start = time.time()
-        calculate_surface_area(slope_float, 10, surfacearea_output)
+        calculate_surface_area(area_raster, slope_float, 10, surfacearea_output)
         # End timing
         iteration_end = time.time()
         iteration_elapsed = int(iteration_end - iteration_start)
@@ -258,7 +269,7 @@ def calculate_topographic_properties(**kwargs):
     if arcpy.Exists(surfacerelief_output) == 0:
         print(f'\tCalculating surface relief ratio...')
         iteration_start = time.time()
-        calculate_surface_relief(elevation_float, 1000, surfacerelief_output)
+        calculate_surface_relief(area_raster, elevation_float, 10000, surfacerelief_output)
         # End timing
         iteration_end = time.time()
         iteration_elapsed = int(iteration_end - iteration_start)
@@ -275,7 +286,7 @@ def calculate_topographic_properties(**kwargs):
     if arcpy.Exists(wetness_output) == 0:
         print(f'\tCalculating topographic wetness...')
         iteration_start = time.time()
-        calculate_wetness(elevation_float, flow_accumulation, slope_float, 100, wetness_output)
+        calculate_wetness(area_raster, elevation_float, flow_accumulation, slope_float, 100, wetness_output)
         # End timing
         iteration_end = time.time()
         iteration_elapsed = int(iteration_end - iteration_start)

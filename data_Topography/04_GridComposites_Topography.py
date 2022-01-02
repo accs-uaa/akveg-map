@@ -2,8 +2,8 @@
 # ---------------------------------------------------------------------------
 # Calculate topographic properties
 # Author: Timm Nawrocki
-# Last Updated: 2021-11-22
-# Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
+# Last Updated: 2022-01-02
+# Usage: Must be executed in an ArcGIS Pro Python 3.7 installation.
 # Description: "Calculate topographic properties" calculates integer versions of ten topographic indices for each grid using elevation float rasters.
 # ---------------------------------------------------------------------------
 
@@ -43,18 +43,22 @@ for grid in grid_list:
 
     # Define folder structure
     output_path = os.path.join(output_folder, grid)
-    input_raster = os.path.join(input_folder, grid, 'Elevation' + grid + '.tif')
-    output_elevation = os.path.join(output_path, 'Elevation' + grid + '.tif')
-    output_aspect = os.path.join(output_path, 'Aspect_' + grid + '.tif')
-    output_wetness = os.path.join(output_path, 'Wetness_' + grid + '.tif')
-    output_roughness = os.path.join(output_path, 'Roughness_' + grid + '.tif')
-    output_exposure = os.path.join(output_path, 'Exposure_' + grid + '.tif')
-    output_slope = os.path.join(output_path, 'Slope_' + grid + '.tif')
-    output_area = os.path.join(output_path, 'SurfaceArea_' + grid + '.tif')
-    output_relief = os.path.join(output_path, 'Relief_' + grid + '.tif')
-    output_position = os.path.join(output_path, 'Position_' + grid + '.tif')
-    output_radiation = os.path.join(output_path, 'Radiation_' + grid + '.tif')
-    output_heat = os.path.join(output_path, 'HeatLoad_' + grid + '.tif')
+
+    # Define input datasets
+    elevation_float = os.path.join(input_folder, grid, 'Elevation' + grid + '.tif')
+
+    # Define output datasets
+    elevation_integer = os.path.join(output_path, 'Elevation' + grid + '.tif')
+    slope_integer = os.path.join(output_path, 'Slope_' + grid + '.tif')
+    aspect_integer = os.path.join(output_path, 'Aspect_' + grid + '.tif')
+    exposure_output = os.path.join(output_path, 'Exposure_' + grid + '.tif')
+    heatload_output = os.path.join(output_path, 'HeatLoad_' + grid + '.tif')
+    position_output = os.path.join(output_path, 'Position_' + grid + '.tif')
+    radiation_output = os.path.join(output_path, 'Radiation_' + grid + '.tif')
+    roughness_output = os.path.join(output_path, 'Roughness_' + grid + '.tif')
+    surfacearea_output = os.path.join(output_path, 'SurfaceArea_' + grid + '.tif')
+    surfacerelief_output = os.path.join(output_path, 'Relief_' + grid + '.tif')
+    wetness_output = os.path.join(output_path, 'Wetness_' + grid + '.tif')
 
     # Make grid folder if it does not already exist
     if os.path.exists(output_path) == 0:
@@ -65,18 +69,19 @@ for grid in grid_list:
 
     # Create key word arguments
     kwargs_topography = {'z_unit': 'METER',
-                         'input_array': [grid_raster, input_raster],
-                         'output_array': [output_elevation,
-                                          output_aspect,
-                                          output_wetness,
-                                          output_roughness,
-                                          output_exposure,
-                                          output_slope,
-                                          output_area,
-                                          output_relief,
-                                          output_position,
-                                          output_radiation,
-                                          output_heat]
+                         'position_width': 5000,
+                         'input_array': [grid_raster, elevation_float],
+                         'output_array': [elevation_integer,
+                                          slope_integer,
+                                          aspect_integer,
+                                          exposure_output,
+                                          heatload_output,
+                                          position_output,
+                                          radiation_output,
+                                          roughness_output,
+                                          surfacearea_output,
+                                          surfacerelief_output,
+                                          wetness_output]
                          }
 
     # Process the topographic calculations
