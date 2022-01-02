@@ -83,7 +83,7 @@ for metric in metrics_list:
     for grid in grid_list:
         # Define folder structure
         output_path = os.path.join(output_folder, grid)
-        output_raster = os.path.join(output_path, 'Sent2' + metric + '_' + grid + '.tif')
+        output_raster = os.path.join(output_path, 'Sent2_' + metric + '_' + grid + '.tif')
 
         # Make grid folder if it does not already exist
         if os.path.exists(output_path) == 0:
