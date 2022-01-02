@@ -72,8 +72,8 @@ def reproject_integer(**kwargs):
     print(f'\tProjection completed at {iteration_success_time.strftime("%Y-%m-%d %H:%M")} (Elapsed time: {datetime.timedelta(seconds=iteration_elapsed)})')
     print('\t----------')
 
-    # Round to integer and store as 16 bit signed raster
-    print(f'\tConverting raster to 16 bit integer...')
+    # Round to integer and store as 32 bit signed raster
+    print(f'\tConverting raster to 32 bit integer...')
     iteration_start = time.time()
     integer_raster = Int((Raster(reprojected_raster) * conversion_factor) + 0.5)
     arcpy.management.CopyRaster(integer_raster,
