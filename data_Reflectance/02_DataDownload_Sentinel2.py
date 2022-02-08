@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Download Sentinel-2 Data from Drive
+# Download Sentinel-2 data from Drive
 # Author: Timm Nawrocki
 # Last Updated: 2021-11-04
 # Usage: Must be executed in a Python 3.8 installation with Google API Python Client and PyDrive installed.
-# Description: "Download Sentinel-2 Data from Drive" programmatically downloads Sentinel-2 tiles from a Google Drive folder. The composites must first be calculated in Google Earth Engine and exported to the Google Drive folder.
+# Description: "Download Sentinel-2 data from Drive" programmatically downloads Sentinel-2 tiles from a Google Drive folder. The composites must first be calculated in Google Earth Engine and exported to the Google Drive folder.
 # ---------------------------------------------------------------------------
 
 # Import packages
@@ -67,7 +67,7 @@ while reiterate == True:
     file_id_list = list_from_drive(drive_service, google_folder)
 
     # Subset list
-    file_id_subset = file_id_list[0:5]
+    file_id_subset = file_id_list[0:]
     total = len(file_id_subset)
 
     # Download all files in Google Drive Folder
