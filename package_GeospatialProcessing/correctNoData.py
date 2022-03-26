@@ -14,7 +14,7 @@ def correct_no_data(**kwargs):
     Inputs: 'value_threshold' -- a value that marks the start of No Data
             'direction' -- inequality direction must be either 'above' or 'below'
             'work_geodatabase' -- a geodatabase to store temporary results
-            'input_array' -- an array containing the snap raster and input raster
+            'input_array' -- an array containing the area raster and input raster
             'output_array' -- an array containing the output raster
     Returned Value: Returns a raster dataset on disk containing the corrected raster
     Preconditions: requires predefined snap raster and input raster
@@ -31,7 +31,7 @@ def correct_no_data(**kwargs):
     work_geodatabase = kwargs['work_geodatabase']
     value_threshold = kwargs['value_threshold']
     direction = kwargs['direction']
-    snap_raster = kwargs['input_array'][0]
+    area_raster = kwargs['input_array'][0]
     input_raster = kwargs['input_array'][1]
     output_raster = kwargs['output_array'][0]
 
@@ -45,7 +45,7 @@ def correct_no_data(**kwargs):
     arcpy.env.parallelProcessingFactor = "75%"
 
     # Set snap raster and extent
-    arcpy.env.snapRaster = snap_raster
+    arcpy.env.snapRaster = area_raster
 
     # Determine input raster value type
     value_number = arcpy.management.GetRasterProperties(input_raster, "VALUETYPE")[0]
@@ -80,7 +80,7 @@ def correct_no_data(**kwargs):
         quit()
     # Export corrected raster
     print(f'Exporting corrected raster to output raster...')
-    arcpy.CopyRaster_management(corrected_raster,
+    arcpy.management.CopyRaster(corrected_raster,
                                 output_raster,
                                 '',
                                 '',

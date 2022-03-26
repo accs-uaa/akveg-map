@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Download File from Google Drive
+# Download file from Google Drive
 # Author: Timm Nawrocki
-# Last Updated: 2021-03-10
+# Last Updated: 2021-11-13
 # Usage: Must be executed in a Python 3.7 environment with Google Drive API v2.
-# Description: "Download File From Google Drive" is a function that downloads a file from Google Drive by file id.
+# Description: "Download file From Google Drive" is a function that downloads a file from Google Drive by file id.
 # ---------------------------------------------------------------------------
 
 # Define a function to download data files from Google Drive

@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Merge Source Elevation Tiles
+# Merge source elevation tiles
 # Author: Timm Nawrocki
-# Last Updated: 2021-03-10
+# Last Updated: 2021-11-22
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
-# Description: "Merge Source Elevation Tiles" is a function that creates single merged DEM from input tiles of the same source with new projection, snap raster, and cell size.
+# Description: "Merge source elevation tiles" is a function that creates single merged DEM from input tiles of the same source with new projection, snap raster, and cell size.
 # ---------------------------------------------------------------------------
 
 # Define function to merge source elevation tiles
@@ -17,7 +17,7 @@ def merge_elevation_tiles(**kwargs):
             'input_projection' -- the machine number for the input projection
             'output_projection' -- the machine number for the output projection
             'geographic_transformation -- the string representation of the appropriate geographic transformation (blank if none required)
-            'input_array' -- an array containing the snap raster
+            'input_array' -- an array containing the area raster
             'output_array' -- an array containing the output raster
     """
 
@@ -35,7 +35,7 @@ def merge_elevation_tiles(**kwargs):
     input_projection = kwargs['input_projection']
     output_projection = kwargs['output_projection']
     geographic_transformation = kwargs['geographic_transformation']
-    snap_raster = kwargs['input_array'][0]
+    area_raster = kwargs['input_array'][0]
     dem_composite = kwargs['output_array'][0]
 
     # Set overwrite option
@@ -45,7 +45,7 @@ def merge_elevation_tiles(**kwargs):
     arcpy.env.parallelProcessingFactor = "75%"
 
     # Set snap raster
-    arcpy.env.snapRaster = snap_raster
+    arcpy.env.snapRaster = area_raster
 
     # Define input and output coordinate systems
     input_system = arcpy.SpatialReference(input_projection)
@@ -100,7 +100,7 @@ def merge_elevation_tiles(**kwargs):
                                            '',
                                            input_system)
             # Enforce new projection
-            arcpy.management.DefineProjection(output_raster, composite_projection)
+            arcpy.management.DefineProjection(output_raster, output_system)
             # End timing
             iteration_end = time.time()
             iteration_elapsed = int(iteration_end - iteration_start)
@@ -144,14 +144,14 @@ def merge_elevation_tiles(**kwargs):
     arcpy.management.MosaicToNewRaster(projected_rasters,
                                        mosaic_location,
                                        mosaic_name,
-                                       composite_projection,
+                                       output_system,
                                        '32_BIT_FLOAT',
                                        cell_size,
                                        '1',
-                                       'MAXIMUM',
-                                       'FIRST')
+                                       'LAST',
+                                       'LAST')
     # Enforce correct projection
-    arcpy.management.DefineProjection(dem_composite, composite_projection)
+    arcpy.management.DefineProjection(dem_composite, output_system)
     # End timing
     iteration_end = time.time()
     iteration_elapsed = int(iteration_end - iteration_start)
