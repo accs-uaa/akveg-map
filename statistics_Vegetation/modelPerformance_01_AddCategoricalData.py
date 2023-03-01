@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Add Categorical Map Data to Model Validation Results
 # Author: Timm Nawrocki
-# Last Updated: 2021-10-12
+# Last Updated: 2023-02-17
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Add Categorical Map Data to Model Validation Results" extracts categorical map classes to model validation results for the National Land Cover Database 2016, the coarse classes of the Alaska Vegetation and Wetland Composite, the fine classes of the Alaska Vegetation and Wetland Composite, the NASA ABoVE Land Cover map circa 2014, and the Landfire Existing Vegetation Classification 2016. This script also assigns the units for the 10x10 km and landscape scale accuracy assessments.
 # ---------------------------------------------------------------------------
@@ -19,12 +19,12 @@ root_folder = 'ACCS_Work'
 # Define data folder
 data_folder = os.path.join(drive,
                            root_folder,
-                           'Projects/VegetationEcology/AKVEG_QuantitativeMap',
-                           'Data/Data_Output/model_results/round_20211012/final')
+                           'Projects/VegetationEcology/AKVEG_Map',
+                           'Data/Data_Output/model_results/round_20230217/final')
 ancillary_folder = os.path.join(drive,
                                 root_folder,
-                                'Projects/VegetationEcology/AKVEG_QuantitativeMap',
-                                'Data/Data_Input/ancillary_data')
+                                'Projects/VegetationEcology/AKVEG_Map',
+                                'Data/Data_Input/data_ancillary')
 map_folder = os.path.join(drive,
                           root_folder,
                           'Data/biota/vegetation')
@@ -32,8 +32,8 @@ map_folder = os.path.join(drive,
 # Define work environment
 work_geodatabase = os.path.join(drive,
                                 root_folder,
-                                'Projects/VegetationEcology/AKVEG_QuantitativeMap',
-                                'Data/BeringiaVegetation.gdb')
+                                'Projects/VegetationEcology/AKVEG_Map',
+                                'Data/AKVEG_Workspace.gdb')
 
 # Define categorical maps
 nlcd = os.path.join(map_folder,
@@ -46,11 +46,13 @@ above = os.path.join(map_folder,
                      'NASA_ABoVE_AnnualLandcover/NorthAmericanBeringia_LandCover_ABoVE_2014.tif')
 landfire = os.path.join(map_folder,
                         'Alaska_Landfire_20/LF2016_EVT_200_AK/Tif/LA16_EVT_200.tif')
+epscor = os.path.join(map_folder,
+                      'Epscor_Interior/Epscor_Vegetation_Interior.tif')
 minor_grid = os.path.join(ancillary_folder,
                           'NorthAmericanBeringia_GridIndex_Minor_10km_Selected.tif')
 ecoregions = os.path.join(ancillary_folder,
                           'NorthAmericanBeringia_UnifiedEcoregions.tif')
-categorical_maps = [nlcd, coarse, fine, above, landfire, minor_grid, ecoregions]
+categorical_maps = [nlcd, coarse, fine, above, landfire, epscor, minor_grid, ecoregions]
 
 # Define model output folders
 class_folders = ['alnus', 'betshr_nojan', 'bettre', 'dectre', 'dryas_nojan_noprec',

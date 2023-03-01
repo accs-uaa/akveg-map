@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Extract Categorical Maps to Model Results
 # Author: Timm Nawrocki
-# Last Updated: 2021-03-10
+# Last Updated: 2023-02-17
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Extract Categorical Maps to Model Results" is a function that extracts the class values of the NLCD, the coarse classes of the Alaska Vegetation and Wetland Composite, and the fine classes of the Alaska Vegetation and Wetland Composite to a set of x and y values in a table.
 # ---------------------------------------------------------------------------
@@ -36,8 +36,9 @@ def extract_categorical_maps(**kwargs):
     fine = kwargs['input_array'][3]
     above = kwargs['input_array'][4]
     landfire = kwargs['input_array'][5]
-    minor_grid = kwargs['input_array'][6]
-    ecoregions = kwargs['input_array'][7]
+    epscor = kwargs['input_array'][6]
+    minor_grid = kwargs['input_array'][7]
+    ecoregions = kwargs['input_array'][8]
     output_file = kwargs['output_array'][0]
 
     # Set overwrite option
@@ -63,7 +64,8 @@ def extract_categorical_maps(**kwargs):
                                     input_system)
     ExtractMultiValuesToPoints(points_feature,
                                [[nlcd, 'nlcd'], [coarse, 'coarse'], [fine, 'fine'], [above, 'above'],
-                                [landfire, 'landfire'], [minor_grid, 'minor'], [ecoregions, 'ecoregion']],
+                                [landfire, 'landfire'], [epscor, 'epscor'], [minor_grid, 'minor'],
+                                [ecoregions, 'ecoregion']],
                                'NONE')
     # Export table
     final_fields = [field.name for field in arcpy.ListFields(points_feature)

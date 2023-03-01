@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Partition Model Validation Results by Region
 # Author: Timm Nawrocki
-# Last Updated: 2021-10-12
+# Last Updated: 2023-02-17
 # Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
 # Description: "Partition Model Validation Results by Region" extracts a set of predictor raster datasets to a study area to enforce the same extent on all rasters.
 # ---------------------------------------------------------------------------
@@ -19,21 +19,25 @@ root_folder = 'ACCS_Work'
 # Define data folder
 data_folder = os.path.join(drive,
                            root_folder,
-                           'Projects/VegetationEcology/AKVEG_QuantitativeMap',
-                           'Data/Data_Output/model_results/round_20211012/final')
+                           'Projects/VegetationEcology/AKVEG_Map',
+                           'Data/Data_Output/model_results/round_20230217/final')
+region_geodatabase = os.path.join(drive,
+                                  root_folder,
+                                  'Projects/VegetationEcology/AKVEG_Map',
+                                  'Data/archive/AKVEG_Regions.gdb')
 
 # Define work environment
 work_geodatabase = os.path.join(drive,
                                 root_folder,
-                                'Projects/VegetationEcology/AKVEG_QuantitativeMap',
-                                'Data/BeringiaVegetation.gdb')
+                                'Projects/VegetationEcology/AKVEG_Map',
+                                'Data/AKVEG_Workspace.gdb')
 
 # Define regional feature classes
-northern = os.path.join(work_geodatabase,
+northern = os.path.join(region_geodatabase,
                         'NorthAmericanBeringia_Subregion_Northern')
-western = os.path.join(work_geodatabase,
+western = os.path.join(region_geodatabase,
                        'NorthAmericanBeringia_Subregion_Western')
-interior = os.path.join(work_geodatabase,
+interior = os.path.join(region_geodatabase,
                         'NorthAmericanBeringia_Subregion_Interior')
 regions = [northern, western, interior]
 
