@@ -21,8 +21,9 @@ def calculate_flow(area_raster, elevation_float, flow_direction, flow_accumulati
     # Import packages
     import arcpy
     from arcpy.sa import DeriveContinuousFlow
-    from arcpy.sa import FlowAccumulation
     from arcpy.sa import Raster
+    from arcpy.sa import FocalStatistics
+    from arcpy.sa import NbrRectangle
 
     # Set overwrite option
     arcpy.env.overwriteOutput = True
@@ -38,30 +39,20 @@ def calculate_flow(area_raster, elevation_float, flow_direction, flow_accumulati
     cell_size = arcpy.management.GetRasterProperties(area_raster, 'CELLSIZEX', '').getOutput(0)
     arcpy.env.cellSize = int(cell_size)
 
+    # Smooth elevation
+    print('\tSmoothing elevation...')
+    neighborhood = NbrRectangle(7, 7, 'CELL')
+    elevation_smoothed = FocalStatistics(Raster(elevation_float), neighborhood, 'MEAN', 'DATA')
+
     # Calculate flow direction
-    print('\tCalculating flow direction...')
-    direction_raster = DeriveContinuousFlow(Raster(elevation_float), '', flow_direction, 'MFD', 'NORMAL')
-
-    # Calculate flow accumulation
     print('\tCalculating flow accumulation...')
-    accumulation_raster = FlowAccumulation(direction_raster, '', 'FLOAT', 'MFD')
+    accumulation_raster = DeriveContinuousFlow(elevation_smoothed,
+                                               '',
+                                               '',
+                                               flow_direction,
+                                               'MFD',
+                                               'NORMAL')
 
-    # Export final raster
-    print('\tExporting flow direction raster as 32-bit float...')
-    arcpy.management.CopyRaster(direction_raster,
-                                flow_direction,
-                                '',
-                                '',
-                                '-2147483648',
-                                'NONE',
-                                'NONE',
-                                '32_BIT_FLOAT',
-                                'NONE',
-                                'NONE',
-                                'TIFF',
-                                'NONE',
-                                'CURRENT_SLICE',
-                                'NO_TRANSPOSE')
     print('\tExporting flow accumulation raster as 32-bit float...')
     arcpy.management.CopyRaster(accumulation_raster,
                                 flow_accumulation,

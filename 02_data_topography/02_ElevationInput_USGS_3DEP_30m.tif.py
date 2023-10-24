@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Process Canada DEM 25 m tiles
+# Process USGS 3DEP 30 m tiles
 # Author: Timm Nawrocki
-# Last Updated: 2023-10-10
+# Last Updated: 2023-10-21
 # Usage: Execute in Python 3.9+.
-# Description: "Process Canada DEM 25 m tiles" combines individual DEM tiles to a single raster, resamples to 10 m, and replaces erroneous values.
+# Description: "Process USGS 3DEP 30 m tiles" combines individual DEM tiles to a single raster, resamples to 10 m, and replaces erroneous values.
 # ---------------------------------------------------------------------------
 
 # Import packages
@@ -30,8 +30,8 @@ root_folder = 'ACCS_Work'
 # Define folder structure
 data_folder = os.path.join(drive, root_folder, 'Data/topography')
 project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_Map/Data')
-input_folder = os.path.join(data_folder, 'Canada_DEM_25m', 'test_unprocessed')
-output_folder = os.path.join(data_folder, 'Canada_DEM_25m', 'test_processed')
+input_folder = os.path.join(data_folder, 'USGS_3DEP_30m', 'unprocessed')
+output_folder = os.path.join(data_folder, 'USGS_3DEP_30m', 'processed')
 corrected_folder = os.path.join(input_folder, 'corrected')
 # Make corrected folder if it does not already exist
 if os.path.exists(corrected_folder) == 0:
@@ -40,12 +40,11 @@ if os.path.exists(corrected_folder) == 0:
 # Define input files
 os.chdir(input_folder)
 input_files = glob.glob('*.tif')
-area_file = os.path.join(data_folder, 'area_test.tif')
-#area_file = os.path.join(data_folder, 'Canada_DEM_MapDomain_10m_3338.tif')
+#area_file = os.path.join(data_folder, 'area_test.tif')
+area_file = os.path.join(data_folder, 'Canada_DEM_MapDomain_10m_3338.tif')
 
 # Define output files
-output_file = os.path.join(output_folder, 'Canada_DEM_25m_3338.tif')
-filled_file = os.path.join(output_folder, 'Canada_DEM_25m_3338_filled.tif')
+output_file = os.path.join(output_folder, 'USGS_3DEP_30m_3338.tif')
 
 # Define empty tile list
 tile_list = []
@@ -97,7 +96,7 @@ iteration_start = time.time()
 area_bounds = raster_bounds(area_file)
 gdal.Warp(output_file,
           tile_list,
-          srcSRS='EPSG:4617',
+          srcSRS='EPSG:4269',
           dstSRS='EPSG:3338',
           outputType=GDT_Float32,
           workingType=GDT_Float32,
@@ -109,14 +108,4 @@ gdal.Warp(output_file,
           resampleAlg = 'bilinear',
           targetAlignedPixels=False,
           creationOptions = ['COMPRESS=LZW', 'BIGTIFF=YES'])
-end_timing(iteration_start)
-
-# Fill no data
-print(f'Filling nodata on edges...')
-iteration_start = time.time()
-gdal.Translate(filled_file, output_file)
-fill_raster = gdal.Open(filled_file, GA_Update)
-fill_band = fill_raster.GetRasterBand(1)
-fill_result = gdal.FillNodata(targetBand = fill_band, maskBand = None, maxSearchDist = 50, smoothingIterations = 0)
-fill_result = None
 end_timing(iteration_start)

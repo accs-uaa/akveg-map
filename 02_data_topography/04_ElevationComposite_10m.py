@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Create elevation composite
 # Author: Timm Nawrocki
-# Last Updated: 2023-10-10
+# Last Updated: 2023-10-21
 # Usage: Execute in Python 3.9+.
 # Description: "Create elevation composite" combines overlapping elevation input datasets into a single raster output.
 # ---------------------------------------------------------------------------
@@ -30,11 +30,10 @@ project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AK
 output_folder = os.path.join(data_folder, 'Alaska_Composite_DTM_10m')
 
 # Define input files
-ifsar_05m_file = os.path.join(data_folder, 'Alaska_IFSAR_DTM_5m/test_processed', 'Alaska_IFSAR_DTM_5m_3338.tif')
-canada_25m_file = os.path.join(data_folder, 'Canada_DEM_25m/test_processed', 'Canada_DEM_25m_3338_filled.tif')
-usgs_60m_file = os.path.join(data_folder, 'USGS_3DEP_60m/test_processed', 'USGS_3DEP_60m_3338.tif')
-area_file = os.path.join(data_folder, 'area_test.tif')
-#area_file = os.path.join(project_folder, 'Data_Input', 'AlaskaYukon_MapDomain_10m_3338.tif')
+alaska_file = os.path.join(data_folder, 'Alaska_IFSAR_DTM_5m/processed', 'Alaska_IFSAR_DTM_5m_3338.tif')
+canada_file = os.path.join(data_folder, 'Canada_Composite_DTM_10m/processed', 'Canada_Composite_10m_3338.tif')
+#area_file = os.path.join(data_folder, 'area_test.tif')
+area_file = os.path.join(project_folder, 'Data_Input', 'AlaskaYukon_MapDomain_10m_3338.tif')
 
 # Define output files
 merge_vrt = os.path.join(output_folder, 'intermediate', 'Elevation_10m_3338_Merged.vrt')
@@ -45,7 +44,7 @@ output_file = os.path.join(output_folder, 'float', 'Elevation_10m_3338.tif')
 print(f'Merging input rasters...')
 iteration_start = time.time()
 # List input files with priority to last pixel
-input_files = [usgs_60m_file, canada_25m_file, ifsar_05m_file]
+input_files = [canada_file, alaska_file]
 # Build and translate virtual raster
 area_bounds = raster_bounds(area_file)
 gdal.BuildVRT(merge_vrt,
@@ -58,7 +57,7 @@ gdal.BuildVRT(merge_vrt,
               outputBounds=area_bounds)
 gdal.Translate(merge_file,
                merge_vrt,
-               creationOptions = ['COMPRESS=LZW'])
+               creationOptions = ['COMPRESS=LZW', 'BIGTIFF=YES'])
 end_timing(iteration_start)
 
 # Update mask for output raster
@@ -67,7 +66,7 @@ iteration_start = time.time()
 input_raster = rasterio.open(merge_file)
 input_profile = input_raster.profile.copy()
 area_raster = rasterio.open(area_file)
-with rasterio.open(output_file, 'w', **input_profile) as dst:
+with rasterio.open(output_file, 'w', **input_profile, BIGTIFF='YES') as dst:
     # Find number of raster blocks
     window_list = []
     for block_index, window in area_raster.block_windows(1):

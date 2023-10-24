@@ -32,4 +32,5 @@ Thumbs.db
 .Rhistory
 .Rdata
 __pycache__
+venv
 venv/

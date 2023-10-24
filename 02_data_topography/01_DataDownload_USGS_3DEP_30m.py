@@ -20,11 +20,11 @@ drive = 'D:/'
 root_folder = 'ACCS_Work'
 
 # Define data folder
-data_folder = os.path.join(drive, root_folder, 'Data/topography/USGS_3DEP_60m')
+data_folder = os.path.join(drive, root_folder, 'Data/topography/USGS_3DEP_30m')
 download_folder = os.path.join(data_folder, 'unprocessed')
 
 # Define input csv table
-input_table = os.path.join(data_folder, 'USGS_3DEP_60m_20231009.csv')
+input_table = os.path.join(data_folder, 'USGS_3DEP_30m_20231021.csv')
 url_field = 'fileurl'
 
 # Import a csv file with the download urls for the Arctic DEM tiles

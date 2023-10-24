@@ -52,14 +52,6 @@ def calculate_aspect(area_raster, elevation_float, z_unit, aspect_float, aspect_
                                       'GEODESIC_AZIMUTHS',
                                       'NORTH_POLE_ASPECT')
 
-    # Convert to integer
-    print('\tConverting to integer...')
-    integer_raster = Int(aspect_raster + 0.5)
-
-    # Extract to area raster
-    print('\tExtracting raster to area...')
-    extract_integer = ExtractByMask(integer_raster, area_raster)
-
     # Export rasters
     print('\tExporting aspect as 32-bit float raster...')
     arcpy.management.CopyRaster(aspect_raster,
@@ -76,16 +68,27 @@ def calculate_aspect(area_raster, elevation_float, z_unit, aspect_float, aspect_
                                 'NONE',
                                 'CURRENT_SLICE',
                                 'NO_TRANSPOSE')
-    print('\tExporting aspect as 16-bit integer raster...')
-    arcpy.management.CopyRaster(extract_integer,
-                                aspect_integer,
-                                '',
-                                '32767',
-                                '-32768',
-                                'NONE',
-                                'NONE',
-                                '16_BIT_SIGNED',
-                                'NONE',
-                                'NONE',
-                                'TIFF',
-                                'NONE')
+
+    # Create integer aspect if file is specified
+    if aspect_integer != None:
+        # Convert to integer
+        print('\tConverting to integer...')
+        integer_raster = Int(aspect_raster + 0.5)
+
+        # Extract to area raster
+        print('\tExtracting raster to area...')
+        extract_integer = ExtractByMask(integer_raster, area_raster)
+
+        print('\tExporting aspect as 16-bit integer raster...')
+        arcpy.management.CopyRaster(extract_integer,
+                                    aspect_integer,
+                                    '',
+                                    '32767',
+                                    '-32768',
+                                    'NONE',
+                                    'NONE',
+                                    '16_BIT_SIGNED',
+                                    'NONE',
+                                    'NONE',
+                                    'TIFF',
+                                    'NONE')

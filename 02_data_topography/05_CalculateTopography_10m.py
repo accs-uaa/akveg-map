@@ -29,15 +29,14 @@ output_folder = os.path.join(data_folder, 'integer')
 
 # Define input files
 elevation_float = os.path.join(input_folder, 'Elevation_10m_3338.tif')
-area_file = os.path.join(drive, root_folder, 'Data/topography/area_test.tif')
-#area_file = os.path.join(project_folder, 'Data_Input', 'AlaskaYukon_MapDomain_10m_3338.tif')
+#area_file = os.path.join(drive, root_folder, 'Data/topography/area_test.tif')
+area_file = os.path.join(project_folder, 'Data_Input', 'AlaskaYukon_MapDomain_10m_3338.tif')
 
 # Define output files
 elevation_integer = os.path.join(output_folder, 'Elevation_10m_3338.tif')
 slope_float = os.path.join(input_folder, 'Slope_10m_3338.tif')
 slope_integer = os.path.join(output_folder, 'Slope_10m_3338.tif')
 aspect_float = os.path.join(input_folder, 'Aspect_10m_3338.tif')
-aspect_integer = os.path.join(output_folder, 'Aspect_10m_3338.tif')
 linear_aspect = os.path.join(input_folder, 'LinearAspect_10m_3338.tif')
 exposure_output = os.path.join(output_folder, 'Exposure_10m_3338.tif')
 heatload_output = os.path.join(output_folder, 'HeatLoad_10m_3338.tif')
@@ -47,11 +46,18 @@ roughness_output = os.path.join(output_folder, 'Roughness_10m_3338.tif')
 ruggedness_output = os.path.join(output_folder, 'Ruggedness_10m_3338.tif')
 surfacearea_output = os.path.join(output_folder, 'SurfaceArea_10m_3338.tif')
 surfacerelief_output = os.path.join(output_folder, 'Relief_10m_3338.tif')
-direction_float = os.path.join(input_folder, 'Direction_10m_3338.tif')
-accumulation_float = os.path.join(input_folder, 'Accumulation_10m_3338.tif')
-wetness_output = os.path.join(output_folder, 'Wetness_10m_3338_Weighted.tif')
 
 #### CALCULATE FOUNDATIONAL TOPOGRAPHY DATASETS
+
+# Calculate integer elevation if it does not already exist
+if os.path.exists(elevation_integer) == 0:
+    print('Calculating integer elevation...')
+    iteration_start = time.time()
+    calculate_integer_elevation(area_file, elevation_float, elevation_integer)
+    end_timing(iteration_start)
+else:
+    print('Integer elevation already exists.')
+    print('----------')
 
 # Calculate slope if it does not already exist
 if os.path.exists(slope_float) == 0:
@@ -68,21 +74,10 @@ if os.path.exists(aspect_float) == 0:
     # Calculate aspect
     print('Calculating aspect...')
     iteration_start = time.time()
-    calculate_aspect(area_file, elevation_float, z_unit, aspect_float, aspect_integer)
+    calculate_aspect(area_file, elevation_float, z_unit, aspect_float, None)
     end_timing(iteration_start)
 else:
     print('Aspect already exists.')
-    print('----------')
-
-# Calculate flow accumulation if it does not already exist
-if os.path.exists(accumulation_float) == 0:
-    # Calculate flow direction
-    print('Calculating flow direction...')
-    iteration_start = time.time()
-    calculate_flow(area_file, elevation_float, direction_float, accumulation_float)
-    end_timing(iteration_start)
-else:
-    print('Flow direction already exists.')
     print('----------')
 
 #### CALCULATE DERIVED INDICES
@@ -137,16 +132,6 @@ else:
     print('Roughness already exists.')
     print('----------')
 
-# Calculate surface area ratio if it does not already exist
-if os.path.exists(surfacearea_output) == 0:
-    print('Calculating surface area ratio...')
-    iteration_start = time.time()
-    calculate_surface_area(area_file, slope_float, 10, surfacearea_output)
-    end_timing(iteration_start)
-else:
-    print('Surface area ratio already exists.')
-    print('----------')
-
 # Calculate surface relief ratio if it does not already exist
 if os.path.exists(surfacerelief_output) == 0:
     print('Calculating surface relief ratio...')
@@ -155,14 +140,4 @@ if os.path.exists(surfacerelief_output) == 0:
     end_timing(iteration_start)
 else:
     print('Surface relief ratio already exists.')
-    print('----------')
-
-# Calculate topographic wetness if it does not already exist
-if os.path.exists(wetness_output) == 0:
-    print('Calculating topographic wetness...')
-    iteration_start = time.time()
-    calculate_wetness(area_file, elevation_float, accumulation_float, 100, wetness_output)
-    end_timing(iteration_start)
-else:
-    print('Topographic wetness already exists.')
     print('----------')

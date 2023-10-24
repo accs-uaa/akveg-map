@@ -8,7 +8,7 @@
 # ---------------------------------------------------------------------------
 
 # Define function to calculate compound topographic index
-def calculate_wetness(area_raster, elevation_float, flow_accumulation, conversion_factor, wetness_output):
+def calculate_wetness(area_raster, slope_float, flow_accumulation, conversion_factor, neighborhood, wetness_output):
     """
     Description: calculates 16-bit signed topographic wetness
     Inputs: 'area_raster' -- a raster of the study area to set snap raster and extract area
@@ -27,14 +27,12 @@ def calculate_wetness(area_raster, elevation_float, flow_accumulation, conversio
     from arcpy.sa import Con
     from arcpy.sa import Cos
     from arcpy.sa import ExtractByMask
-    from arcpy.sa import Fill
     from arcpy.sa import Int
     from arcpy.sa import IsNull
     from arcpy.sa import Ln
     from arcpy.sa import Nibble
     from arcpy.sa import Raster
     from arcpy.sa import SetNull
-    from arcpy.sa import SurfaceParameters
     from arcpy.sa import Tan
     from arcpy.sa import FocalStatistics
     from arcpy.sa import NbrRectangle
@@ -54,25 +52,10 @@ def calculate_wetness(area_raster, elevation_float, flow_accumulation, conversio
     cell_size = arcpy.management.GetRasterProperties(area_raster, 'CELLSIZEX', '').getOutput(0)
     arcpy.env.cellSize = int(cell_size)
 
-    # Smooth elevation
-    print('\tSmoothing elevation...')
-    neighborhood = NbrRectangle(5, 5, 'CELL')
-    elevation_smoothed = FocalStatistics(Raster(elevation_float), neighborhood, 'MEAN', 'DATA')
-
-    # Fill sinks in DEM
-    print('\tFilling sinks in elevation...')
-    elevation_fill = Fill(elevation_smoothed)
-
-    # Calculate slope
-    slope_degree = SurfaceParameters(elevation_float,
-                                     'SLOPE',
-                                     'QUADRATIC',
-                                     cell_size,
-                                     'FIXED_NEIGHBORHOOD',
-                                     'METER',
-                                     'DEGREE',
-                                     'GEODESIC_AZIMUTHS',
-                                     '')
+    # Smooth slope
+    print('\tSmoothing slope...')
+    neighborhood = NbrRectangle(neighborhood, neighborhood, 'CELL')
+    slope_degree = FocalStatistics(Raster(slope_float), neighborhood, 'MEAN', 'DATA')
 
     # Convert degrees to radians
     print('\tConverting slope degrees to radians...')
@@ -92,13 +75,12 @@ def calculate_wetness(area_raster, elevation_float, flow_accumulation, conversio
 
     # Weight wetness by cosine
     print('\tWeighting by cosine slope...')
-    wetness_weight = wetness_index * Cos(slope_radian * 3)
-    wetness_restrict = Con(slope_radian > 0.5, 0, wetness_weight)
+    wetness_weighted = Con(slope_radian >= (pi/6), 0, wetness_index * Cos(slope_radian * 3))
 
     # Nibble wetness raster
     print('\tFilling missing values...')
-    null_raster = SetNull(IsNull(wetness_restrict), 1, '')
-    filled_raster = Nibble(wetness_restrict, null_raster, 'DATA_ONLY', 'PROCESS_NODATA', '')
+    null_raster = SetNull(IsNull(wetness_weighted), 1, '')
+    filled_raster = Nibble(wetness_weighted, null_raster, 'DATA_ONLY', 'PROCESS_NODATA', '')
 
     # Convert to integer
     print('\tConverting to integer...')
