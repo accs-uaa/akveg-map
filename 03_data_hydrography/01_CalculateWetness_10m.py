@@ -18,14 +18,15 @@ drive = 'D:/'
 root_folder = 'ACCS_Work'
 
 # Define folder structure
-topography_folder = os.path.join(drive, root_folder, 'Data/topography')
-hydrography_folder = os.path.join(drive, root_folder, 'Data/hydrography')
+topography_folder = os.path.join(drive, root_folder, 'Data/topography/Composite_USGSDEM')
+#hydrography_folder = os.path.join(drive, root_folder, 'Data/hydrography')
+hydrography_folder = topography_folder
 project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_Map/Data')
 
 # Define input files
-elevation_float = os.path.join(topography_folder, 'Alaska_Composite_DTM_10m/float', 'Elevation_10m_3338.tif')
-slope_float = os.path.join(topography_folder, 'Alaska_Composite_DTM_10m/float', 'Slope_10m_3338.tif')
-area_file = os.path.join(topography_folder, 'area_test.tif')
+elevation_float = os.path.join(topography_folder, 'float', 'Elevation_10m_3338.tif')
+slope_float = os.path.join(topography_folder, 'float', 'Slope_10m_3338.tif')
+area_file = os.path.join(drive, root_folder, 'Data/topography', 'area_test.tif')
 # area_file = os.path.join(project_folder, 'Data_Input', 'AlaskaYukon_MapDomain_10m_3338.tif')
 
 # Define output files
@@ -44,12 +45,12 @@ else:
     print('Flow direction already exists.')
     print('----------')
 
-# Calculate topographic wetness with smoothing 5 if it does not already exist
+# Calculate topographic wetness with smoothing 3 if it does not already exist
 if os.path.exists(wetness_output) == 0:
-    print('Calculating topographic wetness (smoothing = 5)...')
+    print('Calculating topographic wetness (smoothing = 3)...')
     iteration_start = time.time()
-    calculate_wetness(area_file, slope_float, accumulation_float, 100, 5, wetness_output)
+    calculate_wetness(area_file, slope_float, accumulation_float, 100, 3, wetness_output)
     end_timing(iteration_start)
 else:
-    print('Topographic wetness (smoothing = 5) already exists.')
+    print('Topographic wetness (smoothing = 3) already exists.')
     print('----------')

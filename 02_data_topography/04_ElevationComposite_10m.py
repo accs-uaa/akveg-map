@@ -13,9 +13,7 @@ import time
 import numpy as np
 import rasterio
 from osgeo import gdal
-from akutils import end_timing
-from akutils import raster_bounds
-from akutils import raster_block_progress
+from akutils import *
 
 # Set nodata value
 nodata = -32768
@@ -31,8 +29,7 @@ output_folder = os.path.join(data_folder, 'Alaska_Composite_DTM_10m')
 
 # Define input files
 alaska_file = os.path.join(data_folder, 'Alaska_IFSAR_DTM_5m/processed', 'Alaska_IFSAR_DTM_5m_3338.tif')
-canada_file = os.path.join(data_folder, 'Canada_Composite_DTM_10m/processed', 'Canada_Composite_10m_3338.tif')
-#area_file = os.path.join(data_folder, 'area_test.tif')
+canada_file = os.path.join(data_folder, 'ESA_GLO_30m/processed', 'ESA_GLO_30m_3338.tif')
 area_file = os.path.join(project_folder, 'Data_Input', 'AlaskaYukon_MapDomain_10m_3338.tif')
 
 # Define output files

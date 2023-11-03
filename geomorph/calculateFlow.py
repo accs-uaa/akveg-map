@@ -41,7 +41,7 @@ def calculate_flow(area_raster, elevation_float, flow_direction, flow_accumulati
 
     # Smooth elevation
     print('\tSmoothing elevation...')
-    neighborhood = NbrRectangle(7, 7, 'CELL')
+    neighborhood = NbrRectangle(3, 3, 'CELL')
     elevation_smoothed = FocalStatistics(Raster(elevation_float), neighborhood, 'MEAN', 'DATA')
 
     # Calculate flow direction

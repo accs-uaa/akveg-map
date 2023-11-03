@@ -29,7 +29,6 @@ output_folder = os.path.join(data_folder, 'integer')
 
 # Define input files
 elevation_float = os.path.join(input_folder, 'Elevation_10m_3338.tif')
-#area_file = os.path.join(drive, root_folder, 'Data/topography/area_test.tif')
 area_file = os.path.join(project_folder, 'Data_Input', 'AlaskaYukon_MapDomain_10m_3338.tif')
 
 # Define output files
