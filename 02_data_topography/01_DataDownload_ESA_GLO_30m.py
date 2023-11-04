@@ -26,6 +26,12 @@ data_folder = os.path.join(drive, root_folder, 'Data/topography/ESA_GLO_30m')
 download_folder = os.path.join(data_folder, 'zip')
 extract_folder = os.path.join(data_folder, 'unprocessed')
 
+# Make output directory if it does not already exist
+if os.path.exists(download_folder) == 0:
+    os.mkdir(download_folder)
+if os.path.exists(extract_folder) == 0:
+    os.mkdir(extract_folder)
+
 # Define input csv table
 input_table = os.path.join(data_folder, 'ESA_GLO_30m_Index.csv')
 block_field = 'Product30'

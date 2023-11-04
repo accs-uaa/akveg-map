@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Process Alaska IFSAR DTM 5 m tiles
 # Author: Timm Nawrocki
-# Last Updated: 2023-10-10
+# Last Updated: 2023-11-03
 # Usage: Execute in Python 3.9+.
 # Description: "Process Alaska IFSAR DTM 5 m tiles" combines individual DEM tiles to a single raster, resamples to 10 m, and replaces erroneous values.
 # ---------------------------------------------------------------------------
@@ -30,8 +30,8 @@ root_folder = 'ACCS_Work'
 # Define folder structure
 data_folder = os.path.join(drive, root_folder, 'Data/topography')
 project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_Map/Data')
-input_folder = os.path.join(data_folder, 'Alaska_IFSAR_DTM_5m', 'test_unprocessed')
-output_folder = os.path.join(data_folder, 'Alaska_IFSAR_DTM_5m', 'test_processed')
+input_folder = os.path.join(data_folder, 'Alaska_IFSAR_DTM_5m', 'unprocessed')
+output_folder = os.path.join(data_folder, 'Alaska_IFSAR_DTM_5m', 'processed')
 corrected_folder = os.path.join(input_folder, 'corrected')
 # Make tiles folder if it does not already exist
 if os.path.exists(corrected_folder) == 0:
@@ -40,8 +40,7 @@ if os.path.exists(corrected_folder) == 0:
 # Define input files
 os.chdir(input_folder)
 input_files = glob.glob('*.tif')
-area_file = os.path.join(data_folder, 'area_test.tif')
-#area_file = os.path.join(project_folder, 'Data_Input', 'AlaskaYukon_MapDomain_10m_3338.tif')
+area_file = os.path.join(project_folder, 'Data_Input', 'AlaskaYukon_MapDomain_10m_3338.tif')
 
 # Define output files
 output_file = os.path.join(output_folder, 'Alaska_IFSAR_DTM_5m_3338.tif')
