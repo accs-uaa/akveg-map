@@ -14,20 +14,18 @@ from akutils import *
 from geomorph import *
 
 # Set root directory
-drive = 'D:/'
+drive = 'N:/'
 root_folder = 'ACCS_Work'
 
 # Define folder structure
-topography_folder = os.path.join(drive, root_folder, 'Data/topography/Composite_USGSDEM')
-#hydrography_folder = os.path.join(drive, root_folder, 'Data/hydrography')
-hydrography_folder = topography_folder
+topography_folder = os.path.join(drive, root_folder, 'Data/topography/Alaska_Composite_DTM_10m')
+hydrography_folder = os.path.join(drive, root_folder, 'Data/hydrography')
 project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_Map/Data')
 
 # Define input files
 elevation_float = os.path.join(topography_folder, 'float', 'Elevation_10m_3338.tif')
 slope_float = os.path.join(topography_folder, 'float', 'Slope_10m_3338.tif')
-area_file = os.path.join(drive, root_folder, 'Data/topography', 'area_test.tif')
-# area_file = os.path.join(project_folder, 'Data_Input', 'AlaskaYukon_MapDomain_10m_3338.tif')
+area_file = os.path.join(project_folder, 'Data_Input', 'AlaskaYukon_MapDomain_10m_3338.tif')
 
 # Define output files
 direction_float = os.path.join(hydrography_folder, 'intermediate', 'Direction_10m_3338.tif')
