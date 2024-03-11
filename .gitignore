@@ -34,3 +34,4 @@ Thumbs.db
 __pycache__
 venv
 venv/
+.Rproj.user
