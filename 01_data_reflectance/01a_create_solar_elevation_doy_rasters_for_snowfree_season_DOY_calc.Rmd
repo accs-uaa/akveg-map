@@ -1,0 +1,112 @@
+---
+title: "Build solar elevation DOY rasters"
+output: html_document
+date: "2024-04-12"
+---
+
+Create raster that represents the day of year (DOY) by latitude for the earliest date in spring when the sun reaches a specified elevation threshold.
+Similarly, create raster that represents the DOY by latitude for the latest date in fall when the sun reaches a specified elevation threshold.
+These can be used as a latitude-specific additional DOY filter to remove dates that are very unlikely to be part of the growing season. 
+Without this step, there is a tendency for deep winter/low sun Landsat or S2 observations to be spuriously mapped to a non-snow type.
+Most pronounced but not limited to deep shadows, e.g. steep north-facing slopes.
+As of 2024-04-12 a sun elevation threshold of 40 degrees in spring and 15
+
+Next step, these rasters are loaded as GEE assets and used in the calculation of Landsat Snow-free DOYs (based on CFMask)
+https://code.earthengine.google.com/?scriptPath=users%2Fmmacander%2Fakveg_map%3Aphenology%2Flandsat_doys
+https://code.earthengine.google.com/807b982e6af96fe36f93d69eee6635a0 (2024-04-12 snapshot)
+
+Also to be used in calculation of S2 Dynamic World snow-free metrics
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(solrad)
+library(tidyverse)
+library(terra)
+library(glue)
+```
+
+Calculating solar declination angle for 365 day of the year (northern hemisphere only)
+```{r create master table}
+DOY <- 1:365
+delta <- Declination(DOY)
+plot(DOY, delta)
+
+solar_df <- tibble(  doy=seq(1:365)) %>%
+  mutate(declination_deg = Declination(doy))
+
+lat_df <- tibble(lat_deg = seq(0.5,89.5,1))
+
+solar_x_lat_df <- expand_grid(solar_df, lat_df) %>%
+  mutate(max_solar_elevation = 90 - (lat_deg - declination_deg))
+
+```
+
+```{r functions}
+filter_solar_start <- function(solar_elevation) {
+  doy_start <- solar_x_lat_df %>%
+    filter(max_solar_elevation >= solar_elevation) %>%
+    # filter(lat_deg >= 0) %>%
+    select(lat_deg, doy) %>%
+    group_by(lat_deg) %>%
+    slice_min(doy) %>%
+    ungroup()
+  latest_doy <- max(doy_start %>% select(doy))
+  doy_start_all <- complete(doy_start, lat_deg=seq(0.5,89.5,1), fill=list(doy=latest_doy))
+  return(unname(as.matrix(doy_start_all)))
+}
+
+filter_solar_end <- function(solar_elevation) {
+  doy_end <- solar_x_lat_df %>%
+    filter(max_solar_elevation >= solar_elevation) %>%
+    # filter(lat_deg >= 0) %>%
+    select(lat_deg, doy) %>%
+    group_by(lat_deg) %>%
+    slice_max(doy) %>%
+    ungroup()
+  earliest_doy <- min(doy_end %>% select(doy))
+  doy_end_all <- complete(doy_end, lat_deg=seq(0.5,89.5,1), fill=list(doy=earliest_doy))
+  return(unname(as.matrix(doy_end_all)))
+}
+
+test_start <- filter_solar_start(40)
+test_end <- filter_solar_end(25)
+
+```
+
+
+```{r build lookup rasters}
+template_lat_rast <- rast(nrows=180,ncols=1,xmin=-180,xmax=180,ymin=0,ymax=90,crs='EPSG:4326',resolution=c(360,1))
+lat_rast <- init(template_lat_rast, fun="y")
+plot(lat_rast)
+
+test_start_40 <- classify(lat_rast, filter_solar_start(40))
+plot(test_start_40)
+test_start_40
+
+rastListStart <- list()
+for(elev in seq(0,90)) {
+  i <- elev + 1
+  start_doy_elev <- classify(lat_rast, filter_solar_start(elev))
+  names(start_doy_elev) <- glue('first_doy_sun_elev_gte_{str_pad(elev, 2, "left", "0")}deg')
+  rastListStart[[i]] <- start_doy_elev
+}
+rastStart <- rast(rastListStart)
+plot(rastStart)
+
+writeRaster(rastStart, '/data/gis/gis_projects/2024/24-224_Land_Cover_Metrics_Susitna_Wolf/solar_doys/nhem_earliest_doy_solar_elevation_v20240411.tif',
+            overwrite=TRUE)
+
+rastListEnd <- list()
+for(elev in seq(0,90)) {
+  i <- elev + 1
+  end_doy_elev <- classify(lat_rast, filter_solar_end(elev))
+  names(end_doy_elev) <- glue('last_doy_sun_elev_gte_{str_pad(elev, 2, "left", "0")}deg')
+  rastListEnd[[i]] <- end_doy_elev
+}
+
+rastEnd <- rast(rastListEnd)
+plot(rastEnd)
+
+writeRaster(rastEnd, '/data/gis/gis_projects/2024/24-224_Land_Cover_Metrics_Susitna_Wolf/solar_doys/nhem_latest_doy_solar_elevation_v20240411.tif',
+            overwrite=TRUE)
+
+```
