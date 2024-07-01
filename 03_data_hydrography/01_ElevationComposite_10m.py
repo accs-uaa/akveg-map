@@ -25,17 +25,18 @@ root_folder = 'ACCS_Work'
 # Define folder structure
 project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_Map/Data')
 topography_folder = os.path.join(drive, root_folder, 'Data/topography')
-output_folder = os.path.join(topography_folder, 'Alaska_Composite_DTM_10m')
+hydrography_folder = os.path.join(drive, root_folder, 'Data/hydrography')
+output_folder = os.path.join(hydrography_folder, 'intermediate')
 
 # Define input files
-area_input = os.path.join(project_folder, 'Data_Input', 'AlaskaYukon_MapDomain_10m_3338.tif')
+area_input = os.path.join(project_folder, 'Data_Input', 'AlaskaYukon_HydrographicArea_10m_3338.tif')
 alaska_input = os.path.join(topography_folder, 'Alaska_IFSAR_DTM_5m/processed', 'Alaska_IFSAR_DTM_5m_3338.tif')
 canada_input = os.path.join(topography_folder, 'ESA_GLO_30m/processed', 'ESA_GLO_30m_3338.tif')
 
 # Define output files
-merge_vrt = os.path.join(output_folder, 'intermediate', 'Elevation_10m_3338_Merged.vrt')
-merge_output = os.path.join(output_folder, 'intermediate', 'Elevation_10m_3338_Merged.tif')
-elevation_output = os.path.join(output_folder, 'float', 'Elevation_10m_3338.tif')
+merge_vrt = os.path.join(output_folder, 'Elevation_10m_3338_Merged.vrt')
+merge_output = os.path.join(output_folder, 'Elevation_10m_3338_Merged.tif')
+elevation_output = os.path.join(output_folder, 'Elevation_10m_3338.tif')
 
 # Merge input rasters
 print(f'Merging input rasters...')

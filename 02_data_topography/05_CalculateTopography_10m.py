@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Calculate topographic indices
 # Author: Timm Nawrocki
-# Last Updated: 2023-10-19
+# Last Updated: 2024-05-04
 # Usage: Execute in ArcGIS Pro Python 3.9+.
 # Description: "Calculate topographic indices" calculates a suite of topographic indices as new rasters from a DTM input raster.
 # ---------------------------------------------------------------------------
@@ -11,7 +11,7 @@
 import os
 import time
 from akutils import *
-from geomorph import *
+from akgeomorph import *
 
 # Set parameter values
 z_unit = 'METER'
@@ -22,47 +22,45 @@ drive = 'D:/'
 root_folder = 'ACCS_Work'
 
 # Define folder structure
-data_folder = os.path.join(drive, root_folder, 'Data/topography/Alaska_Composite_DTM_10m')
 project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_Map/Data')
-input_folder = os.path.join(data_folder, 'float')
-output_folder = os.path.join(data_folder, 'integer')
+topography_folder = os.path.join(drive, root_folder, 'Data/topography/Alaska_Composite_DTM_10m')
+input_folder = os.path.join(topography_folder, 'float')
+output_folder = os.path.join(topography_folder, 'integer')
 
 # Define input files
-elevation_float = os.path.join(input_folder, 'Elevation_10m_3338.tif')
-area_file = os.path.join(project_folder, 'Data_Input', 'AlaskaYukon_MapDomain_10m_3338.tif')
+area_input = os.path.join(project_folder, 'Data_Input', 'AlaskaYukon_MapDomain_10m_3338.tif')
+elevation_input = os.path.join(input_folder, 'Elevation_10m_3338.tif')
 
 # Define output files
-elevation_integer = os.path.join(output_folder, 'Elevation_10m_3338.tif')
+elevation_output = os.path.join(output_folder, 'Elevation_10m_3338.tif')
 slope_float = os.path.join(input_folder, 'Slope_10m_3338.tif')
-slope_integer = os.path.join(output_folder, 'Slope_10m_3338.tif')
+slope_output = os.path.join(output_folder, 'Slope_10m_3338.tif')
 aspect_float = os.path.join(input_folder, 'Aspect_10m_3338.tif')
-linear_aspect = os.path.join(input_folder, 'LinearAspect_10m_3338.tif')
+aspect_output = os.path.join(input_folder, 'LinearAspect_10m_3338.tif')
 exposure_output = os.path.join(output_folder, 'Exposure_10m_3338.tif')
 heatload_output = os.path.join(output_folder, 'HeatLoad_10m_3338.tif')
 position_output = os.path.join(output_folder, 'Position_10m_3338.tif')
 radiation_output = os.path.join(output_folder, 'RadiationAspect_10m_3338.tif')
 roughness_output = os.path.join(output_folder, 'Roughness_10m_3338.tif')
-ruggedness_output = os.path.join(output_folder, 'Ruggedness_10m_3338.tif')
-surfacearea_output = os.path.join(output_folder, 'SurfaceArea_10m_3338.tif')
 surfacerelief_output = os.path.join(output_folder, 'Relief_10m_3338.tif')
 
 #### CALCULATE FOUNDATIONAL TOPOGRAPHY DATASETS
 
 # Calculate integer elevation if it does not already exist
-if os.path.exists(elevation_integer) == 0:
+if os.path.exists(elevation_output) == 0:
     print('Calculating integer elevation...')
     iteration_start = time.time()
-    calculate_integer_elevation(area_file, elevation_float, elevation_integer)
+    calculate_integer_elevation(area_input, elevation_input, elevation_output)
     end_timing(iteration_start)
 else:
     print('Integer elevation already exists.')
     print('----------')
 
 # Calculate slope if it does not already exist
-if os.path.exists(slope_float) == 0:
+if os.path.exists(slope_output) == 0:
     print('Calculating slope...')
     iteration_start = time.time()
-    calculate_slope(area_file, elevation_float, z_unit, slope_float, slope_integer)
+    calculate_slope(area_input, elevation_input, z_unit, slope_float, slope_output)
     end_timing(iteration_start)
 else:
     print('Slope already exists.')
@@ -73,7 +71,7 @@ if os.path.exists(aspect_float) == 0:
     # Calculate aspect
     print('Calculating aspect...')
     iteration_start = time.time()
-    calculate_aspect(area_file, elevation_float, z_unit, aspect_float, None)
+    calculate_aspect(area_input, elevation_input, z_unit, aspect_float, None)
     end_timing(iteration_start)
 else:
     print('Aspect already exists.')
@@ -85,7 +83,7 @@ else:
 if os.path.exists(exposure_output) == 0:
     print('Calculating solar exposure...')
     iteration_start = time.time()
-    calculate_exposure(area_file, aspect_float, slope_float, 10, exposure_output)
+    calculate_exposure(area_input, aspect_float, slope_float, 10, exposure_output)
     end_timing(iteration_start)
 else:
     print('Solar exposure already exists.')
@@ -95,7 +93,7 @@ else:
 if os.path.exists(heatload_output) == 0:
     print('Calculating heat load index...')
     iteration_start = time.time()
-    calculate_heat_load(area_file, elevation_float, slope_float, aspect_float, 10000, heatload_output)
+    calculate_heat_load(area_input, elevation_input, slope_float, aspect_float, 10000, heatload_output)
     end_timing(iteration_start)
 else:
     print('Heat load index already exists.')
@@ -105,7 +103,7 @@ else:
 if os.path.exists(position_output) == 0:
     print('Calculating topographic position...')
     iteration_start = time.time()
-    calculate_position(area_file, elevation_float, position_width, position_output)
+    calculate_position(area_input, elevation_input, position_width, position_output)
     end_timing(iteration_start)
 else:
     print('Topographic position already exists.')
@@ -115,7 +113,7 @@ else:
 if os.path.exists(radiation_output) == 0:
     print('Calculating topographic radiation...')
     iteration_start = time.time()
-    calculate_radiation_aspect(area_file, aspect_float, 1000, radiation_output)
+    calculate_radiation_aspect(area_input, aspect_float, 1000, radiation_output)
     end_timing(iteration_start)
 else:
     print('Topographic radiation already exists.')
@@ -125,7 +123,7 @@ else:
 if os.path.exists(roughness_output) == 0:
     print('Calculating roughness...')
     iteration_start = time.time()
-    calculate_roughness(area_file, elevation_float, 1, roughness_output)
+    calculate_roughness(area_input, elevation_input, 1, roughness_output)
     end_timing(iteration_start)
 else:
     print('Roughness already exists.')
@@ -135,7 +133,7 @@ else:
 if os.path.exists(surfacerelief_output) == 0:
     print('Calculating surface relief ratio...')
     iteration_start = time.time()
-    calculate_surface_relief(area_file, elevation_float, 10000, surfacerelief_output)
+    calculate_surface_relief(area_input, elevation_input, 10000, surfacerelief_output)
     end_timing(iteration_start)
 else:
     print('Surface relief ratio already exists.')

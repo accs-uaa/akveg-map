@@ -12,7 +12,7 @@ from package_GeospatialProcessing import download_from_csv
 import os
 
 # Define base folder structure
-drive = 'N:/'
+drive = 'D:/'
 root_folder = 'ACCS_Work'
 
 # Define data folder

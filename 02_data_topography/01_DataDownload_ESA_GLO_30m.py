@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Download ESA GLO DEM 30 m tiles
 # Author: Timm Nawrocki
-# Last Updated: 2023-10-24
+# Last Updated: 2024-04-03
 # Usage: Execute in Python 3.9+.
 # Description: "Download ESA GLO DEM 30 m tiles" contacts a server to download a series of 30 m DEM tiles for the ESA GLO 30 m DEM: https://spacedata.copernicus.eu/en/web/guest/collections/copernicus-digital-elevation-model
 # ---------------------------------------------------------------------------
@@ -74,8 +74,9 @@ for download in download_items[block_field]:
 
 # Copy files to main directory
 for folder in next(os.walk(extract_folder))[1]:
-    source_folder = os.path.join(extract_folder, folder, 'DEM')
-    os.chdir(source_folder)
-    source_file = glob.glob('*DEM.tif')[0]
-    shutil.copyfile(os.path.join(source_folder, source_file),
-                    os.path.join(extract_folder, source_file))
+    if folder != 'corrected':
+        source_folder = os.path.join(extract_folder, folder, 'DEM')
+        os.chdir(source_folder)
+        source_file = glob.glob('*DEM.tif')[0]
+        shutil.copyfile(os.path.join(source_folder, source_file),
+                        os.path.join(extract_folder, source_file))
