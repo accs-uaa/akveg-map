@@ -62,7 +62,7 @@ arcpy.env.snapRaster = area_raster
 arcpy.env.extent = area_raster.extent
 
 # Set cell size environment
-cell_size = arcpy.management.GetRasterProperties(area_raster, 'CELLSIZEX', '').getOutput(0)
+cell_size = arcpy.management.GetRasterProperties(Raster(raster_list[0]), 'CELLSIZEX', '').getOutput(0)
 arcpy.env.cellSize = int(cell_size)
 
 # Set environment workspace
@@ -90,6 +90,10 @@ iteration_start = time.time()
 integer_raster = Int((nibble_raster) + 0.5)
 end_timing(iteration_start)
 
+# Set cell size environment
+cell_size = arcpy.management.GetRasterProperties(area_raster, 'CELLSIZEX', '').getOutput(0)
+arcpy.env.cellSize = int(cell_size)
+
 # Extract to area raster
 print('Extracting raster to study area...')
 iteration_start = time.time()
@@ -97,7 +101,7 @@ extract_integer = ExtractByMask(integer_raster, area_raster)
 end_timing(iteration_start)
 
 # Export raster
-print('Exporting coast distance raster as 16-bit signed...')
+print('Exporting mean annual precipitation raster as 16-bit signed...')
 iteration_start = time.time()
 arcpy.management.CopyRaster(extract_integer,
                             precip_output,

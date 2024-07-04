@@ -62,7 +62,7 @@ arcpy.env.snapRaster = area_raster
 arcpy.env.extent = area_raster.extent
 
 # Set cell size environment
-cell_size = arcpy.management.GetRasterProperties(area_raster, 'CELLSIZEX', '').getOutput(0)
+cell_size = arcpy.management.GetRasterProperties(Raster(raster_list[0]), 'CELLSIZEX', '').getOutput(0)
 arcpy.env.cellSize = int(cell_size)
 
 # Set environment workspace
@@ -89,6 +89,10 @@ print('Converting to integer...')
 iteration_start = time.time()
 integer_raster = Int((nibble_raster) + 0.5)
 end_timing(iteration_start)
+
+# Set cell size environment
+cell_size = arcpy.management.GetRasterProperties(area_raster, 'CELLSIZEX', '').getOutput(0)
+arcpy.env.cellSize = int(cell_size)
 
 # Extract to area raster
 print('Extracting raster to study area...')
