@@ -16,6 +16,7 @@ from arcpy.sa import Con
 from arcpy.sa import DistanceAccumulation
 from arcpy.sa import ExtractByMask
 from arcpy.sa import Int
+from arcpy.sa import IsNull
 from arcpy.sa import Raster
 from akutils import *
 
@@ -128,26 +129,6 @@ for coast_tile in coast_tiles:
 # Set extent
 arcpy.env.extent = area_raster.extent
 
-# Create area fill if it does not already exist
-if os.path.exists(fill_raster) == 0:
-    print('Creating raster with fill value of 32767...')
-    iteration_start = time.time()
-    con_raster = Con(area_raster == 1, 32767, area_raster)
-    arcpy.management.CopyRaster(con_raster,
-                                fill_raster,
-                                '',
-                                '',
-                                '-32768',
-                                'NONE',
-                                'NONE',
-                                '16_BIT_SIGNED',
-                                'NONE',
-                                'NONE',
-                                'TIFF',
-                                'NONE')
-    end_timing(iteration_start)
-input_rasters.append(fill_raster)
-
 # Mosaic tiles to new raster
 if os.path.exists(mosaic_raster) == 0:
     arcpy.management.MosaicToNewRaster(input_rasters,
@@ -163,7 +144,8 @@ if os.path.exists(mosaic_raster) == 0:
 # Extract to area raster
 print('Extracting raster to study area...')
 iteration_start = time.time()
-extract_raster = ExtractByMask(mosaic_raster, area_raster)
+con_raster = Con((area_raster == 1) & (IsNull(Raster(mosaic_raster))), 32767, mosaic_raster)
+extract_raster = ExtractByMask(con_raster, area_raster)
 end_timing(iteration_start)
 
 # Export raster
