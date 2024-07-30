@@ -23,3 +23,5 @@ vim ~/scripts/01_Create_COG_Versions.py
 nohup python3 ~/scripts/01_Create_COG_Versions.py
 # Check that files are processing
 ls ~/covariates_v20240711
+
+gsutil cp -r ~/covariates_v20240711/* gs://akveg-data/covariates_v20240711/
