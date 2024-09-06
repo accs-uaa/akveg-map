@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Prepare taxa presence-absence data
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Last Updated: 2024-08-21
+# Last Updated: 2024-09-06
 # Usage: Script should be executed in R 4.3.2+.
 # Description: "Prepare taxa presence-absence data" prepares train/test data for each target species.
 # ---------------------------------------------------------------------------
@@ -35,11 +35,13 @@ project_folder = path(drive, root_folder,
                       'Data/Data_Input')
 
 # Define input files
-schema_input = path(project_folder, 'AKVEG_Schema_20240821.xlsx')
+schema_input = path(project_folder, 'AKVEG_Schema_20240906.xlsx')
 zone_input = path(project_folder, 'region_data', 'AlaskaYukon_MapDomain_3338.shp')
 zone_file = path(project_folder, 'region_data', 'AlaskaYukon_VegetationZones_30m_3338.tif')
 validation_file = path(project_folder, 'validation_grid', 'AlaskaYukon_100_Tiles_3338.tif')
 coast_file = path(drive, root_folder, 'Data/hydrography/processed/CoastDist_10m_3338.tif')
+esa_file = path(project_folder, 'ancillary_data/processed/AlaskaYukon_ESAWorldCover2_10m_3338.tif')
+fire_file = path(project_folder, 'ancillary_data/processed/AlaskaYukon_FireYear_10m_3338.tif')
 collection_site_input = path(project_folder, 'collection_data/processed', 'Collection_Sites_4269.csv')
 collection_veg_input = path(project_folder, 'collection_data/processed', 'Collection_Vegetation_4269.csv')
 
@@ -78,7 +80,7 @@ zone_shape = st_read(zone_input)
 ####------------------------------
 
 # Import database connection function
-connection_script = path(akveg_repository, 'package_DataProcessing', 'connect_database_postgresql.R')
+connection_script = path(database_repository, 'package_DataProcessing', 'connect_database_postgresql.R')
 source(connection_script)
 
 # Create a connection to the AKVEG PostgreSQL database
@@ -264,14 +266,18 @@ exclusion_sites = function (vegetation_data, exclude_taxon) {
 
 # Exclude sites with genus observations
 remove_betula = exclusion_sites(vegetation_import, 'Betula')
+remove_calama = exclusion_sites(vegetation_import, 'Calamagrostis')
 remove_carex = exclusion_sites(vegetation_import, 'Carex')
 remove_dwashr = exclusion_sites(vegetation_import, 'shrub dwarf')
 remove_erioph = exclusion_sites(vegetation_import, 'Eriophorum')
+remove_festuca = exclusion_sites(vegetation_import, 'Festuca')
 remove_forb = exclusion_sites(vegetation_import, 'forb')
 remove_gramin = exclusion_sites(vegetation_import, 'graminoid')
 remove_grass = exclusion_sites(vegetation_import, 'grass (Poaceae)')
 remove_herb = exclusion_sites(vegetation_import, 'herbaceous')
 remove_picea = exclusion_sites(vegetation_import, 'Picea')
+remove_populus = exclusion_sites(vegetation_import, 'Populus')
+remove_rubus = exclusion_sites(vegetation_import, 'Rubus')
 remove_salix = exclusion_sites(vegetation_import, 'Salix')
 remove_sedge = exclusion_sites(vegetation_import, 'sedge (Cyperaceae)')
 remove_shrub = exclusion_sites(vegetation_import, 'shrub')
@@ -291,6 +297,8 @@ project_summary = vegetation_import %>%
 zone_raster = rast(zone_file)
 validation_raster = rast(validation_file)
 coast_raster = rast(coast_file)
+esa_raster = rast(esa_file)
+fire_raster = rast(fire_file)
 
 # Read AKVEG Schema
 schema_data = read_xlsx(schema_input, sheet = 'foliar_cover') %>%
@@ -349,7 +357,7 @@ for (group in group_list) {
     mutate(cvr_pct = case_when(presence == 0 & is.na(cvr_pct) ~ 0,
                                TRUE ~ cvr_pct)) %>%
     # Assign group name
-    mutate(target_abbr = group) %>%
+    mutate(group_abbr = group) %>%
     # Restrict absences based on lifeform scopes
     {if (lifeform == 'vascular' & top_absence == 'TRUE' & (group == 'picgla' | group == 'picmar'))
       filter(., (presence == 1)
@@ -442,7 +450,13 @@ for (group in group_list) {
         .} %>%
     {if (group == 'rubcha')
       anti_join(., remove_forb, join_by('st_vst')) %>%
-        anti_join(remove_herb, join_by('st_vst'))
+        anti_join(remove_herb, join_by('st_vst')) %>%
+        anti_join(remove_rubus, join_by('st_vst'))
+      else
+        .} %>%
+    {if (group == 'rubspe')
+      anti_join(., remove_shrub, join_by('st_vst')) %>%
+        anti_join(remove_rubus, join_by('st_vst'))
       else
         .} %>%
     {if (group == 'senpse')
@@ -463,9 +477,21 @@ for (group in group_list) {
         anti_join(remove_sedge, join_by('st_vst'))
       else
         .} %>%
+    {if (group == 'fesalt')
+      anti_join(., remove_gramin, join_by('st_vst')) %>%
+        anti_join(remove_grass, join_by('st_vst')) %>%
+        anti_join(remove_festuca, join_by('st_vst'))
+      else
+        .} %>%
     {if (group == 'leymol')
       anti_join(., remove_gramin, join_by('st_vst')) %>%
         anti_join(remove_grass, join_by('st_vst'))
+      else
+        .} %>%
+    {if (group == 'mwcalama')
+      anti_join(., remove_gramin, join_by('st_vst')) %>%
+        anti_join(remove_grass, join_by('st_vst')) %>%
+        anti_join(remove_calama, join_by('st_vst'))
       else
         .} %>%
     {if (group == 'wetsed')
@@ -518,6 +544,14 @@ for (group in group_list) {
       anti_join(., remove_picea, join_by('st_vst'))
       else
         .} %>%
+    {if (group == 'populbt')
+      anti_join(., remove_populus, join_by('st_vst'))
+      else
+        .} %>%
+    {if (group == 'poptre')
+      anti_join(., remove_populus, join_by('st_vst'))
+      else
+        .} %>%
     {if (group == 'tsumer')
       anti_join(., remove_tsuga, join_by('st_vst'))
       else
@@ -528,18 +562,28 @@ for (group in group_list) {
     mutate(zone = terra::extract(zone_raster, ., raw=TRUE)[,2]) %>%
     mutate(valid = terra::extract(validation_raster, ., raw=TRUE)[,2]) %>%
     mutate(coast_dist = terra::extract(coast_raster, ., raw=TRUE)[,2]) %>%
+    mutate(esa_type = terra::extract(esa_raster, ., raw=TRUE)[,2]) %>%
+    mutate(fire_yr = terra::extract(fire_raster, ., raw=TRUE)[,2]) %>%
     # Remove erroneous data from all groups
     filter(prjct_cd != 'nps_kenai_2004' | (prjct_cd == 'nps_kenai_2004' & coast_dist >= 50)) %>%
+    # Remove sites with centroid in permanent water
+    filter((esa_type != 80 & prjct_cd != 'akveg_absences') | prjct_cd == 'akveg_absences') %>%
+    # Remove sites that burned after observation
+    filter(fire_yr < year(obs_date)) %>%
+    mutate(obs_yr = year(obs_date)) %>%
+    # Enforce maximum cover value
+    mutate(cvr_pct = case_when(cvr_pct > 100 ~ 100,
+                               TRUE ~ cvr_pct)) %>%
     # Select columns
-    dplyr::select(st_vst, target_abbr, zone, valid, cvr_pct, presence, cent_x, cent_y, geometry)
+    dplyr::select(st_vst, group_abbr, zone, valid, obs_yr, fire_yr, esa_type, cvr_pct, presence, cent_x, cent_y, geometry)
   
   # Export data to shapefile
   st_write(vegetation_data, shape_output, append = FALSE)
   
   # Export data to output table
   vegetation_data %>%
-    st_drop_geometry()
-  write.csv(vegetation_data, file = table_output, fileEncoding = 'UTF-8', row.names = FALSE)
+    st_drop_geometry() %>%
+    write.csv(., file = table_output, fileEncoding = 'UTF-8', row.names = FALSE)
   
   # Increase count
   count = count + 1

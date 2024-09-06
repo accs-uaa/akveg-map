@@ -2,9 +2,9 @@
 # ---------------------------------------------------------------------------
 # Validate random forest abundance model
 # Author: Timm Nawrocki
-# Last Updated: 2024-09-06
+# Last Updated: 2024-08-22
 # Usage: Must be executed in an Anaconda Python 3.12+ installation.
-# Description: "Validate random forest abundance model" validates a random forest classifier and regressor. The model validation accounts for spatial autocorrelation by grouping in 100 km blocks.
+# Description: "Validate random forest abundance model" validates a random forest classifier and regressor with balanced class weights. The model validation accounts for spatial autocorrelation by grouping in 100 km blocks.
 # ---------------------------------------------------------------------------
 
 # Import packages
@@ -15,8 +15,10 @@ import time
 from akutils import *
 from sklearn.utils import shuffle
 from sklearn.model_selection import StratifiedGroupKFold
+from sklearn.ensemble import RandomForestClassifier
 from imblearn.ensemble import BalancedRandomForestClassifier
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import HistGradientBoostingRegressor
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import mean_squared_error
@@ -27,10 +29,10 @@ from sklearn.metrics import r2_score
 ####____________________________________________________
 
 # Set round date
-round_date = 'round_20240904_rf'
+round_date = 'round_20240821'
 
 # Define species
-group = 'alnus'
+group = 'erivag'
 
 # Define cross validation methods
 outer_cv_splits = StratifiedGroupKFold(n_splits=10)
@@ -71,19 +73,14 @@ predictor_all = ['summer', 'january', 'precip',
                  's1_3_vha', 's1_3_vhd', 's1_3_vva', 's1_3_vvd',
                  's2_1_blue', 's2_1_green', 's2_1_red', 's2_1_redge1', 's2_1_redge2',
                  's2_1_redge3', 's2_1_nir', 's2_1_redge4', 's2_1_swir1', 's2_1_swir2',
-                 's2_1_nbr', 's2_1_ngrdi', 's2_1_ndmi', 's2_1_ndsi', 's2_1_ndvi', 's2_1_ndwi',
                  's2_2_blue', 's2_2_green', 's2_2_red', 's2_2_redge1', 's2_2_redge2',
                  's2_2_redge3', 's2_2_nir', 's2_2_redge4', 's2_2_swir1', 's2_2_swir2',
-                 's2_2_nbr', 's2_2_ngrdi', 's2_2_ndmi', 's2_2_ndsi', 's2_2_ndvi', 's2_2_ndwi',
                  's2_3_blue', 's2_3_green', 's2_3_red', 's2_3_redge1', 's2_3_redge2',
                  's2_3_redge3', 's2_3_nir', 's2_3_redge4', 's2_3_swir1', 's2_3_swir2',
-                 's2_3_nbr', 's2_3_ngrdi', 's2_3_ndmi', 's2_3_ndsi', 's2_3_ndvi', 's2_3_ndwi',
                  's2_4_blue', 's2_4_green', 's2_4_red', 's2_4_redge1', 's2_4_redge2',
                  's2_4_redge3', 's2_4_nir', 's2_4_redge4', 's2_4_swir1', 's2_4_swir2',
-                 's2_4_nbr', 's2_4_ngrdi', 's2_4_ndmi', 's2_4_ndsi', 's2_4_ndvi', 's2_4_ndwi',
                  's2_5_blue', 's2_5_green', 's2_5_red', 's2_5_redge1', 's2_5_redge2',
-                 's2_5_redge3', 's2_5_nir', 's2_5_redge4', 's2_5_swir1', 's2_5_swir2',
-                 's2_5_nbr', 's2_5_ngrdi', 's2_5_ndmi', 's2_5_ndsi', 's2_5_ndvi', 's2_5_ndwi']
+                 's2_5_redge3', 's2_5_nir', 's2_5_redge4', 's2_5_swir1', 's2_5_swir2']
 obs_pres = ['presence']
 obs_cover = ['cvr_pct']
 retain_variables = ['st_vst'] + validation
@@ -95,11 +92,11 @@ pred_pres = ['pred_pres']
 pred_bin = ['pred_bin']
 pred_cover = ['pred_cover']
 prediction = ['prediction']
-inner_columns = all_variables + pred_abs + pred_pres + inner_split
+inner_columns = all_variables + pred_abs + pred_pres + pred_cover + inner_split
 outer_columns = all_variables + pred_abs + pred_pres + pred_cover + pred_bin + outer_split
 
 # Create a standardized parameter set for a random forest classifier
-classifier_params = {'n_estimators': 500,
+classifier_params = {'n_estimators': 50,
                      'criterion': 'gini',
                      'max_depth': None,
                      'min_samples_split': 2,
@@ -108,25 +105,39 @@ classifier_params = {'n_estimators': 500,
                      'max_features': 'sqrt',
                      'bootstrap': True,
                      'oob_score': False,
-                     'sampling_strategy': 'all',
-                     'replacement': True,
                      'warm_start': False,
-                     'class_weight': None,
-                     'n_jobs': 2,
+                     'class_weight': 'balanced',
+                     'n_jobs': 4,
                      'random_state': 314}
+bclassifier_params = {'n_estimators': 50,
+                      'criterion': 'gini',
+                      'max_depth': None,
+                      'min_samples_split': 2,
+                      'min_samples_leaf': 1,
+                      'min_weight_fraction_leaf': 0,
+                      'max_features': 'sqrt',
+                      'bootstrap': True,
+                      'oob_score': False,
+                      'sampling_strategy': 'all',
+                      'replacement': True,
+                      'warm_start': False,
+                      'class_weight': None,
+                      'n_jobs': 4,
+                      'random_state': 314}
 
 # Create a standardized parameter set for a random forest classifier
-regressor_params = {'n_estimators': 500,
+regressor_estimators = 100
+regressor_params = {'n_estimators': 1,
                     'criterion': 'poisson',
                     'max_depth': None,
                     'min_samples_split': 2,
                     'min_samples_leaf': 1,
                     'min_weight_fraction_leaf': 0,
                     'max_features': 'sqrt',
-                    'bootstrap': True,
+                    'bootstrap': False,
                     'oob_score': False,
                     'warm_start': True,
-                    'n_jobs': 2,
+                    'n_jobs': 4,
                     'random_state': 314}
 
 #### PREPARE INPUT DATA
@@ -137,76 +148,6 @@ print('Loading input data...')
 iteration_start = time.time()
 covariate_data = pd.read_csv(covariate_file)
 species_data = pd.read_csv(species_file)[['st_vst', 'cvr_pct', 'presence', 'valid']]
-
-# Calculate derived metrics for season 1
-covariate_data['s2_1_nbr'] = ((covariate_data['s2_1_nir'] - covariate_data['s2_1_swir2'])
-                              / (covariate_data['s2_1_nir'] + covariate_data['s2_1_swir2']))
-covariate_data['s2_1_ngrdi'] = ((covariate_data['s2_1_green'] - covariate_data['s2_1_red'])
-                                / (covariate_data['s2_1_green'] + covariate_data['s2_1_red']))
-covariate_data['s2_1_ndmi'] = ((covariate_data['s2_1_nir'] - covariate_data['s2_1_swir1'])
-                               / (covariate_data['s2_1_nir'] + covariate_data['s2_1_swir1']))
-covariate_data['s2_1_ndsi'] = ((covariate_data['s2_1_green'] - covariate_data['s2_1_swir1'])
-                               / (covariate_data['s2_1_green'] + covariate_data['s2_1_swir1']))
-covariate_data['s2_1_ndvi'] = ((covariate_data['s2_1_nir'] - covariate_data['s2_1_red'])
-                               / (covariate_data['s2_1_nir'] + covariate_data['s2_1_red']))
-covariate_data['s2_1_ndwi'] = ((covariate_data['s2_1_green'] - covariate_data['s2_1_nir'])
-                               / (covariate_data['s2_1_green'] + covariate_data['s2_1_nir']))
-
-# Calculate derived metrics for season 2
-covariate_data['s2_2_nbr'] = ((covariate_data['s2_2_nir'] - covariate_data['s2_2_swir2'])
-                              / (covariate_data['s2_2_nir'] + covariate_data['s2_2_swir2']))
-covariate_data['s2_2_ngrdi'] = ((covariate_data['s2_2_green'] - covariate_data['s2_2_red'])
-                                / (covariate_data['s2_2_green'] + covariate_data['s2_2_red']))
-covariate_data['s2_2_ndmi'] = ((covariate_data['s2_2_nir'] - covariate_data['s2_2_swir1'])
-                               / (covariate_data['s2_2_nir'] + covariate_data['s2_2_swir1']))
-covariate_data['s2_2_ndsi'] = ((covariate_data['s2_2_green'] - covariate_data['s2_2_swir1'])
-                               / (covariate_data['s2_2_green'] + covariate_data['s2_2_swir1']))
-covariate_data['s2_2_ndvi'] = ((covariate_data['s2_2_nir'] - covariate_data['s2_2_red'])
-                               / (covariate_data['s2_2_nir'] + covariate_data['s2_2_red']))
-covariate_data['s2_2_ndwi'] = ((covariate_data['s2_2_green'] - covariate_data['s2_2_nir'])
-                               / (covariate_data['s2_2_green'] + covariate_data['s2_2_nir']))
-
-# Calculate derived metrics for season 3
-covariate_data['s2_3_nbr'] = ((covariate_data['s2_3_nir'] - covariate_data['s2_3_swir2'])
-                              / (covariate_data['s2_3_nir'] + covariate_data['s2_3_swir2']))
-covariate_data['s2_3_ngrdi'] = ((covariate_data['s2_3_green'] - covariate_data['s2_3_red'])
-                                / (covariate_data['s2_3_green'] + covariate_data['s2_3_red']))
-covariate_data['s2_3_ndmi'] = ((covariate_data['s2_3_nir'] - covariate_data['s2_3_swir1'])
-                               / (covariate_data['s2_3_nir'] + covariate_data['s2_3_swir1']))
-covariate_data['s2_3_ndsi'] = ((covariate_data['s2_3_green'] - covariate_data['s2_3_swir1'])
-                               / (covariate_data['s2_3_green'] + covariate_data['s2_3_swir1']))
-covariate_data['s2_3_ndvi'] = ((covariate_data['s2_3_nir'] - covariate_data['s2_3_red'])
-                               / (covariate_data['s2_3_nir'] + covariate_data['s2_3_red']))
-covariate_data['s2_3_ndwi'] = ((covariate_data['s2_3_green'] - covariate_data['s2_3_nir'])
-                               / (covariate_data['s2_3_green'] + covariate_data['s2_3_nir']))
-
-# Calculate derived metrics for season 4
-covariate_data['s2_4_nbr'] = ((covariate_data['s2_4_nir'] - covariate_data['s2_4_swir2'])
-                              / (covariate_data['s2_4_nir'] + covariate_data['s2_4_swir2']))
-covariate_data['s2_4_ngrdi'] = ((covariate_data['s2_4_green'] - covariate_data['s2_4_red'])
-                                / (covariate_data['s2_4_green'] + covariate_data['s2_4_red']))
-covariate_data['s2_4_ndmi'] = ((covariate_data['s2_4_nir'] - covariate_data['s2_4_swir1'])
-                               / (covariate_data['s2_4_nir'] + covariate_data['s2_4_swir1']))
-covariate_data['s2_4_ndsi'] = ((covariate_data['s2_4_green'] - covariate_data['s2_4_swir1'])
-                               / (covariate_data['s2_4_green'] + covariate_data['s2_4_swir1']))
-covariate_data['s2_4_ndvi'] = ((covariate_data['s2_4_nir'] - covariate_data['s2_4_red'])
-                               / (covariate_data['s2_4_nir'] + covariate_data['s2_4_red']))
-covariate_data['s2_4_ndwi'] = ((covariate_data['s2_4_green'] - covariate_data['s2_4_nir'])
-                               / (covariate_data['s2_4_green'] + covariate_data['s2_4_nir']))
-
-# Calculate derived metrics for season 5
-covariate_data['s2_5_nbr'] = ((covariate_data['s2_5_nir'] - covariate_data['s2_5_swir2'])
-                              / (covariate_data['s2_5_nir'] + covariate_data['s2_5_swir2']))
-covariate_data['s2_5_ngrdi'] = ((covariate_data['s2_5_green'] - covariate_data['s2_5_red'])
-                                / (covariate_data['s2_5_green'] + covariate_data['s2_5_red']))
-covariate_data['s2_5_ndmi'] = ((covariate_data['s2_5_nir'] - covariate_data['s2_5_swir1'])
-                               / (covariate_data['s2_5_nir'] + covariate_data['s2_5_swir1']))
-covariate_data['s2_5_ndsi'] = ((covariate_data['s2_5_green'] - covariate_data['s2_5_swir1'])
-                               / (covariate_data['s2_5_green'] + covariate_data['s2_5_swir1']))
-covariate_data['s2_5_ndvi'] = ((covariate_data['s2_5_nir'] - covariate_data['s2_5_red'])
-                               / (covariate_data['s2_5_nir'] + covariate_data['s2_5_red']))
-covariate_data['s2_5_ndwi'] = ((covariate_data['s2_5_green'] - covariate_data['s2_5_nir'])
-                               / (covariate_data['s2_5_green'] + covariate_data['s2_5_nir']))
 
 # Create an inner join of species and covariate data
 input_data = species_data.merge(covariate_data, how='inner', on='st_vst')
@@ -269,7 +210,7 @@ while outer_cv_i <= outer_cv_length:
     print(f'Conducting outer cross-validation iteration {outer_cv_i} of {outer_cv_length}...')
     iteration_start = time.time()
 
-    #### SETUP INNER DATA
+    #### CONDUCT INNER CROSS VALIDATION
     ####____________________________________________________
     print('\tCreating inner cross validation splits...')
     # Partition the outer train split by iteration number
@@ -310,9 +251,6 @@ while outer_cv_i <= outer_cv_length:
     inner_train = inner_train.reset_index()
     inner_test = inner_test.reset_index()
 
-    #### CONDUCT INNER THRESHOLD DETERMINATION
-    ####____________________________________________________
-
     # Iterate through inner cross validation splits
     inner_cv_i = 1
     while inner_cv_i <= inner_cv_length:
@@ -327,16 +265,27 @@ while outer_cv_i <= outer_cv_length:
 
         # Train classifier on the inner train data
         print('\t\tTraining inner classifier...')
-        inner_classifier = BalancedRandomForestClassifier(**classifier_params)
+        inner_classifier = BalancedRandomForestClassifier(**bclassifier_params)
         inner_classifier.fit(X_class_inner, y_class_inner)
+
+        # Train regressor on the inner train data
+        print('\t\tTraining inner regressor...')
+        inner_regress_iteration = inner_train_iteration.loc[inner_train_iteration[obs_cover[0]] >= 0]
+        X_regress_inner = inner_regress_iteration[predictor_all].astype(float).copy()
+        y_regress_inner = inner_regress_iteration[obs_cover[0]].astype(float).copy()
+        inner_regressor = RandomForestRegressor(**regressor_params)
+        #inner_regressor = HistGradientBoostingRegressor(**hregressor_params)
+        inner_regressor.fit(X_regress_inner, y_regress_inner)
 
         # Predict inner test data
         print('\t\tPredicting inner cross-validation test data...')
         probability_inner = inner_classifier.predict_proba(X_test_inner)
+        cover_inner = inner_regressor.predict(X_test_inner)
 
         # Assign predicted values to inner test data frame
         inner_test_iteration = inner_test_iteration.assign(pred_abs=probability_inner[:, 0])
         inner_test_iteration = inner_test_iteration.assign(pred_pres=probability_inner[:, 1])
+        inner_test_iteration = inner_test_iteration.assign(pred_cover=cover_inner)
 
         # Add the test results to output data frame
         inner_results = pd.concat([inner_results if not inner_results.empty else None,
@@ -345,6 +294,9 @@ while outer_cv_i <= outer_cv_length:
 
         # Increase n value
         inner_cv_i += 1
+
+    #### CONDUCT INNER THRESHOLD DETERMINATION
+    ####____________________________________________________
 
     # Calculate the optimal threshold and performance of the presence-absence classification
     print('\tOptimizing classification threshold...')
@@ -364,16 +316,28 @@ while outer_cv_i <= outer_cv_length:
 
     # Train classifier on the outer train data
     print('\tTraining outer classifier...')
-    outer_classifier = BalancedRandomForestClassifier(**classifier_params)
+    outer_classifier = BalancedRandomForestClassifier(**bclassifier_params)
     outer_classifier.fit(X_class_outer, y_class_outer)
 
     # Train regressor on the outer train data
     print('\tTraining outer regressor...')
     outer_regressor = RandomForestRegressor(**regressor_params)
-    outer_regress_iteration = outer_train_iteration.loc[outer_train_iteration[obs_cover[0]] >= 0]
-    X_regress_outer = outer_regress_iteration[predictor_all].astype(float).copy()
-    y_regress_outer = outer_regress_iteration[obs_cover[0]].astype(float).copy()
-    outer_regressor.fit(X_regress_outer, y_regress_outer)
+    count = 1
+    while count <= regressor_estimators:
+        outer_regress_nonzero = outer_train_iteration.loc[outer_train_iteration[obs_cover[0]] > 0]
+        outer_regress_zero = outer_train_iteration.loc[outer_train_iteration[obs_cover[0]] == 0]
+        outer_regress_zero = outer_regress_zero.sample(n=len(outer_regress_nonzero))
+        outer_regress_iteration = pd.concat(
+            [outer_regress_nonzero if not outer_regress_nonzero.empty else None,
+             outer_regress_zero],
+            axis=0
+        )
+        X_regress_outer = outer_regress_iteration[predictor_all].astype(float).copy()
+        y_regress_outer = outer_regress_iteration[obs_cover[0]].astype(float).copy()
+        if count != 1:
+            outer_regressor.n_estimators += 1
+        outer_regressor.fit(X_regress_outer, y_regress_outer)
+        count += 1
 
     # Predict inner test data
     print('\tPredicting outer cross-validation test data...')
@@ -405,18 +369,13 @@ while outer_cv_i <= outer_cv_length:
 ####____________________________________________________
 
 # Create a composite prediction
-outer_results[prediction[0]] = np.where((outer_results[pred_bin[0]] == 1)
-                                        & (outer_results[pred_cover[0]] >= 0.5),
+outer_results[prediction[0]] = np.where((outer_results[pred_bin[0]] == 1) & (outer_results[pred_cover[0]] >= 0.5),
                                         outer_results[pred_cover[0]],
                                         0)
-outer_results['distribution'] = np.where((outer_results[pred_bin[0]] == 1)
-                                         & (outer_results[pred_cover[0]] >= 0.5),
-                                         1,
-                                         0)
 
 # Partition output results to presence-absence observed and predicted
 y_classify_observed = outer_results[obs_pres[0]].astype('int32').copy()
-y_classify_predicted = outer_results['distribution'].astype('int32').copy()
+y_classify_predicted = outer_results[prediction[0]].astype('int32').copy()
 y_classify_probability = outer_results[pred_pres[0]].astype(float).copy()
 
 # Partition output results to foliar cover observed and predicted
@@ -433,7 +392,7 @@ false_positive = confusion_test[0, 1]
 # Calculate metrics
 validation_auc = roc_auc_score(y_classify_observed, y_classify_probability)
 validation_accuracy = (true_negative + true_positive) / (
-        true_negative + false_positive + false_negative + true_positive)
+            true_negative + false_positive + false_negative + true_positive)
 
 # Calculate performance metrics from output_results
 r_score = r2_score(y_regress_observed, y_regress_predicted, sample_weight=None, multioutput='uniform_average')
