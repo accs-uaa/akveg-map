@@ -74,20 +74,10 @@ rm -rf ~/anaconda3/anaconda.sh
 source ~/.bashrc
 ```
 
-Update all packages using conda.
-
-```bash
-conda update --all
-```
-
 Install the necessary packages. In the example below, we install packages to support interactions with Earth Engine and statistical learning with LightGBM and Bayesian Optimization. We also install the "akutils" helper functions.
 
 ```bash
-conda install -c conda-forge earthengine-api
-conda install -c conda-forge geemap
-conda install -c conda-forge imbalanced-learn
-conda install -c conda-forge lightgbm
-conda install -c conda-forge bayesian-optimization
+conda install -c conda-forge earthengine-api geemap imbalanced-learn lightgbm bayesian-optimization
 python3 -m pip install git+https://github.com/accs-uaa/akutils
 ```
 
@@ -100,7 +90,9 @@ mkdir ~/scripts
 mkdir ~/Data_Input
 mkdir ~/Data_Input/extract_data
 mkdir ~/Data_Input/species_data
-mkdir ~/Data_Output/model_results/round_20240904_rf
+mkdir ~/Data_Output
+mkdir ~/Data_Output/model_results
+mkdir ~/Data_Output/model_results/<round_date>
 ```
 
 Use Google Cloud SDK commands from the terminal to download data and scripts for the storage bucket to the vm.

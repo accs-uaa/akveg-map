@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Validate LightGBM abundance model
+# Validate random forest abundance model
 # Author: Timm Nawrocki
-# Last Updated: 2024-09-05
+# Last Updated: 2024-09-06
 # Usage: Must be executed in an Anaconda Python 3.12+ installation.
-# Description: "Validate LightGBM abundance model" validates a random forest classifier and a LightGBM regressor. The model validation accounts for spatial autocorrelation by grouping in 100 km blocks.
+# Description: "Validate random forest abundance model" validates a random forest classifier and regressor. The model validation accounts for spatial autocorrelation by grouping in 100 km blocks.
 # ---------------------------------------------------------------------------
 
 # Import packages
@@ -15,10 +15,8 @@ import time
 from akutils import *
 from sklearn.utils import shuffle
 from sklearn.model_selection import StratifiedGroupKFold
-from sklearn.model_selection import cross_val_score
-from lightgbm import LGBMClassifier
-from lightgbm import LGBMRegressor
-from bayes_opt import BayesianOptimization
+from imblearn.ensemble import BalancedRandomForestClassifier
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import roc_auc_score
 from sklearn.metrics import mean_squared_error
@@ -29,14 +27,10 @@ from sklearn.metrics import r2_score
 ####____________________________________________________
 
 # Set round date
-round_date = 'round_20240904_lgbmall'
+round_date = 'round_20240904_rf'
 
 # Define species
-group = 'alnus'
-
-# Define cross validation methods
-outer_cv_splits = StratifiedGroupKFold(n_splits=10)
-inner_cv_splits = StratifiedGroupKFold(n_splits=10)
+group = 'rubcha'
 
 # Set root directory
 drive = 'D:/'
@@ -100,163 +94,40 @@ prediction = ['prediction']
 inner_columns = all_variables + pred_abs + pred_pres + inner_split
 outer_columns = all_variables + pred_abs + pred_pres + pred_cover + pred_bin + outer_split
 
-# Define optimization functions
-def classifier_cv(num_leaves, max_depth, learning_rate, n_estimators,
-                  min_split_gain, min_child_weight, min_child_samples,
-                  subsample, colsample_bytree, reg_alpha, reg_lambda,
-                  data, targets):
-    estimator = LGBMClassifier(
-        boosting_type='gbdt',
-        num_leaves=int(num_leaves),
-        max_depth=int(max_depth),
-        learning_rate=learning_rate,
-        n_estimators=int(n_estimators),
-        objective='binary',
-        class_weight='balanced',
-        min_split_gain=min_split_gain,
-        min_child_weight=min_child_weight,
-        min_child_samples=int(min_child_samples),
-        subsample=subsample,
-        subsample_freq=1,
-        colsample_bytree=colsample_bytree,
-        reg_alpha=reg_alpha,
-        reg_lambda=reg_lambda,
-        n_jobs=4,
-        importance_type='gain',
-        verbosity=-1)
-    cval = cross_val_score(estimator, data, targets,
-                           scoring='balanced_accuracy', cv=5)
-    return cval.mean()
+# Create a standardized parameter set for a random forest classifier
+classifier_params = {'n_estimators': 500,
+                     'criterion': 'gini',
+                     'max_depth': None,
+                     'min_samples_split': 2,
+                     'min_samples_leaf': 1,
+                     'min_weight_fraction_leaf': 0,
+                     'max_features': 'sqrt',
+                     'bootstrap': True,
+                     'oob_score': False,
+                     'sampling_strategy': 'all',
+                     'replacement': True,
+                     'warm_start': False,
+                     'class_weight': None,
+                     'n_jobs': 2,
+                     'random_state': 314}
 
-def optimize_classifier(data, targets):
-    def classifier_crossval(num_leaves, max_depth, learning_rate, n_estimators,
-                            min_split_gain, min_child_weight, min_child_samples,
-                            subsample, colsample_bytree, reg_alpha, reg_lambda):
-        return classifier_cv(
-            num_leaves=num_leaves,
-            max_depth=max_depth,
-            learning_rate=learning_rate,
-            n_estimators=n_estimators,
-            min_split_gain=min_split_gain,
-            min_child_weight=min_child_weight,
-            min_child_samples=min_child_samples,
-            subsample=subsample,
-            colsample_bytree=colsample_bytree,
-            reg_alpha=reg_alpha,
-            reg_lambda=reg_lambda,
-            data=data,
-            targets=targets,
-        )
+# Create a standardized parameter set for a random forest classifier
+regressor_params = {'n_estimators': 500,
+                    'criterion': 'poisson',
+                    'max_depth': None,
+                    'min_samples_split': 2,
+                    'min_samples_leaf': 1,
+                    'min_weight_fraction_leaf': 0,
+                    'max_features': 'sqrt',
+                    'bootstrap': True,
+                    'oob_score': False,
+                    'warm_start': True,
+                    'n_jobs': 2,
+                    'random_state': 314}
 
-    optimizer = BayesianOptimization(
-        f=classifier_crossval,
-        pbounds={
-            'num_leaves': (5, 200),
-            'max_depth': (3, 12),
-            'learning_rate': (0.001, 0.2),
-            'n_estimators': (50, 1000),
-            'min_split_gain': (0.001, 0.1),
-            'min_child_weight': (0.001, 1),
-            'min_child_samples': (1, 200),
-            'subsample': (0.3, 0.9),
-            'colsample_bytree': (0.3, 0.9),
-            'reg_alpha': (0, 5),
-            'reg_lambda': (0, 5)
-        },
-        random_state=314,
-        verbose=2
-    )
-    optimizer.maximize(init_points=30, n_iter=70)
-
-    return optimizer.max['params']
-
-# Define optimization functions
-def regressor_cv(num_leaves, max_depth, learning_rate, n_estimators,
-                 min_split_gain, min_child_weight, min_child_samples,
-                 subsample, colsample_bytree, reg_alpha, reg_lambda,
-                 data, targets):
-    """Random Forest cross validation.
-
-    This function will instantiate a random forest regressor with parameters
-    n_estimators, min_samples_split, and max_features. Combined with data and
-    targets this will in turn be used to perform cross validation. The result
-    of cross validation is returned.
-
-    Our goal is to find combinations of n_estimators, min_samples_split, and
-    max_features that minimizes the log loss.
-    """
-    estimator = LGBMRegressor(
-        boosting_type='gbdt',
-        num_leaves=int(num_leaves),
-        max_depth=int(max_depth),
-        learning_rate=learning_rate,
-        n_estimators=int(n_estimators),
-        objective='regression',
-        min_split_gain=min_split_gain,
-        min_child_weight=min_child_weight,
-        min_child_samples=int(min_child_samples),
-        subsample=subsample,
-        subsample_freq=1,
-        colsample_bytree=colsample_bytree,
-        reg_alpha=reg_alpha,
-        reg_lambda=reg_lambda,
-        n_jobs=4,
-        importance_type='gain',
-        verbosity=-1)
-    cval = cross_val_score(estimator, data, targets,
-                           scoring='neg_mean_squared_error', cv=5)
-    return cval.mean()
-
-def optimize_regressor(data, targets):
-    """Apply Bayesian Optimization to Random Forest parameters."""
-
-    def regressor_crossval(num_leaves, max_depth, learning_rate, n_estimators,
-                           min_split_gain, min_child_weight, min_child_samples,
-                           subsample, colsample_bytree, reg_alpha, reg_lambda):
-        """Wrapper of RandomForest cross validation.
-
-        Notice how we ensure n_estimators and min_samples_split are casted
-        to integer before we pass them along. Moreover, to avoid max_features
-        taking values outside the (0, 1) range, we also ensure it is capped
-        accordingly.
-        """
-        return regressor_cv(
-            num_leaves=num_leaves,
-            max_depth=max_depth,
-            learning_rate=learning_rate,
-            n_estimators=n_estimators,
-            min_split_gain=min_split_gain,
-            min_child_weight=min_child_weight,
-            min_child_samples=min_child_samples,
-            subsample=subsample,
-            colsample_bytree=colsample_bytree,
-            reg_alpha=reg_alpha,
-            reg_lambda=reg_lambda,
-            data=data,
-            targets=targets,
-        )
-
-    optimizer = BayesianOptimization(
-        f=regressor_crossval,
-        pbounds={
-            'num_leaves': (5, 200),
-            'max_depth': (3, 12),
-            'learning_rate': (0.001, 0.2),
-            'n_estimators': (50, 1000),
-            'min_split_gain': (0.001, 0.1),
-            'min_child_weight': (0.001, 1),
-            'min_child_samples': (1, 200),
-            'subsample': (0.3, 0.9),
-            'colsample_bytree': (0.3, 0.9),
-            'reg_alpha': (0, 5),
-            'reg_lambda': (0, 5)
-        },
-        random_state=314,
-        verbose=2
-    )
-    optimizer.maximize(init_points=30, n_iter=70)
-
-    return optimizer.max['params']
+# Define cross validation methods
+outer_cv_splits = StratifiedGroupKFold(n_splits=10)
+inner_cv_splits = StratifiedGroupKFold(n_splits=10)
 
 #### PREPARE INPUT DATA
 ####____________________________________________________
@@ -439,31 +310,6 @@ while outer_cv_i <= outer_cv_length:
     inner_train = inner_train.reset_index()
     inner_test = inner_test.reset_index()
 
-    #### CONDUCT INNER CLASSIFIER OPTIMIZATION
-    ####____________________________________________________
-
-    print('\tOptimizing classifier parameters...')
-
-    # Identify X and y train splits for the classifier
-    X_class_outer = outer_train_iteration[predictor_all].astype(float).copy()
-    y_class_outer = outer_train_iteration[obs_pres[0]].astype('int32').copy()
-    X_test_outer = outer_test_iteration[predictor_all].astype(float).copy()
-
-    # Optimize classifier
-    classifier_params = optimize_classifier(data=X_class_outer, targets=y_class_outer)
-
-    #### CONDUCT INNER REGRESSOR OPTIMIZATION
-    ####____________________________________________________
-
-    print('\tOptimizing regressor parameters...')
-
-    # Identify X and y train splits for the classifier
-    X_regress_outer = outer_train_iteration[predictor_all].astype(float).copy()
-    y_regress_outer = outer_train_iteration[obs_cover[0]].astype(float).copy()
-
-    # Optimize regressor
-    regressor_params = optimize_regressor(data=X_regress_outer, targets=y_regress_outer)
-
     #### CONDUCT INNER THRESHOLD DETERMINATION
     ####____________________________________________________
 
@@ -481,25 +327,7 @@ while outer_cv_i <= outer_cv_length:
 
         # Train classifier on the inner train data
         print('\t\tTraining inner classifier...')
-        inner_classifier = LGBMClassifier(
-            boosting_type='gbdt',
-            num_leaves=int(classifier_params['num_leaves']),
-            max_depth=int(classifier_params['max_depth']),
-            learning_rate=classifier_params['learning_rate'],
-            n_estimators=int(classifier_params['n_estimators']),
-            objective='binary',
-            class_weight='balanced',
-            min_split_gain=classifier_params['min_split_gain'],
-            min_child_weight=classifier_params['min_child_weight'],
-            min_child_samples=int(classifier_params['min_child_samples']),
-            subsample=classifier_params['subsample'],
-            subsample_freq=1,
-            colsample_bytree=classifier_params['colsample_bytree'],
-            reg_alpha=classifier_params['reg_alpha'],
-            reg_lambda=classifier_params['reg_lambda'],
-            n_jobs=4,
-            importance_type='gain',
-            verbosity=-1)
+        inner_classifier = BalancedRandomForestClassifier(**classifier_params)
         inner_classifier.fit(X_class_inner, y_class_inner)
 
         # Predict inner test data
@@ -529,55 +357,25 @@ while outer_cv_i <= outer_cv_length:
     #### CONDUCT OUTER CROSS VALIDATION
     ####____________________________________________________
 
+    # Identify X and y train splits for the classifier
+    X_class_outer = outer_train_iteration[predictor_all].astype(float).copy()
+    y_class_outer = outer_train_iteration[obs_pres[0]].astype('int32').copy()
+    X_test_outer = outer_test_iteration[predictor_all].astype(float).copy()
+
     # Train classifier on the outer train data
     print('\tTraining outer classifier...')
-    outer_classifier = LGBMClassifier(
-        boosting_type='gbdt',
-        num_leaves=int(classifier_params['num_leaves']),
-        max_depth=int(classifier_params['max_depth']),
-        learning_rate=classifier_params['learning_rate'],
-        n_estimators=int(classifier_params['n_estimators']),
-        objective='binary',
-        class_weight='balanced',
-        min_split_gain=classifier_params['min_split_gain'],
-        min_child_weight=classifier_params['min_child_weight'],
-        min_child_samples=int(classifier_params['min_child_samples']),
-        subsample=classifier_params['subsample'],
-        subsample_freq=1,
-        colsample_bytree=classifier_params['colsample_bytree'],
-        reg_alpha=classifier_params['reg_alpha'],
-        reg_lambda=classifier_params['reg_lambda'],
-        n_jobs=4,
-        importance_type='gain',
-        verbosity=-1)
+    outer_classifier = BalancedRandomForestClassifier(**classifier_params)
     outer_classifier.fit(X_class_outer, y_class_outer)
 
     # Train regressor on the outer train data
     print('\tTraining outer regressor...')
-    outer_regressor = LGBMRegressor(
-        boosting_type='gbdt',
-        num_leaves=int(regressor_params['num_leaves']),
-        max_depth=int(regressor_params['max_depth']),
-        learning_rate=regressor_params['learning_rate'],
-        n_estimators=int(regressor_params['n_estimators']),
-        objective='regression',
-        min_split_gain=regressor_params['min_split_gain'],
-        min_child_weight=regressor_params['min_child_weight'],
-        min_child_samples=int(regressor_params['min_child_samples']),
-        subsample=regressor_params['subsample'],
-        subsample_freq=1,
-        colsample_bytree=regressor_params['colsample_bytree'],
-        reg_alpha=regressor_params['reg_alpha'],
-        reg_lambda=regressor_params['reg_lambda'],
-        n_jobs=4,
-        importance_type='gain',
-        verbosity=-1)
+    outer_regressor = RandomForestRegressor(**regressor_params)
     outer_regress_iteration = outer_train_iteration.loc[outer_train_iteration[obs_cover[0]] >= 0]
     X_regress_outer = outer_regress_iteration[predictor_all].astype(float).copy()
     y_regress_outer = outer_regress_iteration[obs_cover[0]].astype(float).copy()
     outer_regressor.fit(X_regress_outer, y_regress_outer)
 
-    # Predict outer test data
+    # Predict inner test data
     print('\tPredicting outer cross-validation test data...')
     probability_outer = outer_classifier.predict_proba(X_test_outer)
     cover_outer = outer_regressor.predict(X_test_outer)

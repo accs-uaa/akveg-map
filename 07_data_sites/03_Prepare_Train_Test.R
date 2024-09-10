@@ -101,6 +101,12 @@ vegetation_query = read_file(vegetation_file)
 vegetation_import = as_tibble(dbGetQuery(database_connection, vegetation_query)) %>%
   rbind(collection_veg)
 
+# Check number of cover observations per project
+project_data = vegetation_import %>%
+  left_join(site_visit_import, join_by('st_vst')) %>%
+  group_by(prjct_cd) %>%
+  summarize(obs_n = n())
+
 #### FORMAT ABSENCES
 ####------------------------------
 

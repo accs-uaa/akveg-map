@@ -26,11 +26,7 @@ from sklearn.metrics import roc_auc_score
 round_date = 'round_20240904_rf'
 
 # Define species
-group = 'ndsalix'
-
-# Define cross validation methods
-outer_cv_splits = StratifiedGroupKFold(n_splits=10)
-inner_cv_splits = StratifiedGroupKFold(n_splits=10)
+group = 'chaang'
 
 # Set root directory
 drive = 'D:/'
@@ -90,7 +86,7 @@ inner_columns = all_variables + pred_abs + pred_pres + inner_split
 outer_columns = all_variables + pred_abs + pred_pres + pred_bin + outer_split
 
 # Create a standardized parameter set for a random forest classifier
-classifier_params = {'n_estimators': 100,
+classifier_params = {'n_estimators': 500,
                       'criterion': 'gini',
                       'max_depth': None,
                       'min_samples_split': 2,
@@ -103,6 +99,10 @@ classifier_params = {'n_estimators': 100,
                       'class_weight': None,
                       'n_jobs': 4,
                       'random_state': 314}
+
+# Define cross validation methods
+outer_cv_splits = StratifiedGroupKFold(n_splits=10)
+inner_cv_splits = StratifiedGroupKFold(n_splits=10)
 
 #### PREPARE INPUT DATA
 ####____________________________________________________

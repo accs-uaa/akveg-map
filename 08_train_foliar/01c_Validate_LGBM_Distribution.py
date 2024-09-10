@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Validate LightGBM abundance model
+# Validate LightGBM distribution model
 # Author: Timm Nawrocki
-# Last Updated: 2024-09-06
+# Last Updated: 2024-09-09
 # Usage: Must be executed in an Anaconda Python 3.12+ installation.
-# Description: "Validate LightGBM abundance model" validates a random forest classifier and a LightGBM regressor. The model validation accounts for spatial autocorrelation by grouping in 100 km blocks.
+# Description: "Validate LightGBM distribution model" validates a LightGBM classifier with balanced class weights. The model validation accounts for spatial autocorrelation by grouping in 100 km blocks.
 # ---------------------------------------------------------------------------
 
 # Import packages
@@ -16,14 +16,10 @@ from akutils import *
 from sklearn.utils import shuffle
 from sklearn.model_selection import StratifiedGroupKFold
 from sklearn.model_selection import cross_val_score
-from imblearn.ensemble import BalancedRandomForestClassifier
-from lightgbm import LGBMRegressor
+from lightgbm import LGBMClassifier
 from bayes_opt import BayesianOptimization
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import roc_auc_score
-from sklearn.metrics import mean_squared_error
-from sklearn.metrics import mean_absolute_error
-from sklearn.metrics import r2_score
 
 #### SET UP DIRECTORIES, FILES, AND FIELDS
 ####____________________________________________________
@@ -32,11 +28,7 @@ from sklearn.metrics import r2_score
 round_date = 'round_20240904_lgbm'
 
 # Define species
-group = 'alnus'
-
-# Define cross validation methods
-outer_cv_splits = StratifiedGroupKFold(n_splits=10)
-inner_cv_splits = StratifiedGroupKFold(n_splits=10)
+group = 'chaang'
 
 # Set root directory
 drive = 'D:/'
@@ -58,9 +50,6 @@ output_file = os.path.join(output_folder, f'{group}_Results.csv')
 auc_file = os.path.join(output_folder, f'{group}_AUC.txt')
 acc_file = os.path.join(output_folder, f'{group}_ACC.txt')
 threshold_file = os.path.join(output_folder, f'{group}_Threshold.txt')
-rscore_file = os.path.join(output_folder, f'{group}_Rsquared.txt')
-rmse_file = os.path.join(output_folder, f'{group}_RMSE.txt')
-mae_file = os.path.join(output_folder, f'{group}_MAE.txt')
 
 # Define variable sets
 validation = ['valid']
@@ -95,78 +84,42 @@ inner_split = ['inner_split_n']
 pred_abs = ['pred_abs']
 pred_pres = ['pred_pres']
 pred_bin = ['pred_bin']
-pred_cover = ['pred_cover']
-prediction = ['prediction']
 inner_columns = all_variables + pred_abs + pred_pres + inner_split
-outer_columns = all_variables + pred_abs + pred_pres + pred_cover + pred_bin + outer_split
-
-# Create a standardized parameter set for a random forest classifier
-classifier_params = {'n_estimators': 100,
-                     'criterion': 'gini',
-                     'max_depth': None,
-                     'min_samples_split': 2,
-                     'min_samples_leaf': 1,
-                     'min_weight_fraction_leaf': 0,
-                     'max_features': 'sqrt',
-                     'bootstrap': True,
-                     'oob_score': False,
-                     'sampling_strategy': 'all',
-                     'replacement': True,
-                     'warm_start': False,
-                     'class_weight': None,
-                     'n_jobs': 4,
-                     'random_state': 314}
+outer_columns = all_variables + pred_abs + pred_pres + pred_bin + outer_split
 
 # Define optimization functions
-def regressor_cv(num_leaves, max_depth, learning_rate, n_estimators,
-                 min_split_gain, min_child_weight, min_child_samples,
-                 subsample, colsample_bytree, reg_alpha, reg_lambda,
-                 data, targets):
-    """Random Forest cross validation.
-
-    This function will instantiate a random forest regressor with parameters
-    n_estimators, min_samples_split, and max_features. Combined with data and
-    targets this will in turn be used to perform cross validation. The result
-    of cross validation is returned.
-
-    Our goal is to find combinations of n_estimators, min_samples_split, and
-    max_features that minimizes the log loss.
-    """
-    estimator = LGBMRegressor(boosting_type='gbdt',
-                              num_leaves=int(num_leaves),
-                              max_depth=int(max_depth),
-                              learning_rate=learning_rate,
-                              n_estimators=int(n_estimators),
-                              objective='regression',
-                              min_split_gain=min_split_gain,
-                              min_child_weight=min_child_weight,
-                              min_child_samples=int(min_child_samples),
-                              subsample=subsample,
-                              subsample_freq=1,
-                              colsample_bytree=colsample_bytree,
-                              reg_alpha=reg_alpha,
-                              reg_lambda=reg_lambda,
-                              n_jobs=4,
-                              importance_type='gain',
-                              verbosity=-1)
+def classifier_cv(num_leaves, max_depth, learning_rate, n_estimators,
+                  min_split_gain, min_child_weight, min_child_samples,
+                  subsample, colsample_bytree, reg_alpha, reg_lambda,
+                  data, targets):
+    estimator = LGBMClassifier(
+        boosting_type='gbdt',
+        num_leaves=int(num_leaves),
+        max_depth=int(max_depth),
+        learning_rate=learning_rate,
+        n_estimators=int(n_estimators),
+        objective='binary',
+        class_weight='balanced',
+        min_split_gain=min_split_gain,
+        min_child_weight=min_child_weight,
+        min_child_samples=int(min_child_samples),
+        subsample=subsample,
+        subsample_freq=1,
+        colsample_bytree=colsample_bytree,
+        reg_alpha=reg_alpha,
+        reg_lambda=reg_lambda,
+        n_jobs=4,
+        importance_type='gain',
+        verbosity=-1)
     cval = cross_val_score(estimator, data, targets,
-                           scoring='neg_mean_squared_error', cv=5)
+                           scoring='balanced_accuracy', cv=5)
     return cval.mean()
 
-def optimize_regressor(data, targets):
-    """Apply Bayesian Optimization to Random Forest parameters."""
-
-    def regressor_crossval(num_leaves, max_depth, learning_rate, n_estimators,
-                 min_split_gain, min_child_weight, min_child_samples,
-                 subsample, colsample_bytree, reg_alpha, reg_lambda):
-        """Wrapper of RandomForest cross validation.
-
-        Notice how we ensure n_estimators and min_samples_split are casted
-        to integer before we pass them along. Moreover, to avoid max_features
-        taking values outside the (0, 1) range, we also ensure it is capped
-        accordingly.
-        """
-        return regressor_cv(
+def optimize_classifier(data, targets):
+    def classifier_crossval(num_leaves, max_depth, learning_rate, n_estimators,
+                            min_split_gain, min_child_weight, min_child_samples,
+                            subsample, colsample_bytree, reg_alpha, reg_lambda):
+        return classifier_cv(
             num_leaves=num_leaves,
             max_depth=max_depth,
             learning_rate=learning_rate,
@@ -183,7 +136,7 @@ def optimize_regressor(data, targets):
         )
 
     optimizer = BayesianOptimization(
-        f=regressor_crossval,
+        f=classifier_crossval,
         pbounds={
             'num_leaves': (5, 200),
             'max_depth': (3, 12),
@@ -203,6 +156,10 @@ def optimize_regressor(data, targets):
     optimizer.maximize(init_points=30, n_iter=70)
 
     return optimizer.max['params']
+
+# Define cross validation methods
+outer_cv_splits = StratifiedGroupKFold(n_splits=10)
+inner_cv_splits = StratifiedGroupKFold(n_splits=10)
 
 #### PREPARE INPUT DATA
 ####____________________________________________________
@@ -385,17 +342,18 @@ while outer_cv_i <= outer_cv_length:
     inner_train = inner_train.reset_index()
     inner_test = inner_test.reset_index()
 
-    #### CONDUCT INNER REGRESSOR OPTIMIZATION
+    #### CONDUCT INNER CLASSIFIER OPTIMIZATION
     ####____________________________________________________
 
-    print('\tOptimizing regressor parameters...')
+    print('\tOptimizing classifier parameters...')
 
     # Identify X and y train splits for the classifier
-    X_regress_outer = outer_train_iteration[predictor_all].astype(float).copy()
-    y_regress_outer = outer_train_iteration[obs_cover[0]].astype(float).copy()
+    X_class_outer = outer_train_iteration[predictor_all].astype(float).copy()
+    y_class_outer = outer_train_iteration[obs_pres[0]].astype('int32').copy()
+    X_test_outer = outer_test_iteration[predictor_all].astype(float).copy()
 
-    # Optimize regressor
-    optimizer = optimize_regressor(data=X_regress_outer, targets=y_regress_outer)
+    # Optimize classifier
+    classifier_params = optimize_classifier(data=X_class_outer, targets=y_class_outer)
 
     #### CONDUCT INNER THRESHOLD DETERMINATION
     ####____________________________________________________
@@ -414,7 +372,25 @@ while outer_cv_i <= outer_cv_length:
 
         # Train classifier on the inner train data
         print('\t\tTraining inner classifier...')
-        inner_classifier = BalancedRandomForestClassifier(**classifier_params)
+        inner_classifier = LGBMClassifier(
+            boosting_type='gbdt',
+            num_leaves=int(classifier_params['num_leaves']),
+            max_depth=int(classifier_params['max_depth']),
+            learning_rate=classifier_params['learning_rate'],
+            n_estimators=int(classifier_params['n_estimators']),
+            objective='binary',
+            class_weight='balanced',
+            min_split_gain=classifier_params['min_split_gain'],
+            min_child_weight=classifier_params['min_child_weight'],
+            min_child_samples=int(classifier_params['min_child_samples']),
+            subsample=classifier_params['subsample'],
+            subsample_freq=1,
+            colsample_bytree=classifier_params['colsample_bytree'],
+            reg_alpha=classifier_params['reg_alpha'],
+            reg_lambda=classifier_params['reg_lambda'],
+            n_jobs=4,
+            importance_type='gain',
+            verbosity=-1)
         inner_classifier.fit(X_class_inner, y_class_inner)
 
         # Predict inner test data
@@ -451,40 +427,34 @@ while outer_cv_i <= outer_cv_length:
 
     # Train classifier on the outer train data
     print('\tTraining outer classifier...')
-    outer_classifier = BalancedRandomForestClassifier(**classifier_params)
+    outer_classifier = LGBMClassifier(
+        boosting_type='gbdt',
+        num_leaves=int(classifier_params['num_leaves']),
+        max_depth=int(classifier_params['max_depth']),
+        learning_rate=classifier_params['learning_rate'],
+        n_estimators=int(classifier_params['n_estimators']),
+        objective='binary',
+        class_weight='balanced',
+        min_split_gain=classifier_params['min_split_gain'],
+        min_child_weight=classifier_params['min_child_weight'],
+        min_child_samples=int(classifier_params['min_child_samples']),
+        subsample=classifier_params['subsample'],
+        subsample_freq=1,
+        colsample_bytree=classifier_params['colsample_bytree'],
+        reg_alpha=classifier_params['reg_alpha'],
+        reg_lambda=classifier_params['reg_lambda'],
+        n_jobs=4,
+        importance_type='gain',
+        verbosity=-1)
     outer_classifier.fit(X_class_outer, y_class_outer)
 
-    # Train regressor on the outer train data
-    print('\tTraining outer regressor...')
-    outer_regressor = LGBMRegressor(boosting_type='gbdt',
-                                    num_leaves=int(optimizer['num_leaves']),
-                                    max_depth=int(optimizer['max_depth']),
-                                    learning_rate=optimizer['learning_rate'],
-                                    n_estimators=int(optimizer['n_estimators']),
-                                    objective='regression',
-                                    min_split_gain=optimizer['min_split_gain'],
-                                    min_child_weight=optimizer['min_child_weight'],
-                                    min_child_samples=int(optimizer['min_child_samples']),
-                                    subsample=optimizer['subsample'],
-                                    subsample_freq=1,
-                                    colsample_bytree=optimizer['colsample_bytree'],
-                                    reg_alpha=optimizer['reg_alpha'],
-                                    reg_lambda=optimizer['reg_lambda'],
-                                    n_jobs=4,
-                                    importance_type='gain',
-                                    verbosity=-1)
-    outer_regress_iteration = outer_train_iteration.loc[outer_train_iteration[obs_cover[0]] >= 0]
-    outer_regressor.fit(X_regress_outer, y_regress_outer)
-
-    # Predict outer test data
+    # Predict inner test data
     print('\tPredicting outer cross-validation test data...')
     probability_outer = outer_classifier.predict_proba(X_test_outer)
-    cover_outer = outer_regressor.predict(X_test_outer)
 
     # Assign predicted values to outer test data frame
     outer_test_iteration = outer_test_iteration.assign(pred_abs=probability_outer[:, 0])
     outer_test_iteration = outer_test_iteration.assign(pred_pres=probability_outer[:, 1])
-    outer_test_iteration = outer_test_iteration.assign(pred_cover=cover_outer)
 
     # Convert probability to presence-absence
     presence_zeros = np.zeros(outer_test_iteration[pred_pres[0]].shape)
@@ -505,24 +475,10 @@ while outer_cv_i <= outer_cv_length:
 #### CALCULATE PERFORMANCE AND STORE RESULTS
 ####____________________________________________________
 
-# Create a composite prediction
-outer_results[prediction[0]] = np.where((outer_results[pred_bin[0]] == 1)
-                                        & (outer_results[pred_cover[0]] >= 0.5),
-                                        outer_results[pred_cover[0]],
-                                        0)
-outer_results['distribution'] = np.where((outer_results[pred_bin[0]] == 1)
-                                         & (outer_results[pred_cover[0]] >= 0.5),
-                                         1,
-                                         0)
-
 # Partition output results to presence-absence observed and predicted
 y_classify_observed = outer_results[obs_pres[0]].astype('int32').copy()
-y_classify_predicted = outer_results['distribution'].astype('int32').copy()
+y_classify_predicted = outer_results[pred_bin[0]].astype('int32').copy()
 y_classify_probability = outer_results[pred_pres[0]].astype(float).copy()
-
-# Partition output results to foliar cover observed and predicted
-y_regress_observed = outer_results[obs_cover[0]].astype(float).copy()
-y_regress_predicted = outer_results[prediction[0]].astype(float).copy()
 
 # Determine error rates
 confusion_test = confusion_matrix(y_classify_observed, y_classify_predicted)
@@ -534,27 +490,19 @@ false_positive = confusion_test[0, 1]
 # Calculate metrics
 validation_auc = roc_auc_score(y_classify_observed, y_classify_probability)
 validation_accuracy = (true_negative + true_positive) / (
-        true_negative + false_positive + false_negative + true_positive)
-
-# Calculate performance metrics from output_results
-r_score = r2_score(y_regress_observed, y_regress_predicted, sample_weight=None, multioutput='uniform_average')
-mae = mean_absolute_error(y_regress_observed, y_regress_predicted)
-rmse = np.sqrt(mean_squared_error(y_regress_observed, y_regress_predicted))
+            true_negative + false_positive + false_negative + true_positive)
 
 # Modify metrics for export
 export_auc = round(validation_auc, 3)
 export_accuracy = round(validation_accuracy * 100, 1)
 export_threshold = round(np.mean(threshold_list), 5)
-export_rscore = round(r_score, 3)
-export_rmse = round(rmse, 1)
-export_mae = round(mae, 1)
 
 # Store output results in csv file
 print('Writing output files...')
 iteration_start = time.time()
 outer_results.to_csv(output_file, header=True, index=False, sep=',', encoding='utf-8')
-output_list = [auc_file, acc_file, threshold_file, rscore_file, rmse_file, mae_file]
-metric_list = [export_auc, export_accuracy, export_threshold, export_rscore, export_rmse, export_mae]
+output_list = [auc_file, acc_file, threshold_file]
+metric_list = [export_auc, export_accuracy, export_threshold]
 count = 0
 for metric in metric_list:
     output_file = output_list[count]
@@ -568,6 +516,3 @@ end_timing(iteration_start)
 print(f'AUC: {export_auc}')
 print(f'ACC: {export_accuracy}')
 print(f'Threshold: {export_threshold}')
-print(f'R-squared: {export_rscore}')
-print(f'RMSE: {export_rmse}')
-print(f'MAE: {export_mae}')
