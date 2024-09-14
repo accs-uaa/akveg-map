@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Validate random forest distribution model
+# Validate balanced random forest distribution model
 # Author: Timm Nawrocki
 # Last Updated: 2024-09-06
 # Usage: Must be executed in an Anaconda Python 3.12+ installation.
-# Description: "Validate random forest distribution model" validates a random forest classifier (without balanced resampling). The model validation accounts for spatial autocorrelation by grouping in 100 km blocks.
+# Description: "Validate balanced random forest distribution model" validates a random forest classifier with class resampling so that class samples are balanced in each tree. The model validation accounts for spatial autocorrelation by grouping in 100 km blocks.
 # ---------------------------------------------------------------------------
 
 # Import packages
@@ -15,7 +15,7 @@ import time
 from akutils import *
 from sklearn.utils import shuffle
 from sklearn.model_selection import StratifiedGroupKFold
-from sklearn.ensemble import RandomForestClassifier
+from imblearn.ensemble import BalancedRandomForestClassifier
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import roc_auc_score
 
@@ -95,6 +95,8 @@ classifier_params = {'n_estimators': 500,
                       'max_features': 'sqrt',
                       'bootstrap': True,
                       'oob_score': False,
+                      'sampling_strategy': 'all',
+                      'replacement': True,
                       'warm_start': False,
                       'class_weight': None,
                       'n_jobs': 4,
@@ -302,7 +304,7 @@ while outer_cv_i <= outer_cv_length:
 
         # Train classifier on the inner train data
         print('\t\tTraining inner classifier...')
-        inner_classifier = RandomForestClassifier(**classifier_params)
+        inner_classifier = BalancedRandomForestClassifier(**classifier_params)
         inner_classifier.fit(X_class_inner, y_class_inner)
 
         # Predict inner test data
@@ -339,7 +341,7 @@ while outer_cv_i <= outer_cv_length:
 
     # Train classifier on the outer train data
     print('\tTraining outer classifier...')
-    outer_classifier = RandomForestClassifier(**classifier_params)
+    outer_classifier = BalancedRandomForestClassifier(**classifier_params)
     outer_classifier.fit(X_class_outer, y_class_outer)
 
     # Predict inner test data
