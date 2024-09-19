@@ -30,7 +30,7 @@ from sklearn.metrics import r2_score
 round_date = 'round_20240910'
 
 # Define species
-group = 'ndsalix'
+group = 'wetsed'
 
 # Set root directory
 drive = 'D:/'
@@ -44,17 +44,17 @@ if os.path.exists(output_folder) == 0:
     os.mkdir(output_folder)
 
 # Define input files
-covariate_file = os.path.join(extract_folder, 'AKVEG_Sites_Covariates_3338.csv')
-species_file = os.path.join(species_folder, f'cover_{group}_3338.csv')
+covariate_input = os.path.join(extract_folder, 'AKVEG_Sites_Covariates_3338.csv')
+species_input = os.path.join(species_folder, f'cover_{group}_3338.csv')
 
 # Define output files
-output_file = os.path.join(output_folder, f'{group}_Results.csv')
-auc_file = os.path.join(output_folder, f'{group}_AUC.txt')
-acc_file = os.path.join(output_folder, f'{group}_ACC.txt')
-threshold_file = os.path.join(output_folder, f'{group}_Threshold.txt')
-rscore_file = os.path.join(output_folder, f'{group}_Rsquared.txt')
-rmse_file = os.path.join(output_folder, f'{group}_RMSE.txt')
-mae_file = os.path.join(output_folder, f'{group}_MAE.txt')
+results_output = os.path.join(output_folder, f'{group}_results.csv')
+auc_output = os.path.join(output_folder, f'{group}_auc.txt')
+acc_output = os.path.join(output_folder, f'{group}_acc.txt')
+threshold_output = os.path.join(output_folder, f'{group}_threshold_mean.txt')
+rscore_output = os.path.join(output_folder, f'{group}_r2.txt')
+rmse_output = os.path.join(output_folder, f'{group}_rmse.txt')
+mae_output = os.path.join(output_folder, f'{group}_mae.txt')
 
 # Define variable sets
 validation = ['valid']
@@ -68,30 +68,18 @@ predictor_all = ['summer', 'january', 'precip',
                  's2_1_blue', 's2_1_green', 's2_1_red', 's2_1_redge1', 's2_1_redge2',
                  's2_1_redge3', 's2_1_nir', 's2_1_redge4', 's2_1_swir1', 's2_1_swir2',
                  's2_1_nbr', 's2_1_ngrdi', 's2_1_ndmi', 's2_1_ndsi', 's2_1_ndvi', 's2_1_ndwi',
-                 's2_1_bcc', 's2_1_gcc', 's2_1_rcc',
                  's2_2_blue', 's2_2_green', 's2_2_red', 's2_2_redge1', 's2_2_redge2',
                  's2_2_redge3', 's2_2_nir', 's2_2_redge4', 's2_2_swir1', 's2_2_swir2',
                  's2_2_nbr', 's2_2_ngrdi', 's2_2_ndmi', 's2_2_ndsi', 's2_2_ndvi', 's2_2_ndwi',
-                 's2_2_bcc', 's2_2_gcc', 's2_2_rcc',
                  's2_3_blue', 's2_3_green', 's2_3_red', 's2_3_redge1', 's2_3_redge2',
                  's2_3_redge3', 's2_3_nir', 's2_3_redge4', 's2_3_swir1', 's2_3_swir2',
                  's2_3_nbr', 's2_3_ngrdi', 's2_3_ndmi', 's2_3_ndsi', 's2_3_ndvi', 's2_3_ndwi',
-                 's2_3_bcc', 's2_3_gcc', 's2_3_rcc',
                  's2_4_blue', 's2_4_green', 's2_4_red', 's2_4_redge1', 's2_4_redge2',
                  's2_4_redge3', 's2_4_nir', 's2_4_redge4', 's2_4_swir1', 's2_4_swir2',
                  's2_4_nbr', 's2_4_ngrdi', 's2_4_ndmi', 's2_4_ndsi', 's2_4_ndvi', 's2_4_ndwi',
-                 's2_4_bcc', 's2_4_gcc', 's2_4_rcc',
                  's2_5_blue', 's2_5_green', 's2_5_red', 's2_5_redge1', 's2_5_redge2',
                  's2_5_redge3', 's2_5_nir', 's2_5_redge4', 's2_5_swir1', 's2_5_swir2',
-                 's2_5_nbr', 's2_5_ngrdi', 's2_5_ndmi', 's2_5_ndsi', 's2_5_ndvi', 's2_5_ndwi',
-                 's2_5_bcc', 's2_5_gcc', 's2_5_rcc',
-                 's2_rng_blue', 's2_rng_green', 's2_rng_red', 's2_rng_redge1', 's2_rng_redge2',
-                 's2_rng_redge3', 's2_rng_nir', 's2_rng_redge4', 's2_rng_swir1', 's2_rng_swir2',
-                 's2_rng_nbr', 's2_rng_ngrdi', 's2_rng_ndmi', 's2_rng_ndsi', 's2_rng_ndvi', 's2_rng_ndwi',
-                 's2_std_blue', 's2_std_green', 's2_std_red', 's2_std_redge1', 's2_std_redge2',
-                 's2_std_redge3', 's2_std_nir', 's2_std_redge4', 's2_std_swir1', 's2_std_swir2',
-                 's2_std_nbr', 's2_std_ngrdi', 's2_std_ndmi', 's2_std_ndsi', 's2_std_ndvi', 's2_std_ndwi'
-                 ]
+                 's2_5_nbr', 's2_5_ngrdi', 's2_5_ndmi', 's2_5_ndsi', 's2_5_ndvi', 's2_5_ndwi']
 obs_pres = ['presence']
 obs_cover = ['cvr_pct']
 retain_variables = ['st_vst'] + validation
@@ -147,221 +135,14 @@ inner_cv_splits = StratifiedGroupKFold(n_splits=10)
 # Read input data to data frames
 print('Loading input data...')
 iteration_start = time.time()
-covariate_data = pd.read_csv(covariate_file)
-species_data = pd.read_csv(species_file)[['st_vst', 'cvr_pct', 'presence', 'valid']]
+covariate_data = pd.read_csv(covariate_input)
+covariate_data = foliar_cover_predictors(covariate_data, predictor_all)
+species_data = pd.read_csv(species_input)[['st_vst', 'cvr_pct', 'presence', 'valid']]
 
-# Calculate derived metrics for season 1
-covariate_data['s2_1_nbr'] = ((covariate_data['s2_1_nir'] - covariate_data['s2_1_swir2'])
-                              / (covariate_data['s2_1_nir'] + covariate_data['s2_1_swir2']))
-covariate_data['s2_1_ngrdi'] = ((covariate_data['s2_1_green'] - covariate_data['s2_1_red'])
-                                / (covariate_data['s2_1_green'] + covariate_data['s2_1_red']))
-covariate_data['s2_1_ndmi'] = ((covariate_data['s2_1_nir'] - covariate_data['s2_1_swir1'])
-                               / (covariate_data['s2_1_nir'] + covariate_data['s2_1_swir1']))
-covariate_data['s2_1_ndsi'] = ((covariate_data['s2_1_green'] - covariate_data['s2_1_swir1'])
-                               / (covariate_data['s2_1_green'] + covariate_data['s2_1_swir1']))
-covariate_data['s2_1_ndvi'] = ((covariate_data['s2_1_nir'] - covariate_data['s2_1_red'])
-                               / (covariate_data['s2_1_nir'] + covariate_data['s2_1_red']))
-covariate_data['s2_1_ndwi'] = ((covariate_data['s2_1_green'] - covariate_data['s2_1_nir'])
-                               / (covariate_data['s2_1_green'] + covariate_data['s2_1_nir']))
-covariate_data['s2_1_bcc'] = (covariate_data['s2_1_blue']
-                              / (covariate_data['s2_1_blue'] + covariate_data['s2_1_green']
-                                 + covariate_data['s2_1_red']))
-covariate_data['s2_1_gcc'] = (covariate_data['s2_1_green']
-                              / (covariate_data['s2_1_blue'] + covariate_data['s2_1_green']
-                                 + covariate_data['s2_1_red']))
-covariate_data['s2_1_rcc'] = (covariate_data['s2_1_red']
-                              / (covariate_data['s2_1_blue'] + covariate_data['s2_1_green']
-                                 + covariate_data['s2_1_red']))
-
-# Calculate derived metrics for season 2
-covariate_data['s2_2_nbr'] = ((covariate_data['s2_2_nir'] - covariate_data['s2_2_swir2'])
-                              / (covariate_data['s2_2_nir'] + covariate_data['s2_2_swir2']))
-covariate_data['s2_2_ngrdi'] = ((covariate_data['s2_2_green'] - covariate_data['s2_2_red'])
-                                / (covariate_data['s2_2_green'] + covariate_data['s2_2_red']))
-covariate_data['s2_2_ndmi'] = ((covariate_data['s2_2_nir'] - covariate_data['s2_2_swir1'])
-                               / (covariate_data['s2_2_nir'] + covariate_data['s2_2_swir1']))
-covariate_data['s2_2_ndsi'] = ((covariate_data['s2_2_green'] - covariate_data['s2_2_swir1'])
-                               / (covariate_data['s2_2_green'] + covariate_data['s2_2_swir1']))
-covariate_data['s2_2_ndvi'] = ((covariate_data['s2_2_nir'] - covariate_data['s2_2_red'])
-                               / (covariate_data['s2_2_nir'] + covariate_data['s2_2_red']))
-covariate_data['s2_2_ndwi'] = ((covariate_data['s2_2_green'] - covariate_data['s2_2_nir'])
-                               / (covariate_data['s2_2_green'] + covariate_data['s2_2_nir']))
-covariate_data['s2_2_bcc'] = (covariate_data['s2_2_blue']
-                              / (covariate_data['s2_2_blue'] + covariate_data['s2_2_green']
-                                 + covariate_data['s2_2_red']))
-covariate_data['s2_2_gcc'] = (covariate_data['s2_2_green']
-                              / (covariate_data['s2_2_blue'] + covariate_data['s2_2_green']
-                                 + covariate_data['s2_2_red']))
-covariate_data['s2_2_rcc'] = (covariate_data['s2_2_red']
-                              / (covariate_data['s2_2_blue'] + covariate_data['s2_2_green']
-                                 + covariate_data['s2_2_red']))
-
-# Calculate derived metrics for season 3
-covariate_data['s2_3_nbr'] = ((covariate_data['s2_3_nir'] - covariate_data['s2_3_swir2'])
-                              / (covariate_data['s2_3_nir'] + covariate_data['s2_3_swir2']))
-covariate_data['s2_3_ngrdi'] = ((covariate_data['s2_3_green'] - covariate_data['s2_3_red'])
-                                / (covariate_data['s2_3_green'] + covariate_data['s2_3_red']))
-covariate_data['s2_3_ndmi'] = ((covariate_data['s2_3_nir'] - covariate_data['s2_3_swir1'])
-                               / (covariate_data['s2_3_nir'] + covariate_data['s2_3_swir1']))
-covariate_data['s2_3_ndsi'] = ((covariate_data['s2_3_green'] - covariate_data['s2_3_swir1'])
-                               / (covariate_data['s2_3_green'] + covariate_data['s2_3_swir1']))
-covariate_data['s2_3_ndvi'] = ((covariate_data['s2_3_nir'] - covariate_data['s2_3_red'])
-                               / (covariate_data['s2_3_nir'] + covariate_data['s2_3_red']))
-covariate_data['s2_3_ndwi'] = ((covariate_data['s2_3_green'] - covariate_data['s2_3_nir'])
-                               / (covariate_data['s2_3_green'] + covariate_data['s2_3_nir']))
-covariate_data['s2_3_bcc'] = (covariate_data['s2_3_blue']
-                              / (covariate_data['s2_3_blue'] + covariate_data['s2_3_green']
-                                 + covariate_data['s2_3_red']))
-covariate_data['s2_3_gcc'] = (covariate_data['s2_3_green']
-                              / (covariate_data['s2_3_blue'] + covariate_data['s2_3_green']
-                                 + covariate_data['s2_3_red']))
-covariate_data['s2_3_rcc'] = (covariate_data['s2_3_red']
-                              / (covariate_data['s2_3_blue'] + covariate_data['s2_3_green']
-                                 + covariate_data['s2_3_red']))
-
-# Calculate derived metrics for season 4
-covariate_data['s2_4_nbr'] = ((covariate_data['s2_4_nir'] - covariate_data['s2_4_swir2'])
-                              / (covariate_data['s2_4_nir'] + covariate_data['s2_4_swir2']))
-covariate_data['s2_4_ngrdi'] = ((covariate_data['s2_4_green'] - covariate_data['s2_4_red'])
-                                / (covariate_data['s2_4_green'] + covariate_data['s2_4_red']))
-covariate_data['s2_4_ndmi'] = ((covariate_data['s2_4_nir'] - covariate_data['s2_4_swir1'])
-                               / (covariate_data['s2_4_nir'] + covariate_data['s2_4_swir1']))
-covariate_data['s2_4_ndsi'] = ((covariate_data['s2_4_green'] - covariate_data['s2_4_swir1'])
-                               / (covariate_data['s2_4_green'] + covariate_data['s2_4_swir1']))
-covariate_data['s2_4_ndvi'] = ((covariate_data['s2_4_nir'] - covariate_data['s2_4_red'])
-                               / (covariate_data['s2_4_nir'] + covariate_data['s2_4_red']))
-covariate_data['s2_4_ndwi'] = ((covariate_data['s2_4_green'] - covariate_data['s2_4_nir'])
-                               / (covariate_data['s2_4_green'] + covariate_data['s2_4_nir']))
-covariate_data['s2_4_bcc'] = (covariate_data['s2_4_blue']
-                              / (covariate_data['s2_4_blue'] + covariate_data['s2_4_green']
-                                 + covariate_data['s2_4_red']))
-covariate_data['s2_4_gcc'] = (covariate_data['s2_4_green']
-                              / (covariate_data['s2_4_blue'] + covariate_data['s2_4_green']
-                                 + covariate_data['s2_4_red']))
-covariate_data['s2_4_rcc'] = (covariate_data['s2_4_red']
-                              / (covariate_data['s2_4_blue'] + covariate_data['s2_4_green']
-                                 + covariate_data['s2_4_red']))
-
-# Calculate derived metrics for season 5
-covariate_data['s2_5_nbr'] = ((covariate_data['s2_5_nir'] - covariate_data['s2_5_swir2'])
-                              / (covariate_data['s2_5_nir'] + covariate_data['s2_5_swir2']))
-covariate_data['s2_5_ngrdi'] = ((covariate_data['s2_5_green'] - covariate_data['s2_5_red'])
-                                / (covariate_data['s2_5_green'] + covariate_data['s2_5_red']))
-covariate_data['s2_5_ndmi'] = ((covariate_data['s2_5_nir'] - covariate_data['s2_5_swir1'])
-                               / (covariate_data['s2_5_nir'] + covariate_data['s2_5_swir1']))
-covariate_data['s2_5_ndsi'] = ((covariate_data['s2_5_green'] - covariate_data['s2_5_swir1'])
-                               / (covariate_data['s2_5_green'] + covariate_data['s2_5_swir1']))
-covariate_data['s2_5_ndvi'] = ((covariate_data['s2_5_nir'] - covariate_data['s2_5_red'])
-                               / (covariate_data['s2_5_nir'] + covariate_data['s2_5_red']))
-covariate_data['s2_5_ndwi'] = ((covariate_data['s2_5_green'] - covariate_data['s2_5_nir'])
-                               / (covariate_data['s2_5_green'] + covariate_data['s2_5_nir']))
-covariate_data['s2_5_bcc'] = (covariate_data['s2_5_blue']
-                              / (covariate_data['s2_5_blue'] + covariate_data['s2_5_green']
-                                 + covariate_data['s2_5_red']))
-covariate_data['s2_5_gcc'] = (covariate_data['s2_5_green']
-                              / (covariate_data['s2_5_blue'] + covariate_data['s2_5_green']
-                                 + covariate_data['s2_5_red']))
-covariate_data['s2_5_rcc'] = (covariate_data['s2_5_red']
-                              / (covariate_data['s2_5_blue'] + covariate_data['s2_5_green']
-                                 + covariate_data['s2_5_red']))
-
-# Create seasonal range metrics
-covariate_data['s2_rng_blue'] = (covariate_data['s2_3_blue'] -
-                                 np.mean([covariate_data['s2_1_blue'], covariate_data['s2_2_blue'],
-                                          covariate_data['s2_4_blue'], covariate_data['s2_5_blue']]))
-covariate_data['s2_rng_green'] = (covariate_data['s2_3_green'] -
-                                  np.mean([covariate_data['s2_1_green'], covariate_data['s2_2_green'],
-                                           covariate_data['s2_4_green'], covariate_data['s2_5_green']]))
-covariate_data['s2_rng_red'] = (covariate_data['s2_3_red'] -
-                                np.mean([covariate_data['s2_1_red'], covariate_data['s2_2_red'],
-                                         covariate_data['s2_4_red'], covariate_data['s2_5_red']]))
-covariate_data['s2_rng_redge1'] = (covariate_data['s2_3_redge1'] -
-                                 np.mean([covariate_data['s2_1_redge1'], covariate_data['s2_2_redge1'],
-                                          covariate_data['s2_4_redge1'], covariate_data['s2_5_redge1']]))
-covariate_data['s2_rng_redge2'] = (covariate_data['s2_3_redge2'] -
-                                 np.mean([covariate_data['s2_1_redge2'], covariate_data['s2_2_redge2'],
-                                          covariate_data['s2_4_redge2'], covariate_data['s2_5_redge2']]))
-covariate_data['s2_rng_redge3'] = (covariate_data['s2_3_redge3'] -
-                                 np.mean([covariate_data['s2_1_redge3'], covariate_data['s2_2_redge3'],
-                                          covariate_data['s2_4_redge3'], covariate_data['s2_5_redge3']]))
-covariate_data['s2_rng_nir'] = (covariate_data['s2_3_nir'] -
-                                 np.mean([covariate_data['s2_1_nir'], covariate_data['s2_2_nir'],
-                                          covariate_data['s2_4_nir'], covariate_data['s2_5_nir']]))
-covariate_data['s2_rng_redge4'] = (covariate_data['s2_3_redge4'] -
-                                 np.mean([covariate_data['s2_1_redge4'], covariate_data['s2_2_redge4'],
-                                          covariate_data['s2_4_redge4'], covariate_data['s2_5_redge4']]))
-covariate_data['s2_rng_swir1'] = (covariate_data['s2_3_swir1'] -
-                                 np.mean([covariate_data['s2_1_swir1'], covariate_data['s2_2_swir1'],
-                                          covariate_data['s2_4_swir1'], covariate_data['s2_5_swir1']]))
-covariate_data['s2_rng_swir2'] = (covariate_data['s2_3_swir2'] -
-                                 np.mean([covariate_data['s2_1_swir2'], covariate_data['s2_2_swir2'],
-                                          covariate_data['s2_4_swir2'], covariate_data['s2_5_swir2']]))
-covariate_data['s2_rng_nbr'] = (covariate_data['s2_3_nbr'] -
-                                 np.mean([covariate_data['s2_1_nbr'], covariate_data['s2_2_nbr'],
-                                          covariate_data['s2_4_nbr'], covariate_data['s2_5_nbr']]))
-covariate_data['s2_rng_ngrdi'] = (covariate_data['s2_3_ngrdi'] -
-                                 np.mean([covariate_data['s2_1_ngrdi'], covariate_data['s2_2_ngrdi'],
-                                          covariate_data['s2_4_ngrdi'], covariate_data['s2_5_ngrdi']]))
-covariate_data['s2_rng_ndmi'] = (covariate_data['s2_3_ndmi'] -
-                                 np.mean([covariate_data['s2_1_ndmi'], covariate_data['s2_2_ndmi'],
-                                          covariate_data['s2_4_ndmi'], covariate_data['s2_5_ndmi']]))
-covariate_data['s2_rng_ndsi'] = (covariate_data['s2_3_ndsi'] -
-                                 np.mean([covariate_data['s2_1_ndsi'], covariate_data['s2_2_ndsi'],
-                                          covariate_data['s2_4_ndsi'], covariate_data['s2_5_ndsi']]))
-covariate_data['s2_rng_ndvi'] = (covariate_data['s2_3_ndvi'] -
-                                 np.mean([covariate_data['s2_1_ndvi'], covariate_data['s2_2_ndvi'],
-                                          covariate_data['s2_4_ndvi'], covariate_data['s2_5_ndvi']]))
-covariate_data['s2_rng_ndwi'] = (covariate_data['s2_3_ndwi'] -
-                                 np.mean([covariate_data['s2_1_ndwi'], covariate_data['s2_2_ndwi'],
-                                          covariate_data['s2_4_ndwi'], covariate_data['s2_5_ndwi']]))
-covariate_data['s2_std_blue'] = np.std([covariate_data['s2_1_blue'], covariate_data['s2_2_blue'],
-                                        covariate_data['s2_3_blue'], covariate_data['s2_4_blue'],
-                                        covariate_data['s2_5_blue']])
-covariate_data['s2_std_green'] = np.std([covariate_data['s2_1_green'], covariate_data['s2_2_green'],
-                                        covariate_data['s2_3_green'], covariate_data['s2_4_green'],
-                                        covariate_data['s2_5_green']])
-covariate_data['s2_std_red'] = np.std([covariate_data['s2_1_red'], covariate_data['s2_2_red'],
-                                        covariate_data['s2_3_red'], covariate_data['s2_4_red'],
-                                        covariate_data['s2_5_red']])
-covariate_data['s2_std_redge1'] = np.std([covariate_data['s2_1_redge1'], covariate_data['s2_2_redge1'],
-                                        covariate_data['s2_3_redge1'], covariate_data['s2_4_redge1'],
-                                        covariate_data['s2_5_redge1']])
-covariate_data['s2_std_redge2'] = np.std([covariate_data['s2_1_redge2'], covariate_data['s2_2_redge2'],
-                                        covariate_data['s2_3_redge2'], covariate_data['s2_4_redge2'],
-                                        covariate_data['s2_5_redge2']])
-covariate_data['s2_std_redge3'] = np.std([covariate_data['s2_1_redge3'], covariate_data['s2_2_redge3'],
-                                        covariate_data['s2_3_redge3'], covariate_data['s2_4_redge3'],
-                                        covariate_data['s2_5_redge3']])
-covariate_data['s2_std_nir'] = np.std([covariate_data['s2_1_nir'], covariate_data['s2_2_nir'],
-                                        covariate_data['s2_3_nir'], covariate_data['s2_4_nir'],
-                                        covariate_data['s2_5_nir']])
-covariate_data['s2_std_redge4'] = np.std([covariate_data['s2_1_redge4'], covariate_data['s2_2_redge4'],
-                                        covariate_data['s2_3_redge4'], covariate_data['s2_4_redge4'],
-                                        covariate_data['s2_5_redge4']])
-covariate_data['s2_std_swir1'] = np.std([covariate_data['s2_1_swir1'], covariate_data['s2_2_swir1'],
-                                        covariate_data['s2_3_swir1'], covariate_data['s2_4_swir1'],
-                                        covariate_data['s2_5_swir1']])
-covariate_data['s2_std_swir2'] = np.std([covariate_data['s2_1_swir2'], covariate_data['s2_2_swir2'],
-                                        covariate_data['s2_3_swir2'], covariate_data['s2_4_swir2'],
-                                        covariate_data['s2_5_swir2']])
-covariate_data['s2_std_nbr'] = np.std([covariate_data['s2_1_nbr'], covariate_data['s2_2_nbr'],
-                                        covariate_data['s2_3_nbr'], covariate_data['s2_4_nbr'],
-                                        covariate_data['s2_5_nbr']])
-covariate_data['s2_std_ngrdi'] = np.std([covariate_data['s2_1_ngrdi'], covariate_data['s2_2_ngrdi'],
-                                        covariate_data['s2_3_ngrdi'], covariate_data['s2_4_ngrdi'],
-                                        covariate_data['s2_5_ngrdi']])
-covariate_data['s2_std_ndmi'] = np.std([covariate_data['s2_1_ndmi'], covariate_data['s2_2_ndmi'],
-                                        covariate_data['s2_3_ndmi'], covariate_data['s2_4_ndmi'],
-                                        covariate_data['s2_5_ndmi']])
-covariate_data['s2_std_ndsi'] = np.std([covariate_data['s2_1_ndsi'], covariate_data['s2_2_ndsi'],
-                                        covariate_data['s2_3_ndsi'], covariate_data['s2_4_ndsi'],
-                                        covariate_data['s2_5_ndsi']])
-covariate_data['s2_std_ndvi'] = np.std([covariate_data['s2_1_ndvi'], covariate_data['s2_2_ndvi'],
-                                        covariate_data['s2_3_ndvi'], covariate_data['s2_4_ndvi'],
-                                        covariate_data['s2_5_ndvi']])
-covariate_data['s2_std_ndwi'] = np.std([covariate_data['s2_1_ndwi'], covariate_data['s2_2_ndwi'],
-                                        covariate_data['s2_3_ndwi'], covariate_data['s2_4_ndwi'],
-                                        covariate_data['s2_5_ndwi']])
+# Re-order covariates
+covariate_data[predictor_all] = covariate_data[predictor_all].interpolate()
+for name, values in covariate_data[predictor_all].items():
+    covariate_data[name] = covariate_data[name].fillna(np.mean(values))
 
 # Create an inner join of species and covariate data
 input_data = species_data.merge(covariate_data, how='inner', on='st_vst')
@@ -525,8 +306,9 @@ while outer_cv_i <= outer_cv_length:
     # Train regressor on the outer train data
     print('\tTraining outer regressor...')
     outer_regressor = RandomForestRegressor(**regressor_params)
-    X_regress_outer = outer_train_iteration[predictor_all].astype(float).copy()
-    y_regress_outer = outer_train_iteration[obs_cover[0]].astype(float).copy()
+    regress_outer = outer_train_iteration[outer_train_iteration[obs_cover[0]] >= 0].copy()
+    X_regress_outer = regress_outer[predictor_all].astype(float).copy()
+    y_regress_outer = regress_outer[obs_cover[0]].astype(float).copy()
     outer_regressor.fit(X_regress_outer, y_regress_outer)
 
     # Predict inner test data
@@ -540,11 +322,9 @@ while outer_cv_i <= outer_cv_length:
     outer_test_iteration = outer_test_iteration.assign(pred_cover=cover_outer)
 
     # Convert probability to presence-absence
-    presence_zeros = np.zeros(outer_test_iteration[pred_pres[0]].shape)
-    presence_zeros[outer_test_iteration[pred_pres[0]] >= threshold] = 1
-
-    # Assign binary prediction values to test data frame
-    outer_test_iteration = outer_test_iteration.assign(pred_bin=presence_zeros)
+    outer_test_iteration[pred_bin[0]] = np.where(outer_test_iteration[pred_pres[0]] >= threshold,
+                                                 1,
+                                                 0)
 
     # Add the test results to output data frame
     outer_results = pd.concat([outer_results if not outer_results.empty else None,
@@ -567,6 +347,15 @@ outer_results['distribution'] = np.where((outer_results[pred_bin[0]] == 1)
                                          & (outer_results[pred_cover[0]] >= 0.5),
                                          1,
                                          0)
+
+# Restrict results to valid cover observations
+outer_results = outer_results[outer_results[obs_cover[0]] >= 0].copy()
+outer_results[prediction[0]] = np.where(outer_results[prediction[0]] < 0,
+                                        0,
+                                        outer_results[prediction[0]])
+outer_results[prediction[0]] = np.where(outer_results[prediction[0]] > 100,
+                                        100,
+                                        outer_results[prediction[0]])
 
 # Partition output results to presence-absence observed and predicted
 y_classify_observed = outer_results[obs_pres[0]].astype('int32').copy()
@@ -605,8 +394,8 @@ export_mae = round(mae, 1)
 # Store output results in csv file
 print('Writing output files...')
 iteration_start = time.time()
-outer_results.to_csv(output_file, header=True, index=False, sep=',', encoding='utf-8')
-output_list = [auc_file, acc_file, threshold_file, rscore_file, rmse_file, mae_file]
+outer_results.to_csv(results_output, header=True, index=False, sep=',', encoding='utf-8')
+output_list = [auc_output, acc_output, threshold_output, rscore_output, rmse_output, mae_output]
 metric_list = [export_auc, export_accuracy, export_threshold, export_rscore, export_rmse, export_mae]
 count = 0
 for metric in metric_list:

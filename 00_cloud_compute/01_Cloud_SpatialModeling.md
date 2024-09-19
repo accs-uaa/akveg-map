@@ -62,28 +62,28 @@ sudo apt-get update
 sudo apt-get install vim
 ```
 
-Install the latest Anaconda release. The version referenced in the example below may need to be updated. The repository version should match the Ubuntu Linux release version.
+Install the latest Miniconda release. The version referenced in the example below may need to be updated. The repository version should match the Ubuntu Linux release version.
 
 ```bash
-mkdir -p ~/anaconda3
-wget https://repo.anaconda.com/archive/Anaconda3-2024.06-1-Linux-x86_64.sh -O ~/anaconda3/anaconda.sh
-bash ~/anaconda3/anaconda.sh -b -u -p ~/anaconda3
-rm -rf ~/anaconda3/anaconda.sh
-~/anaconda3/bin/conda init bash
-~/anaconda3/bin/conda init zsh
+mkdir -p ~/miniconda3
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda3/miniconda.sh
+bash ~/miniconda3/miniconda.sh -b -u -p ~/miniconda3
+rm -rf ~/miniconda3/miniconda.sh
+~/miniconda3/bin/conda init bash
+~/miniconda3/bin/conda init zsh
 source ~/.bashrc
 ```
 
-Install the necessary packages. In the example below, we install packages to support interactions with Earth Engine and statistical learning with LightGBM and Bayesian Optimization. We also install the "akutils" helper functions.
+Install the necessary packages for geospatial processing and predictive modeling. In the example below, we install packages to support interactions with Earth Engine and statistical learning with LightGBM and Bayesian Optimization. We also install the "akutils" helper functions.
 
 ```bash
-conda install -c conda-forge earthengine-api geemap imbalanced-learn lightgbm bayesian-optimization
+conda install -c conda-forge numpy pandas gdal geopandas rasterio scikit-learn imbalanced-learn lightgbm bayesian-optimization joblib earthengine-api geemap
 python3 -m pip install git+https://github.com/accs-uaa/akutils
 ```
 
 ### Download files to the virtual machine:
 
-Create the data directories referenced in the script.
+Create the data directories referenced in the script. The example below includes directories to validate and train models.
 
 ```bash
 mkdir ~/scripts

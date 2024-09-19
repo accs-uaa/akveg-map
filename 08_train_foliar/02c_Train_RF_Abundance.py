@@ -9,6 +9,7 @@
 
 # Import packages
 import os
+import numpy as np
 import pandas as pd
 import time
 from akutils import *
@@ -25,7 +26,7 @@ import joblib
 round_date = 'round_20240910'
 
 # Define species
-group = 'alnus'
+group = 'wetsed'
 
 # Set root directory
 drive = 'D:/'
@@ -39,12 +40,13 @@ if os.path.exists(output_folder) == 0:
     os.mkdir(output_folder)
 
 # Define input files
-covariate_file = os.path.join(extract_folder, 'AKVEG_Sites_Covariates_3338.csv')
-species_file = os.path.join(species_folder, f'cover_{group}_3338.csv')
+covariate_input = os.path.join(extract_folder, 'AKVEG_Sites_Covariates_3338.csv')
+species_input = os.path.join(species_folder, f'cover_{group}_3338.csv')
 
 # Define output files
-output_classifier = os.path.join(output_folder, 'final_classifier.joblib')
-output_regressor = os.path.join(output_folder, 'final_regressor.joblib')
+threshold_output = os.path.join(output_folder, f'{group}_threshold_final.txt')
+classifier_output = os.path.join(output_folder, f'{group}_classifier.joblib')
+regressor_output = os.path.join(output_folder, f'{group}_regressor.joblib')
 
 # Define variable sets
 validation = ['valid']
@@ -124,78 +126,14 @@ inner_cv_splits = StratifiedGroupKFold(n_splits=10)
 # Read input data to data frames
 print('Loading input data...')
 iteration_start = time.time()
-covariate_data = pd.read_csv(covariate_file)
-species_data = pd.read_csv(species_file)[['st_vst', 'cvr_pct', 'presence', 'valid']]
+covariate_data = pd.read_csv(covariate_input)
+covariate_data = foliar_cover_predictors(covariate_data, predictor_all)
+species_data = pd.read_csv(species_input)[['st_vst', 'cvr_pct', 'presence', 'valid']]
 
-# Calculate derived metrics for season 1
-covariate_data['s2_1_nbr'] = ((covariate_data['s2_1_nir'] - covariate_data['s2_1_swir2'])
-                              / (covariate_data['s2_1_nir'] + covariate_data['s2_1_swir2']))
-covariate_data['s2_1_ngrdi'] = ((covariate_data['s2_1_green'] - covariate_data['s2_1_red'])
-                                / (covariate_data['s2_1_green'] + covariate_data['s2_1_red']))
-covariate_data['s2_1_ndmi'] = ((covariate_data['s2_1_nir'] - covariate_data['s2_1_swir1'])
-                               / (covariate_data['s2_1_nir'] + covariate_data['s2_1_swir1']))
-covariate_data['s2_1_ndsi'] = ((covariate_data['s2_1_green'] - covariate_data['s2_1_swir1'])
-                               / (covariate_data['s2_1_green'] + covariate_data['s2_1_swir1']))
-covariate_data['s2_1_ndvi'] = ((covariate_data['s2_1_nir'] - covariate_data['s2_1_red'])
-                               / (covariate_data['s2_1_nir'] + covariate_data['s2_1_red']))
-covariate_data['s2_1_ndwi'] = ((covariate_data['s2_1_green'] - covariate_data['s2_1_nir'])
-                               / (covariate_data['s2_1_green'] + covariate_data['s2_1_nir']))
-
-# Calculate derived metrics for season 2
-covariate_data['s2_2_nbr'] = ((covariate_data['s2_2_nir'] - covariate_data['s2_2_swir2'])
-                              / (covariate_data['s2_2_nir'] + covariate_data['s2_2_swir2']))
-covariate_data['s2_2_ngrdi'] = ((covariate_data['s2_2_green'] - covariate_data['s2_2_red'])
-                                / (covariate_data['s2_2_green'] + covariate_data['s2_2_red']))
-covariate_data['s2_2_ndmi'] = ((covariate_data['s2_2_nir'] - covariate_data['s2_2_swir1'])
-                               / (covariate_data['s2_2_nir'] + covariate_data['s2_2_swir1']))
-covariate_data['s2_2_ndsi'] = ((covariate_data['s2_2_green'] - covariate_data['s2_2_swir1'])
-                               / (covariate_data['s2_2_green'] + covariate_data['s2_2_swir1']))
-covariate_data['s2_2_ndvi'] = ((covariate_data['s2_2_nir'] - covariate_data['s2_2_red'])
-                               / (covariate_data['s2_2_nir'] + covariate_data['s2_2_red']))
-covariate_data['s2_2_ndwi'] = ((covariate_data['s2_2_green'] - covariate_data['s2_2_nir'])
-                               / (covariate_data['s2_2_green'] + covariate_data['s2_2_nir']))
-
-# Calculate derived metrics for season 3
-covariate_data['s2_3_nbr'] = ((covariate_data['s2_3_nir'] - covariate_data['s2_3_swir2'])
-                              / (covariate_data['s2_3_nir'] + covariate_data['s2_3_swir2']))
-covariate_data['s2_3_ngrdi'] = ((covariate_data['s2_3_green'] - covariate_data['s2_3_red'])
-                                / (covariate_data['s2_3_green'] + covariate_data['s2_3_red']))
-covariate_data['s2_3_ndmi'] = ((covariate_data['s2_3_nir'] - covariate_data['s2_3_swir1'])
-                               / (covariate_data['s2_3_nir'] + covariate_data['s2_3_swir1']))
-covariate_data['s2_3_ndsi'] = ((covariate_data['s2_3_green'] - covariate_data['s2_3_swir1'])
-                               / (covariate_data['s2_3_green'] + covariate_data['s2_3_swir1']))
-covariate_data['s2_3_ndvi'] = ((covariate_data['s2_3_nir'] - covariate_data['s2_3_red'])
-                               / (covariate_data['s2_3_nir'] + covariate_data['s2_3_red']))
-covariate_data['s2_3_ndwi'] = ((covariate_data['s2_3_green'] - covariate_data['s2_3_nir'])
-                               / (covariate_data['s2_3_green'] + covariate_data['s2_3_nir']))
-
-# Calculate derived metrics for season 4
-covariate_data['s2_4_nbr'] = ((covariate_data['s2_4_nir'] - covariate_data['s2_4_swir2'])
-                              / (covariate_data['s2_4_nir'] + covariate_data['s2_4_swir2']))
-covariate_data['s2_4_ngrdi'] = ((covariate_data['s2_4_green'] - covariate_data['s2_4_red'])
-                                / (covariate_data['s2_4_green'] + covariate_data['s2_4_red']))
-covariate_data['s2_4_ndmi'] = ((covariate_data['s2_4_nir'] - covariate_data['s2_4_swir1'])
-                               / (covariate_data['s2_4_nir'] + covariate_data['s2_4_swir1']))
-covariate_data['s2_4_ndsi'] = ((covariate_data['s2_4_green'] - covariate_data['s2_4_swir1'])
-                               / (covariate_data['s2_4_green'] + covariate_data['s2_4_swir1']))
-covariate_data['s2_4_ndvi'] = ((covariate_data['s2_4_nir'] - covariate_data['s2_4_red'])
-                               / (covariate_data['s2_4_nir'] + covariate_data['s2_4_red']))
-covariate_data['s2_4_ndwi'] = ((covariate_data['s2_4_green'] - covariate_data['s2_4_nir'])
-                               / (covariate_data['s2_4_green'] + covariate_data['s2_4_nir']))
-
-# Calculate derived metrics for season 5
-covariate_data['s2_5_nbr'] = ((covariate_data['s2_5_nir'] - covariate_data['s2_5_swir2'])
-                              / (covariate_data['s2_5_nir'] + covariate_data['s2_5_swir2']))
-covariate_data['s2_5_ngrdi'] = ((covariate_data['s2_5_green'] - covariate_data['s2_5_red'])
-                                / (covariate_data['s2_5_green'] + covariate_data['s2_5_red']))
-covariate_data['s2_5_ndmi'] = ((covariate_data['s2_5_nir'] - covariate_data['s2_5_swir1'])
-                               / (covariate_data['s2_5_nir'] + covariate_data['s2_5_swir1']))
-covariate_data['s2_5_ndsi'] = ((covariate_data['s2_5_green'] - covariate_data['s2_5_swir1'])
-                               / (covariate_data['s2_5_green'] + covariate_data['s2_5_swir1']))
-covariate_data['s2_5_ndvi'] = ((covariate_data['s2_5_nir'] - covariate_data['s2_5_red'])
-                               / (covariate_data['s2_5_nir'] + covariate_data['s2_5_red']))
-covariate_data['s2_5_ndwi'] = ((covariate_data['s2_5_green'] - covariate_data['s2_5_nir'])
-                               / (covariate_data['s2_5_green'] + covariate_data['s2_5_nir']))
+# Re-order covariates
+covariate_data[predictor_all] = covariate_data[predictor_all].interpolate()
+for name, values in covariate_data[predictor_all].items():
+    covariate_data[name] = covariate_data[name].fillna(np.mean(values))
 
 # Create an inner join of species and covariate data
 input_data = species_data.merge(covariate_data, how='inner', on='st_vst')
@@ -302,8 +240,9 @@ y_class_outer = shuffled_data[obs_pres[0]].astype('int32').copy()
 groups_outer = shuffled_data[validation[0]].astype('int32').copy()
 
 # Identify X and y train splits for the classifier
-X_regress_outer = shuffled_data[predictor_all].astype(float).copy()
-y_regress_outer = shuffled_data[obs_cover[0]].astype(float).copy()
+regress_data = shuffled_data[shuffled_data[obs_cover[0]] >= 0].copy()
+X_regress_outer = regress_data[predictor_all].astype(float).copy()
+y_regress_outer = regress_data[obs_cover[0]].astype(float).copy()
 
 # Train classifier on the outer train data
 print('\tTraining outer classifier...')
@@ -316,5 +255,9 @@ final_regressor = RandomForestRegressor(**regressor_params)
 final_regressor.fit(X_regress_outer, y_regress_outer)
 
 # Export final models
-joblib.dump(final_classifier, output_classifier)
-joblib.dump(final_regressor, output_regressor)
+export_threshold = round(threshold, 5)
+file = open(threshold_output, 'w')
+file.write(str(export_threshold))
+file.close()
+joblib.dump(final_classifier, classifier_output)
+joblib.dump(final_regressor, regressor_output)

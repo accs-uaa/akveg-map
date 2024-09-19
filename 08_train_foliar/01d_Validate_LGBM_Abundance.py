@@ -44,17 +44,17 @@ if os.path.exists(output_folder) == 0:
     os.mkdir(output_folder)
 
 # Define input files
-covariate_file = os.path.join(extract_folder, 'AKVEG_Sites_Covariates_3338.csv')
-species_file = os.path.join(species_folder, f'cover_{group}_3338.csv')
+covariate_input = os.path.join(extract_folder, 'AKVEG_Sites_Covariates_3338.csv')
+species_input = os.path.join(species_folder, f'cover_{group}_3338.csv')
 
 # Define output files
-output_file = os.path.join(output_folder, f'{group}_Results.csv')
-auc_file = os.path.join(output_folder, f'{group}_AUC.txt')
-acc_file = os.path.join(output_folder, f'{group}_ACC.txt')
-threshold_file = os.path.join(output_folder, f'{group}_Threshold.txt')
-rscore_file = os.path.join(output_folder, f'{group}_Rsquared.txt')
-rmse_file = os.path.join(output_folder, f'{group}_RMSE.txt')
-mae_file = os.path.join(output_folder, f'{group}_MAE.txt')
+results_output = os.path.join(output_folder, f'{group}_results.csv')
+auc_output = os.path.join(output_folder, f'{group}_auc.txt')
+acc_output = os.path.join(output_folder, f'{group}_acc.txt')
+threshold_output = os.path.join(output_folder, f'{group}_threshold_mean.txt')
+rscore_output = os.path.join(output_folder, f'{group}_r2.txt')
+rmse_output = os.path.join(output_folder, f'{group}_rmse.txt')
+mae_output = os.path.join(output_folder, f'{group}_mae.txt')
 
 # Define variable sets
 validation = ['valid']
@@ -104,78 +104,9 @@ inner_cv_splits = StratifiedGroupKFold(n_splits=10)
 # Read input data to data frames
 print('Loading input data...')
 iteration_start = time.time()
-covariate_data = pd.read_csv(covariate_file)
-species_data = pd.read_csv(species_file)[['st_vst', 'cvr_pct', 'presence', 'valid']]
-
-# Calculate derived metrics for season 1
-covariate_data['s2_1_nbr'] = ((covariate_data['s2_1_nir'] - covariate_data['s2_1_swir2'])
-                              / (covariate_data['s2_1_nir'] + covariate_data['s2_1_swir2']))
-covariate_data['s2_1_ngrdi'] = ((covariate_data['s2_1_green'] - covariate_data['s2_1_red'])
-                                / (covariate_data['s2_1_green'] + covariate_data['s2_1_red']))
-covariate_data['s2_1_ndmi'] = ((covariate_data['s2_1_nir'] - covariate_data['s2_1_swir1'])
-                               / (covariate_data['s2_1_nir'] + covariate_data['s2_1_swir1']))
-covariate_data['s2_1_ndsi'] = ((covariate_data['s2_1_green'] - covariate_data['s2_1_swir1'])
-                               / (covariate_data['s2_1_green'] + covariate_data['s2_1_swir1']))
-covariate_data['s2_1_ndvi'] = ((covariate_data['s2_1_nir'] - covariate_data['s2_1_red'])
-                               / (covariate_data['s2_1_nir'] + covariate_data['s2_1_red']))
-covariate_data['s2_1_ndwi'] = ((covariate_data['s2_1_green'] - covariate_data['s2_1_nir'])
-                               / (covariate_data['s2_1_green'] + covariate_data['s2_1_nir']))
-
-# Calculate derived metrics for season 2
-covariate_data['s2_2_nbr'] = ((covariate_data['s2_2_nir'] - covariate_data['s2_2_swir2'])
-                              / (covariate_data['s2_2_nir'] + covariate_data['s2_2_swir2']))
-covariate_data['s2_2_ngrdi'] = ((covariate_data['s2_2_green'] - covariate_data['s2_2_red'])
-                                / (covariate_data['s2_2_green'] + covariate_data['s2_2_red']))
-covariate_data['s2_2_ndmi'] = ((covariate_data['s2_2_nir'] - covariate_data['s2_2_swir1'])
-                               / (covariate_data['s2_2_nir'] + covariate_data['s2_2_swir1']))
-covariate_data['s2_2_ndsi'] = ((covariate_data['s2_2_green'] - covariate_data['s2_2_swir1'])
-                               / (covariate_data['s2_2_green'] + covariate_data['s2_2_swir1']))
-covariate_data['s2_2_ndvi'] = ((covariate_data['s2_2_nir'] - covariate_data['s2_2_red'])
-                               / (covariate_data['s2_2_nir'] + covariate_data['s2_2_red']))
-covariate_data['s2_2_ndwi'] = ((covariate_data['s2_2_green'] - covariate_data['s2_2_nir'])
-                               / (covariate_data['s2_2_green'] + covariate_data['s2_2_nir']))
-
-# Calculate derived metrics for season 3
-covariate_data['s2_3_nbr'] = ((covariate_data['s2_3_nir'] - covariate_data['s2_3_swir2'])
-                              / (covariate_data['s2_3_nir'] + covariate_data['s2_3_swir2']))
-covariate_data['s2_3_ngrdi'] = ((covariate_data['s2_3_green'] - covariate_data['s2_3_red'])
-                                / (covariate_data['s2_3_green'] + covariate_data['s2_3_red']))
-covariate_data['s2_3_ndmi'] = ((covariate_data['s2_3_nir'] - covariate_data['s2_3_swir1'])
-                               / (covariate_data['s2_3_nir'] + covariate_data['s2_3_swir1']))
-covariate_data['s2_3_ndsi'] = ((covariate_data['s2_3_green'] - covariate_data['s2_3_swir1'])
-                               / (covariate_data['s2_3_green'] + covariate_data['s2_3_swir1']))
-covariate_data['s2_3_ndvi'] = ((covariate_data['s2_3_nir'] - covariate_data['s2_3_red'])
-                               / (covariate_data['s2_3_nir'] + covariate_data['s2_3_red']))
-covariate_data['s2_3_ndwi'] = ((covariate_data['s2_3_green'] - covariate_data['s2_3_nir'])
-                               / (covariate_data['s2_3_green'] + covariate_data['s2_3_nir']))
-
-# Calculate derived metrics for season 4
-covariate_data['s2_4_nbr'] = ((covariate_data['s2_4_nir'] - covariate_data['s2_4_swir2'])
-                              / (covariate_data['s2_4_nir'] + covariate_data['s2_4_swir2']))
-covariate_data['s2_4_ngrdi'] = ((covariate_data['s2_4_green'] - covariate_data['s2_4_red'])
-                                / (covariate_data['s2_4_green'] + covariate_data['s2_4_red']))
-covariate_data['s2_4_ndmi'] = ((covariate_data['s2_4_nir'] - covariate_data['s2_4_swir1'])
-                               / (covariate_data['s2_4_nir'] + covariate_data['s2_4_swir1']))
-covariate_data['s2_4_ndsi'] = ((covariate_data['s2_4_green'] - covariate_data['s2_4_swir1'])
-                               / (covariate_data['s2_4_green'] + covariate_data['s2_4_swir1']))
-covariate_data['s2_4_ndvi'] = ((covariate_data['s2_4_nir'] - covariate_data['s2_4_red'])
-                               / (covariate_data['s2_4_nir'] + covariate_data['s2_4_red']))
-covariate_data['s2_4_ndwi'] = ((covariate_data['s2_4_green'] - covariate_data['s2_4_nir'])
-                               / (covariate_data['s2_4_green'] + covariate_data['s2_4_nir']))
-
-# Calculate derived metrics for season 5
-covariate_data['s2_5_nbr'] = ((covariate_data['s2_5_nir'] - covariate_data['s2_5_swir2'])
-                              / (covariate_data['s2_5_nir'] + covariate_data['s2_5_swir2']))
-covariate_data['s2_5_ngrdi'] = ((covariate_data['s2_5_green'] - covariate_data['s2_5_red'])
-                                / (covariate_data['s2_5_green'] + covariate_data['s2_5_red']))
-covariate_data['s2_5_ndmi'] = ((covariate_data['s2_5_nir'] - covariate_data['s2_5_swir1'])
-                               / (covariate_data['s2_5_nir'] + covariate_data['s2_5_swir1']))
-covariate_data['s2_5_ndsi'] = ((covariate_data['s2_5_green'] - covariate_data['s2_5_swir1'])
-                               / (covariate_data['s2_5_green'] + covariate_data['s2_5_swir1']))
-covariate_data['s2_5_ndvi'] = ((covariate_data['s2_5_nir'] - covariate_data['s2_5_red'])
-                               / (covariate_data['s2_5_nir'] + covariate_data['s2_5_red']))
-covariate_data['s2_5_ndwi'] = ((covariate_data['s2_5_green'] - covariate_data['s2_5_nir'])
-                               / (covariate_data['s2_5_green'] + covariate_data['s2_5_nir']))
+covariate_data = pd.read_csv(covariate_input)
+covariate_data = foliar_cover_predictors(covariate_data, predictor_all)
+species_data = pd.read_csv(species_input)[['st_vst', 'cvr_pct', 'presence', 'valid']]
 
 # Create an inner join of species and covariate data
 input_data = species_data.merge(covariate_data, how='inner', on='st_vst')
@@ -491,8 +422,8 @@ export_mae = round(mae, 1)
 # Store output results in csv file
 print('Writing output files...')
 iteration_start = time.time()
-outer_results.to_csv(output_file, header=True, index=False, sep=',', encoding='utf-8')
-output_list = [auc_file, acc_file, threshold_file, rscore_file, rmse_file, mae_file]
+outer_results.to_csv(results_output, header=True, index=False, sep=',', encoding='utf-8')
+output_list = [auc_output, acc_output, threshold_output, rscore_output, rmse_output, mae_output]
 metric_list = [export_auc, export_accuracy, export_threshold, export_rscore, export_rmse, export_mae]
 count = 0
 for metric in metric_list:
