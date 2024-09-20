@@ -35,7 +35,7 @@ table_folder = os.path.join(drive, root_folder, 'Data_Output/covariate_tables', 
 # Define input files
 covariate_input = os.path.join('C:/', script_folder, '00_covariates.csv')
 grid_list = glob.glob(f'{grid_folder}/*.tif')
-grid_list = [os.path.join(grid_folder, 'AK050H057V019' + '_10m_3338.tif')]
+grid_list = [os.path.join(grid_folder, 'AK050H051V026' + '_10m_3338.tif')]
 
 # Define variable sets
 predictor_all = ['summer', 'january', 'precip',

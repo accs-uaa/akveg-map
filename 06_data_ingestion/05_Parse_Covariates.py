@@ -36,7 +36,7 @@ covariate_list = glob.glob(f'{covariate_folder}/*.tif')
 
 # Parse each covariate to grids
 count = 1
-grid_list = [os.path.join(grid_folder, 'AK050H057V019' + '_10m_3338.tif')]
+grid_list = [os.path.join(grid_folder, 'AK050H051V026' + '_10m_3338.tif')]
 for covariate in covariate_list:
     for grid in grid_list:
         # Define file names

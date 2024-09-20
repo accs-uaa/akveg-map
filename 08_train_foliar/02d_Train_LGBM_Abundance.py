@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Train LightGBM abundance model
 # Author: Timm Nawrocki
-# Last Updated: 2024-09-10
+# Last Updated: 2024-09-19
 # Usage: Must be executed in an Anaconda Python 3.12+ installation.
 # Description: "Train LightGBM abundance model" trains and saves a LightGBM classifier and regressor for use in prediction.
 # ---------------------------------------------------------------------------

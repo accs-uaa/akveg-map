@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Validate LightGBM distribution model
 # Author: Timm Nawrocki
-# Last Updated: 2024-09-09
+# Last Updated: 2024-09-19
 # Usage: Must be executed in an Anaconda Python 3.12+ installation.
 # Description: "Validate LightGBM distribution model" validates a LightGBM classifier with balanced class weights. The model validation accounts for spatial autocorrelation by grouping in 100 km blocks.
 # ---------------------------------------------------------------------------
@@ -86,76 +86,6 @@ pred_pres = ['pred_pres']
 pred_bin = ['pred_bin']
 inner_columns = all_variables + pred_abs + pred_pres + inner_split
 outer_columns = all_variables + pred_abs + pred_pres + pred_bin + outer_split
-
-# Define optimization functions
-def classifier_cv(num_leaves, max_depth, learning_rate, n_estimators,
-                  min_split_gain, min_child_weight, min_child_samples,
-                  subsample, colsample_bytree, reg_alpha, reg_lambda,
-                  data, targets):
-    estimator = LGBMClassifier(
-        boosting_type='gbdt',
-        num_leaves=int(num_leaves),
-        max_depth=int(max_depth),
-        learning_rate=learning_rate,
-        n_estimators=int(n_estimators),
-        objective='binary',
-        class_weight='balanced',
-        min_split_gain=min_split_gain,
-        min_child_weight=min_child_weight,
-        min_child_samples=int(min_child_samples),
-        subsample=subsample,
-        subsample_freq=1,
-        colsample_bytree=colsample_bytree,
-        reg_alpha=reg_alpha,
-        reg_lambda=reg_lambda,
-        n_jobs=4,
-        importance_type='gain',
-        verbosity=-1)
-    cval = cross_val_score(estimator, data, targets,
-                           scoring='balanced_accuracy', cv=5)
-    return cval.mean()
-
-def optimize_classifier(data, targets):
-    def classifier_crossval(num_leaves, max_depth, learning_rate, n_estimators,
-                            min_split_gain, min_child_weight, min_child_samples,
-                            subsample, colsample_bytree, reg_alpha, reg_lambda):
-        return classifier_cv(
-            num_leaves=num_leaves,
-            max_depth=max_depth,
-            learning_rate=learning_rate,
-            n_estimators=n_estimators,
-            min_split_gain=min_split_gain,
-            min_child_weight=min_child_weight,
-            min_child_samples=min_child_samples,
-            subsample=subsample,
-            colsample_bytree=colsample_bytree,
-            reg_alpha=reg_alpha,
-            reg_lambda=reg_lambda,
-            data=data,
-            targets=targets,
-        )
-
-    optimizer = BayesianOptimization(
-        f=classifier_crossval,
-        pbounds={
-            'num_leaves': (5, 200),
-            'max_depth': (3, 12),
-            'learning_rate': (0.001, 0.2),
-            'n_estimators': (50, 1000),
-            'min_split_gain': (0.001, 0.1),
-            'min_child_weight': (0.001, 1),
-            'min_child_samples': (1, 200),
-            'subsample': (0.3, 0.9),
-            'colsample_bytree': (0.3, 0.9),
-            'reg_alpha': (0, 5),
-            'reg_lambda': (0, 5)
-        },
-        random_state=314,
-        verbose=2
-    )
-    optimizer.maximize(init_points=30, n_iter=70)
-
-    return optimizer.max['params']
 
 # Define cross validation methods
 outer_cv_splits = StratifiedGroupKFold(n_splits=10)
@@ -284,7 +214,7 @@ while outer_cv_i <= outer_cv_length:
     X_test_outer = outer_test_iteration[predictor_all].astype(float).copy()
 
     # Optimize classifier
-    classifier_params = optimize_classifier(data=X_class_outer, targets=y_class_outer)
+    classifier_params = optimize_lgbmclassifier(data=X_class_outer, targets=y_class_outer)
 
     #### CONDUCT INNER THRESHOLD DETERMINATION
     ####____________________________________________________

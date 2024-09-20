@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Validate random forest abundance model
 # Author: Timm Nawrocki
-# Last Updated: 2024-09-10
+# Last Updated: 2024-09-19
 # Usage: Must be executed in an Anaconda Python 3.12+ installation.
 # Description: "Validate random forest abundance model" validates a random forest classifier and regressor. The model validation accounts for spatial autocorrelation by grouping in 100 km blocks.
 # ---------------------------------------------------------------------------
@@ -30,7 +30,7 @@ from sklearn.metrics import r2_score
 round_date = 'round_20240910'
 
 # Define species
-group = 'wetsed'
+group = 'rubspe'
 
 # Set root directory
 drive = 'D:/'
@@ -136,6 +136,7 @@ inner_cv_splits = StratifiedGroupKFold(n_splits=10)
 print('Loading input data...')
 iteration_start = time.time()
 covariate_data = pd.read_csv(covariate_input)
+covariate_data = covariate_data.dropna()
 covariate_data = foliar_cover_predictors(covariate_data, predictor_all)
 species_data = pd.read_csv(species_input)[['st_vst', 'cvr_pct', 'presence', 'valid']]
 

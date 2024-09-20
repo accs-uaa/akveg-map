@@ -24,7 +24,7 @@ import joblib
 round_date = 'round_20240910'
 
 # Define species
-group = 'wetsed'
+group = 'rubspe'
 
 # Set root directory
 drive = 'D:/'
@@ -45,7 +45,7 @@ threshold_input = os.path.join(model_folder, f'{group}_threshold_final.txt')
 classifier_input = os.path.join(model_folder, f'{group}_classifier.joblib')
 regressor_input = os.path.join(model_folder, f'{group}_regressor.joblib')
 grid_list = glob.glob(f'{grid_folder}/*.tif')
-grid_list = [os.path.join(grid_folder, 'AK050H057V019' + '_10m_3338.tif')]
+grid_list = [os.path.join(grid_folder, 'AK050H051V026' + '_10m_3338.tif')]
 
 # Define variable sets
 predictor_all = ['summer', 'january', 'precip',

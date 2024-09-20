@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Validate LightGBM abundance model
 # Author: Timm Nawrocki
-# Last Updated: 2024-09-10
+# Last Updated: 2024-09-19
 # Usage: Must be executed in an Anaconda Python 3.12+ installation.
 # Description: "Validate LightGBM abundance model" validates a random forest classifier and a LightGBM regressor. The model validation accounts for spatial autocorrelation by grouping in 100 km blocks.
 # ---------------------------------------------------------------------------
@@ -384,6 +384,15 @@ outer_results['distribution'] = np.where((outer_results[pred_bin[0]] == 1)
                                          & (outer_results[pred_cover[0]] >= 0.5),
                                          1,
                                          0)
+
+# Restrict results to valid cover observations
+outer_results = outer_results[outer_results[obs_cover[0]] >= 0].copy()
+outer_results[prediction[0]] = np.where(outer_results[prediction[0]] < 0,
+                                        0,
+                                        outer_results[prediction[0]])
+outer_results[prediction[0]] = np.where(outer_results[prediction[0]] > 100,
+                                        100,
+                                        outer_results[prediction[0]])
 
 # Partition output results to presence-absence observed and predicted
 y_classify_observed = outer_results[obs_pres[0]].astype('int32').copy()

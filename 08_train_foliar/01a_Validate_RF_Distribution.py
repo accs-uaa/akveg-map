@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Validate balanced random forest distribution model
 # Author: Timm Nawrocki
-# Last Updated: 2024-09-06
+# Last Updated: 2024-09-19
 # Usage: Must be executed in an Anaconda Python 3.12+ installation.
 # Description: "Validate balanced random forest distribution model" validates a random forest classifier with class resampling so that class samples are balanced in each tree. The model validation accounts for spatial autocorrelation by grouping in 100 km blocks.
 # ---------------------------------------------------------------------------
