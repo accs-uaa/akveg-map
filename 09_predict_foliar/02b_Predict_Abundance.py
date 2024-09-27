@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Predict abundance model
 # Author: Timm Nawrocki
-# Last Updated: 2024-09-19
+# Last Updated: 2024-09-26
 # Usage: Must be executed in an Anaconda Python 3.12+ installation.
 # Description: "Predict abundance model" predicts a classifier and regressor to raster outputs.
 # ---------------------------------------------------------------------------
@@ -21,10 +21,10 @@ import joblib
 ####____________________________________________________
 
 # Set round date
-round_date = 'round_20240910'
+round_date = 'round_20240930'
 
 # Define species
-group = 'rubspe'
+group = 'alnus'
 
 # Set root directory
 drive = 'D:/'
@@ -32,7 +32,7 @@ root_folder = 'ACCS_Work/Projects/VegetationEcology/AKVEG_Map/Data'
 script_folder = 'ACCS_Work/Repositories/akveg-map/09_predict_foliar'
 
 # Define folder structure
-covariate_folder = os.path.join(drive, root_folder, 'Data_Output/covariate_tables', round_date)
+covariate_folder = os.path.join(drive, root_folder, 'Data_Output/covariate_tables')
 grid_folder = os.path.join(drive, root_folder, 'Data_Input/grid_050')
 model_folder = os.path.join(drive, root_folder, 'Data_Output/model_results', round_date, group)
 output_folder = os.path.join(drive, root_folder, 'Data_Output/rasters_final', round_date, group)
@@ -40,12 +40,11 @@ if os.path.exists(output_folder) == 0:
     os.mkdir(output_folder)
 
 # Define input files
-covariate_input = os.path.join('C:/', script_folder, '00_covariates.csv')
 threshold_input = os.path.join(model_folder, f'{group}_threshold_final.txt')
 classifier_input = os.path.join(model_folder, f'{group}_classifier.joblib')
 regressor_input = os.path.join(model_folder, f'{group}_regressor.joblib')
 grid_list = glob.glob(f'{grid_folder}/*.tif')
-grid_list = [os.path.join(grid_folder, 'AK050H051V026' + '_10m_3338.tif')]
+grid_list = [os.path.join(grid_folder, 'AK050H057V019' + '_10m_3338.tif')]
 
 # Define variable sets
 predictor_all = ['summer', 'january', 'precip',

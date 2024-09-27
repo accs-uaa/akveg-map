@@ -76,3 +76,13 @@
 75,s2_5_redge4,s2_sr_2019_2023_gMedian_,_all_v20240713d.tif,1,56
 76,s2_5_swir1,s2_sr_2019_2023_gMedian_,_all_v20240713d.tif,1,57
 77,s2_5_swir2,s2_sr_2019_2023_gMedian_,_all_v20240713d.tif,1,58
+78,s2_0_blue,s2_median_,.tif,0,1
+79,s2_0_green,s2_median_,.tif,0,2
+80,s2_0_red,s2_median_,.tif,0,3
+81,s2_0_redge1,s2_median_,.tif,0,4
+82,s2_0_redge2,s2_median_,.tif,0,5
+83,s2_0_redge3,s2_median_,.tif,0,6
+84,s2_0_nir,s2_median_,.tif,0,7
+85,s2_0_redge4,s2_median_,.tif,0,8
+86,s2_0_swir1,s2_median_,.tif,0,9
+87,s2_0_swir2,s2_median_,.tif,0,10

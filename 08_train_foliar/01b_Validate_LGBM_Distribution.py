@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Validate LightGBM distribution model
 # Author: Timm Nawrocki
-# Last Updated: 2024-09-19
+# Last Updated: 2024-09-26
 # Usage: Must be executed in an Anaconda Python 3.12+ installation.
 # Description: "Validate LightGBM distribution model" validates a LightGBM classifier with balanced class weights. The model validation accounts for spatial autocorrelation by grouping in 100 km blocks.
 # ---------------------------------------------------------------------------
@@ -47,6 +47,7 @@ species_input = os.path.join(species_folder, f'cover_{group}_3338.csv')
 
 # Define output files
 results_output = os.path.join(output_folder, f'{group}_results.csv')
+importance_output = os.path.join(output_folder, f'{group}_importances.csv')
 auc_output = os.path.join(output_folder, f'{group}_auc.txt')
 acc_output = os.path.join(output_folder, f'{group}_acc.txt')
 threshold_output = os.path.join(output_folder, f'{group}_threshold_mean.txt')
@@ -149,6 +150,7 @@ print(f'Created {outer_cv_length} outer cross-validation group splits.')
 
 # Create an empty data frame to store the outer test results
 outer_results = pd.DataFrame(columns=outer_columns)
+importance_results = pd.DataFrame(columns=['covariate', 'importance', 'component', 'outer_cv_i'])
 end_timing(iteration_start)
 
 #### CONDUCT MODEL VALIDATION
@@ -211,10 +213,15 @@ while outer_cv_i <= outer_cv_length:
     # Identify X and y train splits for the classifier
     X_class_outer = outer_train_iteration[predictor_all].astype(float).copy()
     y_class_outer = outer_train_iteration[obs_pres[0]].astype('int32').copy()
+    groups_outer = outer_train_iteration[validation[0]].astype('int32').copy()
     X_test_outer = outer_test_iteration[predictor_all].astype(float).copy()
 
     # Optimize classifier
-    classifier_params = optimize_lgbmclassifier(data=X_class_outer, targets=y_class_outer)
+    classifier_params = optimize_lgbmclassifier(data=X_class_outer,
+                                                targets=y_class_outer,
+                                                groups=groups_outer,
+                                                init_points=30,
+                                                n_iter=70)
 
     #### CONDUCT INNER THRESHOLD DETERMINATION
     ####____________________________________________________
@@ -309,6 +316,15 @@ while outer_cv_i <= outer_cv_length:
         verbosity=-1)
     outer_classifier.fit(X_class_outer, y_class_outer)
 
+    # Harvest feature importances
+    classifier_importance = pd.DataFrame({'covariate': X_class_outer.columns,
+                                          'importance': outer_classifier.feature_importances_})
+    classifier_importance['component'] = 'classifier'
+    classifier_importance['outer_cv_i'] = outer_cv_i
+    importance_results = pd.concat([importance_results if not importance_results.empty else None,
+                                    classifier_importance],
+                                   axis=0)
+
     # Predict inner test data
     print('\tPredicting outer cross-validation test data...')
     probability_outer = outer_classifier.predict_proba(X_test_outer)
@@ -362,6 +378,7 @@ export_threshold = round(np.mean(threshold_list), 5)
 print('Writing output files...')
 iteration_start = time.time()
 outer_results.to_csv(results_output, header=True, index=False, sep=',', encoding='utf-8')
+importance_results.to_csv(importance_output, header=True, index=False, sep=',', encoding='utf-8')
 output_list = [auc_output, acc_output, threshold_output]
 metric_list = [export_auc, export_accuracy, export_threshold]
 count = 0

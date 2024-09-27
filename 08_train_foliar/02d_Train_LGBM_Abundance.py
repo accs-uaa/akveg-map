@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Train LightGBM abundance model
 # Author: Timm Nawrocki
-# Last Updated: 2024-09-19
+# Last Updated: 2024-09-26
 # Usage: Must be executed in an Anaconda Python 3.12+ installation.
 # Description: "Train LightGBM abundance model" trains and saves a LightGBM classifier and regressor for use in prediction.
 # ---------------------------------------------------------------------------
@@ -22,7 +22,7 @@ import joblib
 ####____________________________________________________
 
 # Set round date
-round_date = 'round_20240910'
+round_date = 'round_20240930'
 
 # Define species
 group = 'alnus'
@@ -162,7 +162,11 @@ y_class_outer = shuffled_data[obs_pres[0]].astype('int32').copy()
 groups_outer = shuffled_data[validation[0]].astype('int32').copy()
 
 # Optimize classifier
-classifier_params = optimize_lgbmclassifier(data=X_class_outer, targets=y_class_outer, groups=groups_outer)
+classifier_params = optimize_lgbmclassifier(data=X_class_outer,
+                                            targets=y_class_outer,
+                                            groups=groups_outer,
+                                            init_points=30,
+                                            n_iter=70)
 
 #### CONDUCT INNER REGRESSOR OPTIMIZATION
 ####____________________________________________________
@@ -174,7 +178,11 @@ X_regress_outer = shuffled_data[predictor_all].astype(float).copy()
 y_regress_outer = shuffled_data[obs_cover[0]].astype(float).copy()
 
 # Optimize regressor
-regressor_params = optimize_lgbmregressor(data=X_regress_outer, targets=y_regress_outer, groups=groups_outer)
+regressor_params = optimize_lgbmregressor(data=X_regress_outer,
+                                          targets=y_regress_outer,
+                                          groups=groups_outer,
+                                          init_points=30,
+                                          n_iter=70)
 
 #### CONDUCT THRESHOLD DETERMINATION
 ####____________________________________________________

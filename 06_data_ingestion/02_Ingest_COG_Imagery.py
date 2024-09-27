@@ -1,0 +1,83 @@
+# -*- coding: utf-8 -*-
+# ---------------------------------------------------------------------------
+# Ingest covariate data
+# Author: Timm Nawrocki
+# Last Updated: 2024-07-24
+# Usage: Must be executed in an ArcGIS Pro Python 3.9+ installation.
+# Description: "Ingest covariate data" creates COG-backed assets for a folder of geotiffs in GEE.
+# ---------------------------------------------------------------------------
+
+# Import packages
+import ee
+import json
+import os
+import re
+from google.auth.transport.requests import AuthorizedSession
+from google.cloud import storage
+from pprint import pprint
+
+# Define paths
+ee_project = 'akveg-map'
+storage_bucket = 'akveg-data'
+storage_prefix = 's2_sr_2019_2023_median_v20240724'
+collection = 's2_sr_2019_2023_median_midsummer_v20240724'
+
+# Authenticate with Earth Engine
+print('Requesting information from server...')
+ee.Authenticate()
+ee.Initialize(project=ee_project)
+
+# Specify the cloud project you want associated with Earth Engine requests.
+session = AuthorizedSession(
+  ee.data.get_persistent_credentials().with_quota_project(ee_project)
+)
+
+# Request list of storage objects
+client = storage.Client()
+file_list = []
+for blob in client.list_blobs(storage_bucket, prefix=storage_prefix):
+  file_list.append(blob.name)
+
+# Filter the list to geotiffs in the
+reg = re.compile(r'^' + storage_prefix + r'/.*.tif$')
+geotiff_list = list(filter(reg.search, file_list))
+
+# Create empty image collection
+ee.data.createAsset({'type': 'ImageCollection'},
+                    f'projects/{ee_project}/assets/{collection}')
+
+# Ingest each geotiff in the storage folder
+for geotiff in geotiff_list:
+  # Define file name
+  file_name = os.path.split(geotiff)[1]
+  asset_name = os.path.splitext(file_name)[0].replace('.tif', '_')
+
+  # Ingest asset if it does not already exist
+  print(f'Ingesting {file_name} as a COG-backed asset...')
+
+  # Request body as a dictionary.
+  request = {
+      'type': 'IMAGE',
+      'gcs_location': {
+          'uris': [f'gs://{storage_bucket}/{storage_prefix}/{file_name}']
+      },
+        'properties': {
+          'source': 'https://github.com/accs-uaa/akveg-map'
+        },
+        'startTime': '2024-01-01T00:00:00.000000000Z',
+        'endTime': '2024-12-31T15:01:23.000000000Z',
+      }
+  print(json.dumps(request))
+
+  # Specify a folder (or ImageCollection) name and the new asset name.
+  asset_id = f'{collection}/{asset_name}'
+
+  # Define the request url
+  url = 'https://earthengine.googleapis.com/v1alpha/projects/{}/assets?assetId={}'
+
+  # Post the request
+  response = session.post(
+      url=url.format(ee_project, asset_id),
+      data=json.dumps(request)
+  )
+  print(json.loads(response.content))

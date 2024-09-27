@@ -36,25 +36,25 @@ covariate_path = f'{asset_path}/covariates_v20240711'
 sent2_collection = ee.ImageCollection(f'{asset_path}/s2_sr_2019_2023_gMedian_v20240713d')
 sent2_image = sent2_collection.median(
     ).select(['s2_seas1spring_blue', 's2_seas1spring_green', 's2_seas1spring_red',
-                 's2_seas1spring_rededge1', 's2_seas1spring_rededge2', 's2_seas1spring_rededge3',
-                 's2_seas1spring_nir', 's2_seas1spring_rededge4',
-                 's2_seas1spring_swir1', 's2_seas1spring_swir2',
-                 's2_seas2earlySummer_blue', 's2_seas2earlySummer_green', 's2_seas2earlySummer_red',
-                 's2_seas2earlySummer_rededge1', 's2_seas2earlySummer_rededge2', 's2_seas2earlySummer_rededge3',
-                 's2_seas2earlySummer_nir', 's2_seas2earlySummer_rededge4',
-                 's2_seas2earlySummer_swir1', 's2_seas2earlySummer_swir2',
-                 's2_seas3midSummer_blue', 's2_seas3midSummer_green', 's2_seas3midSummer_red',
-                 's2_seas3midSummer_rededge1', 's2_seas3midSummer_rededge2', 's2_seas3midSummer_rededge3',
-                 's2_seas3midSummer_nir', 's2_seas3midSummer_rededge4',
-                 's2_seas3midSummer_swir1', 's2_seas3midSummer_swir2',
-                 's2_seas4lateSummer_blue', 's2_seas4lateSummer_green', 's2_seas4lateSummer_red',
-                 's2_seas4lateSummer_rededge1', 's2_seas4lateSummer_rededge2', 's2_seas4lateSummer_rededge3',
-                 's2_seas4lateSummer_nir', 's2_seas4lateSummer_rededge4',
-                 's2_seas4lateSummer_swir1', 's2_seas4lateSummer_swir2',
-                 's2_seas5fall_blue', 's2_seas5fall_green', 's2_seas5fall_red',
-                 's2_seas5fall_rededge1', 's2_seas5fall_rededge2', 's2_seas5fall_rededge3',
-                 's2_seas5fall_nir', 's2_seas5fall_rededge4',
-                 's2_seas5fall_swir1', 's2_seas5fall_swir2'
+              's2_seas1spring_rededge1', 's2_seas1spring_rededge2', 's2_seas1spring_rededge3',
+              's2_seas1spring_nir', 's2_seas1spring_rededge4',
+              's2_seas1spring_swir1', 's2_seas1spring_swir2',
+              's2_seas2earlySummer_blue', 's2_seas2earlySummer_green', 's2_seas2earlySummer_red',
+              's2_seas2earlySummer_rededge1', 's2_seas2earlySummer_rededge2', 's2_seas2earlySummer_rededge3',
+              's2_seas2earlySummer_nir', 's2_seas2earlySummer_rededge4',
+              's2_seas2earlySummer_swir1', 's2_seas2earlySummer_swir2',
+              's2_seas3midSummer_blue', 's2_seas3midSummer_green', 's2_seas3midSummer_red',
+              's2_seas3midSummer_rededge1', 's2_seas3midSummer_rededge2', 's2_seas3midSummer_rededge3',
+              's2_seas3midSummer_nir', 's2_seas3midSummer_rededge4',
+              's2_seas3midSummer_swir1', 's2_seas3midSummer_swir2',
+              's2_seas4lateSummer_blue', 's2_seas4lateSummer_green', 's2_seas4lateSummer_red',
+              's2_seas4lateSummer_rededge1', 's2_seas4lateSummer_rededge2', 's2_seas4lateSummer_rededge3',
+              's2_seas4lateSummer_nir', 's2_seas4lateSummer_rededge4',
+              's2_seas4lateSummer_swir1', 's2_seas4lateSummer_swir2',
+              's2_seas5fall_blue', 's2_seas5fall_green', 's2_seas5fall_red',
+              's2_seas5fall_rededge1', 's2_seas5fall_rededge2', 's2_seas5fall_rededge3',
+              's2_seas5fall_nir', 's2_seas5fall_rededge4',
+              's2_seas5fall_swir1', 's2_seas5fall_swir2'
               ]).rename(['s2_1_blue', 's2_1_green', 's2_1_red', 's2_1_redge1', 's2_1_redge2',
                          's2_1_redge3', 's2_1_nir', 's2_1_redge4', 's2_1_swir1', 's2_1_swir2',
                          's2_2_blue', 's2_2_green', 's2_2_red', 's2_2_redge1', 's2_2_redge2',
@@ -75,7 +75,17 @@ sent1_image = sent1_collection.median(
               'VV_p50_froz_asc', 'VV_p50_froz_desc', 'VV_p50_grow_asc', 'VV_p50_grow_desc'
               ]).rename(['s1_2_vha', 's1_2_vhd', 's1_3_vha', 's1_3_vhd',
                          's1_1_vha', 's1_1_vhd', 's1_2_vva', 's1_2_vvd',
-                         's1_3_vva', 's1_3_vvd', 's1_1_vva', 's1_1_vvd'])
+                         's1_3_vva', 's1_3_vvd', 's1_1_vva', 's1_1_vvd'
+                         ])
+
+# Load Sentinel-2 growing season median
+sent2_m_collection = ee.ImageCollection(f'{asset_path}/s2_sr_2019_2023_median_midsummer_v20240724')
+sent2_m_image = sent2_m_collection.median(
+    ).select(['B2', 'B3', 'B4', 'B5', 'B6', 'B7',
+              'B8', 'B8A', 'B11', 'B12'
+              ]).rename(['s2_0_blue', 's2_0_green', 's2_0_red', 's2_0_redge1', 's2_0_redge2',
+                         's2_0_redge3', 's2_0_nir', 's2_0_redge4', 's2_0_swir1', 's2_0_swir2'
+                         ])
 
 # Load covariates
 summer_image = (
@@ -143,7 +153,7 @@ area_feature = ee.FeatureCollection(f'{asset_path}/regions/AlaskaYukon_MapDomain
 
 # Create image collection
 covariate_image = sent2_image.addBands(
-    srcImg=[sent1_image, summer_image, january_image, precip_image,
+    srcImg=[sent2_m_image, sent1_image, summer_image, january_image, precip_image,
             coast_image, stream_image, river_image, wetness_image,
             elevation_image, exposure_image, heatload_image, position_image,
             aspect_image, relief_image, roughness_image, slope_image],

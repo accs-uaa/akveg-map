@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Train Random Forest abundance model
 # Author: Timm Nawrocki
-# Last Updated: 2024-09-19
+# Last Updated: 2024-09-26
 # Usage: Must be executed in an Anaconda Python 3.12+ installation.
 # Description: "Train Random Forest abundance model" trains and saves a Random Forest classifier and regressor for use in prediction.
 # ---------------------------------------------------------------------------
@@ -23,10 +23,10 @@ import joblib
 ####____________________________________________________
 
 # Set round date
-round_date = 'round_20240910'
+round_date = 'round_20240930'
 
 # Define species
-group = 'rubspe'
+group = 'erivag'
 
 # Set root directory
 drive = 'D:/'
@@ -127,14 +127,8 @@ inner_cv_splits = StratifiedGroupKFold(n_splits=10)
 print('Loading input data...')
 iteration_start = time.time()
 covariate_data = pd.read_csv(covariate_input)
-covariate_data = covariate_data.dropna()
 covariate_data = foliar_cover_predictors(covariate_data, predictor_all)
 species_data = pd.read_csv(species_input)[['st_vst', 'cvr_pct', 'presence', 'valid']]
-
-# Re-order covariates
-covariate_data[predictor_all] = covariate_data[predictor_all].interpolate()
-for name, values in covariate_data[predictor_all].items():
-    covariate_data[name] = covariate_data[name].fillna(np.mean(values))
 
 # Create an inner join of species and covariate data
 input_data = species_data.merge(covariate_data, how='inner', on='st_vst')

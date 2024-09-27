@@ -2,13 +2,12 @@
 # ---------------------------------------------------------------------------
 # Compile block covariates
 # Author: Timm Nawrocki
-# Last Updated: 2024-09-19
+# Last Updated: 2024-09-26
 # Usage: Must be executed in an Anaconda Python 3.12+ installation.
 # Description: "Compile block covariates" creates tables stored on disk for covariates from each block window of each grid raster.
 # ---------------------------------------------------------------------------
 
 # Import packages
-import glob
 import os
 import pandas as pd
 import time
@@ -19,23 +18,26 @@ from akutils import *
 #### SET UP DIRECTORIES, FILES, AND FIELDS
 ####____________________________________________________
 
-# Set round date
-round_date = 'round_20240910'
+# Set processor
+processor = 1
 
 # Set root directory
-drive = 'D:/'
-root_folder = 'ACCS_Work/Projects/VegetationEcology/AKVEG_Map/Data'
-script_folder = 'ACCS_Work/Repositories/akveg-map/09_predict_foliar'
+drive = '/home'
+root_folder = 'twnawrocki'
 
 # Define folder structure
-covariate_folder = os.path.join(drive, root_folder, 'Data_Input/covariate_data')
-grid_folder = os.path.join(drive, root_folder, 'Data_Input/grid_050')
-table_folder = os.path.join(drive, root_folder, 'Data_Output/covariate_tables', round_date)
+script_folder = os.path.join(drive, root_folder, 'scripts')
+covariate_folder = os.path.join(drive, root_folder, 'data_input/covariates_050')
+grid_folder = os.path.join(drive, root_folder, 'data_input/grid_050')
+table_folder = os.path.join(drive, root_folder, 'data_output/covariate_tables')
 
 # Define input files
-covariate_input = os.path.join('C:/', script_folder, '00_covariates.csv')
-grid_list = glob.glob(f'{grid_folder}/*.tif')
-grid_list = [os.path.join(grid_folder, 'AK050H051V026' + '_10m_3338.tif')]
+covariate_input = os.path.join(script_folder, '00_covariates.csv')
+list_input = os.path.join(script_folder, 'PredictionGrid_050_v20240923.xlsx')
+
+# Define grid list
+grid_list = pd.read_excel(list_input, sheet_name='grids')
+grid_list = grid_list[grid_list['processor'] == processor]
 
 # Define variable sets
 predictor_all = ['summer', 'january', 'precip',
@@ -62,16 +64,15 @@ predictor_all = ['summer', 'january', 'precip',
                  's2_5_nbr', 's2_5_ngrdi', 's2_5_ndmi', 's2_5_ndsi', 's2_5_ndvi', 's2_5_ndwi']
 
 # Export covariate tables for each grid in grid list
-for grid in grid_list:
-    grid_name = os.path.split(grid)[1].replace('_10m_3338.tif', '')
-    print(f'Processing covariate tables for {grid_name}...')
+grid_count = 1
+for grid in grid_list['grid_code']:
+    # Define input grid file
+    grid_input = os.path.join(grid_folder, f'{grid}_10m_3338.tif')
+    print(f'Processing covariate tables for {grid} ({grid_count} out of {len(grid_list)})...')
     iteration_start = time.time()
 
-    # DELETE FOR FINAL VERSION
-    covariate_folder = os.path.join(covariate_folder, grid_name)
-
     # Define output folder
-    output_folder = os.path.join(table_folder, grid_name)
+    output_folder = os.path.join(table_folder, grid)
     if os.path.exists(output_folder) == 0:
         os.mkdir(output_folder)
 
@@ -79,13 +80,13 @@ for grid in grid_list:
     covariate_metadata = pd.read_csv(covariate_input)
     covariate_metadata['raster'] = np.where(
         covariate_metadata['alt_grid'] == 0,
-        covariate_metadata['raster_prefix'] + grid_name + covariate_metadata['raster_suffix'],
+        covariate_metadata['raster_prefix'] + grid + covariate_metadata['raster_suffix'],
         covariate_metadata['raster_prefix']
-        + grid_name.replace('H0', 'H').replace('V0', 'V')
+        + grid.replace('H0', 'H').replace('V0', 'V')
         + covariate_metadata['raster_suffix'])
 
     # Prepare raster data
-    grid_raster = rasterio.open(grid)
+    grid_raster = rasterio.open(grid_input)
 
     # Find number of raster blocks
     window_list = []
@@ -99,15 +100,15 @@ for grid in grid_list:
 
         # Define output table
         if count < 10:
-            table_output = os.path.join(output_folder, grid_name + f'_00{count}.csv')
+            table_output = os.path.join(output_folder, grid + f'_00{count}.csv')
         elif count < 100:
-            table_output = os.path.join(output_folder, grid_name + f'_0{count}.csv')
+            table_output = os.path.join(output_folder, grid + f'_0{count}.csv')
         else:
-            table_output = os.path.join(output_folder, grid_name + f'_{count}.csv')
+            table_output = os.path.join(output_folder, grid + f'_{count}.csv')
 
         # Process covariate data for block if it does not already exist
         if os.path.exists(table_output) == 0:
-            print(f'\tProcessing {grid_name} block {count} of {len(window_list)}...')
+            print(f'\tProcessing {grid} block {count} of {len(window_list)}...')
 
             # Define block shape
             block_shape = grid_raster.read(1, window=window, masked=False).shape
@@ -136,13 +137,16 @@ for grid in grid_list:
             # Convert to dataframe
             covariate_data = pd.DataFrame(data=X_array, columns=predictor_list)
             covariate_data = foliar_cover_predictors(covariate_data, predictor_all)
+            export_data = covariate_data[predictor_all].copy()
 
             # Write result
-            covariate_data.to_csv(table_output, header=True, index=False, sep=',', encoding='utf-8')
+            export_data.to_csv(table_output, header=True, index=False, sep=',', encoding='utf-8')
 
         else:
-            print(f'\tCovariate table {grid_name} block {count} of {len(window_list)} already exists.')
+            print(f'\tCovariate table {grid} block {count} of {len(window_list)} already exists.')
 
         # Increase count
         count += 1
+    # Increase count
+    grid_count += 1
     end_timing(iteration_start)

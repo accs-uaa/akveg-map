@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Validate random forest abundance model
 # Author: Timm Nawrocki
-# Last Updated: 2024-09-19
+# Last Updated: 2024-09-26
 # Usage: Must be executed in an Anaconda Python 3.12+ installation.
 # Description: "Validate random forest abundance model" validates a random forest classifier and regressor. The model validation accounts for spatial autocorrelation by grouping in 100 km blocks.
 # ---------------------------------------------------------------------------
@@ -27,10 +27,10 @@ from sklearn.metrics import r2_score
 ####____________________________________________________
 
 # Set round date
-round_date = 'round_20240910'
+round_date = 'round_20240930'
 
 # Define species
-group = 'rubspe'
+group = 'erivag'
 
 # Set root directory
 drive = 'D:/'
@@ -49,6 +49,7 @@ species_input = os.path.join(species_folder, f'cover_{group}_3338.csv')
 
 # Define output files
 results_output = os.path.join(output_folder, f'{group}_results.csv')
+importance_output = os.path.join(output_folder, f'{group}_importances.csv')
 auc_output = os.path.join(output_folder, f'{group}_auc.txt')
 acc_output = os.path.join(output_folder, f'{group}_acc.txt')
 threshold_output = os.path.join(output_folder, f'{group}_threshold_mean.txt')
@@ -136,14 +137,8 @@ inner_cv_splits = StratifiedGroupKFold(n_splits=10)
 print('Loading input data...')
 iteration_start = time.time()
 covariate_data = pd.read_csv(covariate_input)
-covariate_data = covariate_data.dropna()
 covariate_data = foliar_cover_predictors(covariate_data, predictor_all)
 species_data = pd.read_csv(species_input)[['st_vst', 'cvr_pct', 'presence', 'valid']]
-
-# Re-order covariates
-covariate_data[predictor_all] = covariate_data[predictor_all].interpolate()
-for name, values in covariate_data[predictor_all].items():
-    covariate_data[name] = covariate_data[name].fillna(np.mean(values))
 
 # Create an inner join of species and covariate data
 input_data = species_data.merge(covariate_data, how='inner', on='st_vst')
@@ -193,6 +188,7 @@ print(f'Created {outer_cv_length} outer cross-validation group splits.')
 
 # Create an empty data frame to store the outer test results
 outer_results = pd.DataFrame(columns=outer_columns)
+importance_results = pd.DataFrame(columns=['covariate', 'importance', 'component', 'outer_cv_i'])
 end_timing(iteration_start)
 
 #### CONDUCT MODEL VALIDATION
@@ -312,6 +308,19 @@ while outer_cv_i <= outer_cv_length:
     y_regress_outer = regress_outer[obs_cover[0]].astype(float).copy()
     outer_regressor.fit(X_regress_outer, y_regress_outer)
 
+    # Harvest feature importances
+    classifier_importance = pd.DataFrame({'covariate': X_class_outer.columns,
+                                          'importance': outer_classifier.feature_importances_})
+    classifier_importance['component'] = 'classifier'
+    regressor_importance = pd.DataFrame({'covariate': X_regress_outer.columns,
+                                         'importance': outer_regressor.feature_importances_})
+    regressor_importance['component'] = 'regressor'
+    importance_data = pd.concat([classifier_importance, regressor_importance], axis=0)
+    importance_data['outer_cv_i'] = outer_cv_i
+    importance_results = pd.concat([importance_results if not importance_results.empty else None,
+                                    importance_data],
+                                   axis=0)
+
     # Predict inner test data
     print('\tPredicting outer cross-validation test data...')
     probability_outer = outer_classifier.predict_proba(X_test_outer)
@@ -396,6 +405,7 @@ export_mae = round(mae, 1)
 print('Writing output files...')
 iteration_start = time.time()
 outer_results.to_csv(results_output, header=True, index=False, sep=',', encoding='utf-8')
+importance_results.to_csv(importance_output, header=True, index=False, sep=',', encoding='utf-8')
 output_list = [auc_output, acc_output, threshold_output, rscore_output, rmse_output, mae_output]
 metric_list = [export_auc, export_accuracy, export_threshold, export_rscore, export_rmse, export_mae]
 count = 0

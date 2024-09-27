@@ -77,7 +77,7 @@ source ~/.bashrc
 Install the necessary packages for geospatial processing and predictive modeling. In the example below, we install packages to support interactions with Earth Engine and statistical learning with LightGBM and Bayesian Optimization. We also install the "akutils" helper functions.
 
 ```bash
-conda install -c conda-forge numpy pandas gdal geopandas rasterio scikit-learn imbalanced-learn lightgbm bayesian-optimization joblib earthengine-api geemap
+conda install -c conda-forge numpy openpyxl pandas gdal geopandas rasterio scikit-learn imbalanced-learn lightgbm bayesian-optimization joblib earthengine-api geemap
 python3 -m pip install git+https://github.com/accs-uaa/akutils
 ```
 

@@ -38,7 +38,7 @@ project_folder = path(drive, root_folder,
 schema_input = path(project_folder, 'AKVEG_Schema_20240906.xlsx')
 zone_input = path(project_folder, 'region_data', 'AlaskaYukon_MapDomain_3338.shp')
 zone_file = path(project_folder, 'region_data', 'AlaskaYukon_VegetationZones_30m_3338.tif')
-validation_file = path(project_folder, 'validation_grid', 'AlaskaYukon_100_Tiles_3338.tif')
+validation_file = path(project_folder, 'grid_100', 'AlaskaYukon_100_Tiles_3338.tif')
 coast_file = path(drive, root_folder, 'Data/hydrography/processed/CoastDist_10m_3338.tif')
 esa_file = path(project_folder, 'ancillary_data/processed/AlaskaYukon_ESAWorldCover2_10m_3338.tif')
 fire_file = path(project_folder, 'ancillary_data/processed/AlaskaYukon_FireYear_10m_3338.tif')
@@ -156,47 +156,47 @@ absence_bettre_data = prepare_absences(absence_geodatabase, absence_bettre_fc, '
 
 # Format site visit data
 site_point_data = site_visit_import %>%
+  # Remove data from erroneous project
+  filter(prjct_cd != 'nps_bering_2003') %>%
   # Process plot sizes into buffer radius
   mutate(plt_dim_m = case_when(perspect == 'aerial' & plt_dim_m == 'unknown' ~ '20 radius',
                                TRUE ~ plt_dim_m)) %>%
-  filter(plt_dim_m != '2×2' &
-           plt_dim_m != '5×8' &
-           plt_dim_m != '2×7' &
-           plt_dim_m != '1×10' &
-           plt_dim_m != '3×7' &
-           plt_dim_m != '2×5' &
-           plt_dim_m != '5×20' &
-           plt_dim_m != '3×20' &
-           plt_dim_m != '4×4' &
-           plt_dim_m != 'unknown' &
-           plt_dim_m != '8×8' &
-           plt_dim_m != '4×25' &
-           plt_dim_m != '5×15' &
-           plt_dim_m != '6×6' &
-           plt_dim_m != '3×6' &
-           plt_dim_m != '5×10' &
-           plt_dim_m != '4×8' &
-           plt_dim_m != '5×5' &
-           plt_dim_m != '5×30' &
-           plt_dim_m != '8×10' &
-           plt_dim_m != '8×12' &
-           plt_dim_m != '2×20' &
-           plt_dim_m != '6×10' &
-           plt_dim_m != '7×10' &
-           plt_dim_m != '2×12' &
-           plt_dim_m != '3×12' &
-           plt_dim_m != '6×12' &
-           plt_dim_m != '3×10' &
-           plt_dim_m != '3×15' &
-           plt_dim_m != '1×12' &
-           plt_dim_m != '3×25' &
-           plt_dim_m != '1×8' &
+  mutate(plt_dim_m = case_when(perspect == 'ground' & plt_dim_m == 'unknown' ~ '5 radius',
+                               TRUE ~ plt_dim_m)) %>%
+  filter(plt_dim_m != '1 radius' &
            plt_dim_m != '1×7' &
-           plt_dim_m != '7×8' &
-           plt_dim_m != '3×8' &
+           plt_dim_m != '1×8' &
+           (plt_dim_m != '1×10' & prjct_cd != 'fws_tetlin_2024') &
+           plt_dim_m != '1×12' &
+           plt_dim_m != '2×2' &
+           plt_dim_m != '2×5' &
+           plt_dim_m != '2×7' &
            plt_dim_m != '2×10' &
-           plt_dim_m != '1 radius' &
-           plt_dim_m != '3 radius') %>%
+           plt_dim_m != '2×12' &
+           plt_dim_m != '2×20' &
+           plt_dim_m != '3 radius' &
+           plt_dim_m != '3×6' &
+           plt_dim_m != '3×7' &
+           plt_dim_m != '3×8' &
+           plt_dim_m != '3×10' &
+           plt_dim_m != '3×12' &
+           plt_dim_m != '3×15' &
+           plt_dim_m != '3×20' &
+           plt_dim_m != '3×25' &
+           plt_dim_m != '4×4' &
+           plt_dim_m != '4×8' &
+           plt_dim_m != '4×25' &
+           plt_dim_m != '5×5' &
+           plt_dim_m != '5×8' &
+           plt_dim_m != '5×10' &
+           plt_dim_m != '5×15' &
+           plt_dim_m != '5×20' &
+           plt_dim_m != '5×30' &
+           plt_dim_m != '6×6' &
+           plt_dim_m != '6×10' &
+           plt_dim_m != '6×12' &
+           plt_dim_m != '7×8' &
+           plt_dim_m != '7×10') %>%
   mutate(plt_rad_m = case_when(plt_dim_m == '55 radius' ~ 55,
                                (plt_dim_m == '34.7 radius' |
                                   plt_dim_m == '50×50') ~ 35,
@@ -227,7 +227,12 @@ site_point_data = site_visit_import %>%
                                   plt_dim_m == '12×12') ~ 8,
                                (plt_dim_m == '10×10' |
                                   plt_dim_m == '10×12') ~ 7,
-                               plt_dim_m == '5 radius' ~ 5)) %>%
+                               (plt_dim_m == '5 radius' |
+                                  plt_dim_m == '8×8' |
+                                  (plt_dim_m == '1×10' & prjct_cd == 'fws_tetlin_2024') |
+                                  plt_dim_m == '8×10' |
+                                  plt_dim_m == '8×12') ~ 5
+                               )) %>%
   # Convert geometries to points with EPSG 4269
   st_as_sf(x = ., coords = c('long_dd', 'lat_dd'), crs = 4269, remove = FALSE) %>%
   # Reproject coordinates to EPSG 3338
