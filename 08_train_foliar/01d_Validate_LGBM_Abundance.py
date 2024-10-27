@@ -227,8 +227,8 @@ while outer_cv_i <= outer_cv_length:
     classifier_params = optimize_lgbmclassifier(data=X_class_outer,
                                                 targets=y_class_outer,
                                                 groups=groups_outer,
-                                                init_points=30,
-                                                n_iter=70)
+                                                init_points=7,
+                                                n_iter=3)
 
     #### CONDUCT INNER REGRESSOR OPTIMIZATION
     ####____________________________________________________
@@ -236,15 +236,16 @@ while outer_cv_i <= outer_cv_length:
     print('\tOptimizing regressor parameters...')
 
     # Identify X and y train splits for the classifier
-    X_regress_outer = outer_train_iteration[predictor_all].astype(float).copy()
-    y_regress_outer = outer_train_iteration[obs_cover[0]].astype(float).copy()
+    regress_outer = outer_train_iteration[outer_train_iteration[obs_cover[0]] >= 0].copy()
+    X_regress_outer = regress_outer[predictor_all].astype(float).copy()
+    y_regress_outer = regress_outer[obs_cover[0]].astype(float).copy()
 
     # Optimize regressor
     regressor_params = optimize_lgbmregressor(data=X_regress_outer,
                                               targets=y_regress_outer,
                                               groups=groups_outer,
-                                              init_points=30,
-                                              n_iter=70)
+                                              init_points=7,
+                                              n_iter=3)
 
     #### CONDUCT INNER THRESHOLD DETERMINATION
     ####____________________________________________________

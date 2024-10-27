@@ -65,7 +65,7 @@ predictor_all = ['summer', 'january', 'precip',
 
 # Export covariate tables for each grid in grid list
 grid_count = 1
-for grid in grid_list['grid_code']:
+for grid in grid_list.sort_values(by=['grid_code'])['grid_code']:
     # Define input grid file
     grid_input = os.path.join(grid_folder, f'{grid}_10m_3338.tif')
     print(f'Processing covariate tables for {grid} ({grid_count} out of {len(grid_list)})...')
@@ -149,4 +149,5 @@ for grid in grid_list['grid_code']:
         count += 1
     # Increase count
     grid_count += 1
+    grid_raster.close()
     end_timing(iteration_start)

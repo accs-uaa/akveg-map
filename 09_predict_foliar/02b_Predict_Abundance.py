@@ -24,12 +24,11 @@ import joblib
 round_date = 'round_20240930'
 
 # Define species
-group = 'alnus'
+group = 'ndsalix'
 
 # Set root directory
 drive = 'D:/'
 root_folder = 'ACCS_Work/Projects/VegetationEcology/AKVEG_Map/Data'
-script_folder = 'ACCS_Work/Repositories/akveg-map/09_predict_foliar'
 
 # Define folder structure
 covariate_folder = os.path.join(drive, root_folder, 'Data_Output/covariate_tables')
@@ -44,7 +43,7 @@ threshold_input = os.path.join(model_folder, f'{group}_threshold_final.txt')
 classifier_input = os.path.join(model_folder, f'{group}_classifier.joblib')
 regressor_input = os.path.join(model_folder, f'{group}_regressor.joblib')
 grid_list = glob.glob(f'{grid_folder}/*.tif')
-grid_list = [os.path.join(grid_folder, 'AK050H057V019' + '_10m_3338.tif')]
+grid_list = [os.path.join(grid_folder, 'AK050H051V014' + '_10m_3338.tif')]
 
 # Define variable sets
 predictor_all = ['summer', 'january', 'precip',
