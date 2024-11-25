@@ -2,10 +2,15 @@
 # ---------------------------------------------------------------------------
 # Validate random forest abundance model
 # Author: Timm Nawrocki
-# Last Updated: 2024-09-26
+# Last Updated: 2024-11-24
 # Usage: Must be executed in an Anaconda Python 3.12+ installation.
 # Description: "Validate random forest abundance model" validates a random forest classifier and regressor. The model validation accounts for spatial autocorrelation by grouping in 100 km blocks.
 # ---------------------------------------------------------------------------
+
+# Define model targets
+group = 'fesalt'
+round_date = 'round_20241124'
+presence_threshold = 3
 
 # Import packages
 import numpy as np
@@ -25,12 +30,6 @@ from sklearn.metrics import r2_score
 
 #### SET UP DIRECTORIES, FILES, AND FIELDS
 ####____________________________________________________
-
-# Set round date
-round_date = 'round_20240930'
-
-# Define species
-group = 'ndsalix'
 
 # Set root directory
 drive = 'D:/'
@@ -96,7 +95,7 @@ inner_columns = all_variables + pred_abs + pred_pres + inner_split
 outer_columns = all_variables + pred_abs + pred_pres + pred_cover + pred_bin + outer_split
 
 # Create a standardized parameter set for a random forest classifier
-classifier_params = {'n_estimators': 500,
+classifier_params = {'n_estimators': 5,
                      'criterion': 'gini',
                      'max_depth': None,
                      'min_samples_split': 2,
@@ -113,7 +112,7 @@ classifier_params = {'n_estimators': 500,
                      'random_state': 314}
 
 # Create a standardized parameter set for a random forest classifier
-regressor_params = {'n_estimators': 500,
+regressor_params = {'n_estimators': 5,
                     'criterion': 'poisson',
                     'max_depth': None,
                     'min_samples_split': 2,

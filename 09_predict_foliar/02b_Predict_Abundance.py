@@ -2,10 +2,15 @@
 # ---------------------------------------------------------------------------
 # Predict abundance model
 # Author: Timm Nawrocki
-# Last Updated: 2024-09-26
+# Last Updated: 2024-11-24
 # Usage: Must be executed in an Anaconda Python 3.12+ installation.
 # Description: "Predict abundance model" predicts a classifier and regressor to raster outputs.
 # ---------------------------------------------------------------------------
+
+# Define model targets
+group = 'picsit'
+round_date = 'round_20241124'
+presence_threshold = 3
 
 # Import packages
 import glob
@@ -19,12 +24,6 @@ import joblib
 
 #### SET UP DIRECTORIES, FILES, AND FIELDS
 ####____________________________________________________
-
-# Set round date
-round_date = 'round_20240930'
-
-# Define species
-group = 'ndsalix'
 
 # Set root directory
 drive = 'D:/'
@@ -43,7 +42,7 @@ threshold_input = os.path.join(model_folder, f'{group}_threshold_final.txt')
 classifier_input = os.path.join(model_folder, f'{group}_classifier.joblib')
 regressor_input = os.path.join(model_folder, f'{group}_regressor.joblib')
 grid_list = glob.glob(f'{grid_folder}/*.tif')
-grid_list = [os.path.join(grid_folder, 'AK050H051V014' + '_10m_3338.tif')]
+grid_list = [os.path.join(grid_folder, 'AK050H055V019' + '_10m_3338.tif')]
 
 # Define variable sets
 predictor_all = ['summer', 'january', 'precip',
@@ -108,24 +107,24 @@ for grid in grid_list:
 
                 # Define input file
                 if count < 10:
-                    covariate_input = os.path.join(input_folder, grid_name + f'_00{count}.csv')
+                    covariate_input = os.path.join(input_folder, grid_name + f'_00{count}.parquet')
                 elif count < 100:
-                    covariate_input = os.path.join(input_folder, grid_name + f'_0{count}.csv')
+                    covariate_input = os.path.join(input_folder, grid_name + f'_0{count}.parquet')
                 else:
-                    covariate_input = os.path.join(input_folder, grid_name + f'_{count}.csv')
+                    covariate_input = os.path.join(input_folder, grid_name + f'_{count}.parquet')
 
                 # Define block shape
                 block_shape = grid_raster.read(1, window=window, masked=False).shape
 
                 # Convert to dataframe
-                covariate_data = pd.read_csv(covariate_input)
+                covariate_data = pd.read_parquet(covariate_input)
                 covariate_data = covariate_data[predictor_all]
 
                 # Predict response
                 response_probability = np.array(classifier.predict_proba(covariate_data)[:, 1])
                 response_abundance = np.array(regressor.predict(covariate_data))
                 response_output = np.where(response_probability >= threshold, response_abundance, 0)
-                response_output = np.where(response_output < 0, 0, response_output)
+                response_output = np.where(response_output < presence_threshold, 0, response_output)
                 response_output = np.where(response_output > 100, 100, response_output)
                 response_output = np.round(response_output, 0)
                 response_2d = response_output.reshape(block_shape[0], block_shape[1])

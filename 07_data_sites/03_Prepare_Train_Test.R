@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Prepare taxa presence-absence data
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Last Updated: 2024-09-06
+# Last Updated: 2024-11-21
 # Usage: Script should be executed in R 4.3.2+.
 # Description: "Prepare taxa presence-absence data" prepares train/test data for each target species.
 # ---------------------------------------------------------------------------
@@ -166,7 +166,7 @@ site_point_data = site_visit_import %>%
   filter(plt_dim_m != '1 radius' &
            plt_dim_m != '1×7' &
            plt_dim_m != '1×8' &
-           (plt_dim_m != '1×10' & prjct_cd != 'fws_tetlin_2024') &
+           (plt_dim_m != '1×10' | prjct_cd == 'fws_tetlin_2024') &
            plt_dim_m != '1×12' &
            plt_dim_m != '2×2' &
            plt_dim_m != '2×5' &
@@ -229,7 +229,7 @@ site_point_data = site_visit_import %>%
                                   plt_dim_m == '10×12') ~ 7,
                                (plt_dim_m == '5 radius' |
                                   plt_dim_m == '8×8' |
-                                  (plt_dim_m == '1×10' & prjct_cd == 'fws_tetlin_2024') |
+                                  plt_dim_m == '1×10' |
                                   plt_dim_m == '8×10' |
                                   plt_dim_m == '8×12') ~ 5
                                )) %>%
@@ -275,25 +275,38 @@ exclusion_sites = function (vegetation_data, exclude_taxon) {
   return(remove_taxon)
 }
 
-# Exclude sites with genus observations
+# Exclude sites with tree observations
+remove_brotre = exclusion_sites(vegetation_import, 'tree broadleaf')
+remove_nedtre = exclusion_sites(vegetation_import, 'tree needleleaf')
 remove_betula = exclusion_sites(vegetation_import, 'Betula')
-remove_calama = exclusion_sites(vegetation_import, 'Calamagrostis')
-remove_carex = exclusion_sites(vegetation_import, 'Carex')
+remove_picea = exclusion_sites(vegetation_import, 'Picea')
+remove_populus = exclusion_sites(vegetation_import, 'Populus')
+remove_tsuga = exclusion_sites(vegetation_import, 'Tsuga')
+
+# Exclude sites with shrub observations
 remove_dwashr = exclusion_sites(vegetation_import, 'shrub dwarf')
-remove_erioph = exclusion_sites(vegetation_import, 'Eriophorum')
-remove_festuca = exclusion_sites(vegetation_import, 'Festuca')
+remove_shrub = exclusion_sites(vegetation_import, 'shrub')
+remove_decshr = exclusion_sites(vegetation_import, 'shrub deciduous')
+remove_evrshr = exclusion_sites(vegetation_import, 'shrub evergreen')
+remove_rubus = exclusion_sites(vegetation_import, 'Rubus')
+remove_salix = exclusion_sites(vegetation_import, 'Salix')
+remove_vaccinium = exclusion_sites(vegetation_import, 'Vaccinium')
+
+# Exclude sites with herbaceous observations
 remove_forb = exclusion_sites(vegetation_import, 'forb')
 remove_gramin = exclusion_sites(vegetation_import, 'graminoid')
 remove_grass = exclusion_sites(vegetation_import, 'grass (Poaceae)')
 remove_herb = exclusion_sites(vegetation_import, 'herbaceous')
-remove_picea = exclusion_sites(vegetation_import, 'Picea')
-remove_populus = exclusion_sites(vegetation_import, 'Populus')
-remove_rubus = exclusion_sites(vegetation_import, 'Rubus')
-remove_salix = exclusion_sites(vegetation_import, 'Salix')
+remove_calama = exclusion_sites(vegetation_import, 'Calamagrostis')
+remove_carex = exclusion_sites(vegetation_import, 'Carex')
+remove_erioph = exclusion_sites(vegetation_import, 'Eriophorum')
+remove_festuca = exclusion_sites(vegetation_import, 'Festuca')
 remove_sedge = exclusion_sites(vegetation_import, 'sedge (Cyperaceae)')
-remove_shrub = exclusion_sites(vegetation_import, 'shrub')
-remove_tsuga = exclusion_sites(vegetation_import, 'Tsuga')
-remove_vaccinium = exclusion_sites(vegetation_import, 'Vaccinium')
+remove_leymus = exclusion_sites(vegetation_import, 'Leymus')
+
+# Exclude sites with nonvascular observations
+remove_bryoph = exclusion_sites(vegetation_import, 'bryophyte')
+remove_moss = exclusion_sites(vegetation_import, 'moss')
 
 #### EXPORT SPECIES DATA
 ####------------------------------
@@ -339,6 +352,12 @@ for (group in group_list) {
     distinct(lifeform) %>%
     pull(lifeform)
   
+  # Define abundance model
+  abundance_model = schema_data %>%
+    filter(target_abbr == group) %>%
+    distinct(abundance) %>%
+    pull(abundance)
+  
   # Define top absence
   top_absence = schema_data %>%
     filter(target_abbr == group) %>%
@@ -350,107 +369,152 @@ for (group in group_list) {
     # Restrict data to taxon list
     filter(name_accepted %in% taxa_list &
              dead_status == 'FALSE') %>%
+    # Remove collection data for abundance models and set positive cover for distribution models
+    {if (abundance_model == 'TRUE')
+        filter(., cvr_pct != -998)
+      else
+        mutate(., cvr_pct = case_when(cvr_pct == -998 ~ 10,
+                                      .default = cvr_pct))
+      } %>%
+    # Set absence indicator
+    mutate(absence_indicator = case_when(cvr_pct == -999 ~ 1,
+                                         .default = 0)) %>%
     # Set absences to zero
     mutate(cvr_pct = case_when(cvr_pct == -999 ~ 0,
-                               TRUE ~ cvr_pct)) %>%
+                               .default = cvr_pct)) %>%
     # Sum the cover of all taxa in taxa list per site visit
     group_by(st_vst) %>%
     summarize(cvr_pct = sum(cvr_pct),
+              abs = sum(absence_indicator),
               number = n()) %>%
     # Join the site visit data to interpret absences
     full_join(site_point_data, by = 'st_vst') %>%
     filter(!is.na(obs_date)) %>%
     # Interpret presence and absence
-    mutate(presence = case_when(cvr_pct >= 0.5 ~ 1,
-                                cvr_pct == -998 ~ 1, # No cover data recorded, but species is present (i.e., voucher collection)
-                                TRUE ~ 0)) %>%
+    {if (abundance_model == 'TRUE')
+      mutate(., presence = case_when(cvr_pct >= 3 ~ 1,
+                                     .default = 0))
+      else
+        mutate(., presence = case_when(cvr_pct >= 0.5 ~ 1,
+                                       .default = 0))
+      } %>%
+    # Assign retain variable to prevent loss of explicit absence data
+    mutate(retain = case_when(!is.na(cvr_pct) ~ 1,
+                              .default = 0)) %>%
     # Assign zero value to absences
     mutate(cvr_pct = case_when(presence == 0 & is.na(cvr_pct) ~ 0,
-                               TRUE ~ cvr_pct)) %>%
+                               .default = cvr_pct)) %>%
     # Assign group name
     mutate(group_abbr = group) %>%
     # Restrict absences based on lifeform scopes
     {if (lifeform == 'vascular' & top_absence == 'TRUE' & (group == 'picgla' | group == 'picmar'))
       filter(., (presence == 1)
-             | (cvr_pct == -999)
+             | (retain == 1)
+             | (abs > 0)
              | (presence == 0
                 & (scp_vasc == 'exhaustive'
                    | scp_vasc == 'non-trace species'
                    | scp_vasc == 'top canopy'
                    | scp_vasc == 'picea')))
       else
-        .} %>%
+        .
+      } %>%
     {if (lifeform == 'vascular' & top_absence == 'TRUE' & group == 'bettre')
       filter(., (presence == 1)
-             | (cvr_pct == -999)
+             | (retain == 1)
+             | (abs > 0)
              | (presence == 0
                 & (scp_vasc == 'exhaustive'
                    | scp_vasc == 'non-trace species'
                    | scp_vasc == 'top canopy'
                    | scp_vasc == 'bettre')))
       else
-        .} %>%
+        .
+      } %>%
     {if (lifeform == 'vascular' & top_absence == 'TRUE' & group != 'bettre' & group != 'picgla' & group != 'picgla')
       filter(., (presence == 1)
-             | (cvr_pct == -999)
+             | (retain == 1)
+             | (abs > 0)
              | (presence == 0
                 & (scp_vasc == 'exhaustive'
                    | scp_vasc == 'non-trace species'
                    | scp_vasc == 'top canopy')))
       else
-        .} %>%
+        .
+      } %>%
     {if (lifeform == 'vascular' & top_absence == 'FALSE')
       filter(., (presence == 1)
-             | (cvr_pct == -999)
+             | (retain == 1)
+             | (abs > 0)
              | (presence == 0
                 & (scp_vasc == 'exhaustive'
                    | scp_vasc == 'non-trace species')))
       else
-        .} %>%
+        .
+      } %>%
     {if (lifeform == 'bryophyte')
       filter(., (presence == 1)
+             | (retain == 1)
+             | (abs > 0)
              | (presence == 0
                 & (scp_bryo == 'exhaustive'
                    | scp_bryo == 'non-trace species'
                    | scp_bryo == 'common species')))
       else
-        .} %>%
+        .
+      } %>%
     {if (lifeform == 'lichen')
       filter(., (presence == 1)
+             | (retain == 1)
+             | (abs > 0)
              | (presence == 0
                 & (scp_lich == 'exhaustive'
                    | scp_lich == 'non-trace species'
                    | scp_lich == 'common species')))
       else
-        .} %>%
+        .
+      } %>%
     # Exclude sites for particular groups
     {if (group == 'dryas')
       anti_join(., remove_dwashr, join_by('st_vst')) %>%
+        anti_join(remove_evrshr, join_by('st_vst')) %>%
         anti_join(remove_shrub, join_by('st_vst'))
       else
-        .} %>%
+        .
+      } %>%
     {if (group == 'dsalix')
       anti_join(., remove_dwashr, join_by('st_vst')) %>%
+        anti_join(remove_decshr, join_by('st_vst')) %>%
         anti_join(remove_shrub, join_by('st_vst')) %>%
-        anti_join(remove_salix, join_by('st_vst'))
+        anti_join(remove_salix, join_by('st_vst')) %>%
+        filter(prjct_cd != 'yukon_landcover_2016')
       else
-        .} %>%
+        .
+      } %>%
     {if (group == 'empnig')
-      anti_join(., remove_dwashr, join_by('st_vst'))
+      anti_join(., remove_dwashr, join_by('st_vst')) %>%
+        anti_join(remove_evrshr, join_by('st_vst')) %>%
+        filter(prjct_cd != 'yukon_landcover_2016')
       else
         .} %>%
     {if (group == 'nerishr')
       anti_join(., remove_dwashr, join_by('st_vst')) %>%
-        anti_join(remove_shrub, join_by('st_vst'))
+        anti_join(remove_evrshr, join_by('st_vst')) %>%
+        anti_join(remove_shrub, join_by('st_vst')) %>%
+        filter(prjct_cd != 'yukon_landcover_2016')
       else
-        .} %>%
+        .
+      } %>%
     {if (group == 'rhoshr')
       anti_join(., remove_dwashr, join_by('st_vst')) %>%
+        anti_join(remove_evrshr, join_by('st_vst')) %>%
         anti_join(remove_shrub, join_by('st_vst'))
       else
-        .} %>%
+        .
+      } %>%
     {if (group == 'vacvit')
       anti_join(., remove_dwashr, join_by('st_vst')) %>%
+        anti_join(remove_evrshr, join_by('st_vst')) %>%
         anti_join(remove_shrub, join_by('st_vst'))
       else
         .} %>%
@@ -458,18 +522,23 @@ for (group in group_list) {
       anti_join(., remove_forb, join_by('st_vst')) %>%
         anti_join(remove_herb, join_by('st_vst'))
       else
-        .} %>%
+        .
+      } %>%
     {if (group == 'rubcha')
       anti_join(., remove_forb, join_by('st_vst')) %>%
         anti_join(remove_herb, join_by('st_vst')) %>%
         anti_join(remove_rubus, join_by('st_vst'))
       else
-        .} %>%
+        .
+      } %>%
     {if (group == 'rubspe')
       anti_join(., remove_shrub, join_by('st_vst')) %>%
-        anti_join(remove_rubus, join_by('st_vst'))
+        anti_join(remove_decshr, join_by('st_vst')) %>%
+        anti_join(remove_rubus, join_by('st_vst')) %>%
+        filter(prjct_cd != 'yukon_landcover_2016')
       else
-        .} %>%
+        .
+      } %>%
     {if (group == 'senpse')
       anti_join(., remove_forb, join_by('st_vst')) %>%
         anti_join(remove_herb, join_by('st_vst')) %>%
@@ -480,93 +549,211 @@ for (group in group_list) {
                  st_vst != 'KEFJ040361_20040808' &
                  st_vst != 'haba-t2-1400_20080721')
       else
-        .} %>%
+        .
+      } %>%
     {if (group == 'erivag')
       anti_join(., remove_gramin, join_by('st_vst')) %>%
         anti_join(remove_grass, join_by('st_vst')) %>%
         anti_join(remove_erioph, join_by('st_vst')) %>%
-        anti_join(remove_sedge, join_by('st_vst'))
+        anti_join(remove_sedge, join_by('st_vst')) %>%
+        filter(prjct_cd != 'yukon_landcover_2016')
       else
-        .} %>%
+        .
+      } %>%
     {if (group == 'fesalt')
       anti_join(., remove_gramin, join_by('st_vst')) %>%
         anti_join(remove_grass, join_by('st_vst')) %>%
-        anti_join(remove_festuca, join_by('st_vst'))
+        anti_join(remove_festuca, join_by('st_vst')) %>%
+        filter(prjct_cd != 'yukon_landcover_2016')
       else
-        .} %>%
+        .
+      } %>%
     {if (group == 'leymol')
       anti_join(., remove_gramin, join_by('st_vst')) %>%
-        anti_join(remove_grass, join_by('st_vst'))
+        anti_join(remove_grass, join_by('st_vst')) %>%
+        anti_join(remove_leymus, join_by('st_vst'))
       else
-        .} %>%
+        .
+      } %>%
     {if (group == 'mwcalama')
       anti_join(., remove_gramin, join_by('st_vst')) %>%
         anti_join(remove_grass, join_by('st_vst')) %>%
-        anti_join(remove_calama, join_by('st_vst'))
+        anti_join(remove_calama, join_by('st_vst')) %>%
+        filter(prjct_cd != 'yukon_landcover_2016')
       else
         .} %>%
     {if (group == 'wetsed')
       anti_join(., remove_gramin, join_by('st_vst')) %>%
         anti_join(remove_grass, join_by('st_vst')) %>%
         anti_join(remove_carex, join_by('st_vst')) %>%
-        anti_join(remove_sedge, join_by('st_vst'))
+        anti_join(remove_sedge, join_by('st_vst')) %>%
+        filter(prjct_cd != 'yukon_landcover_2016')
       else
-        .} %>%
+        .
+      } %>%
     {if (group == 'alnus')
-      anti_join(., remove_shrub, join_by('st_vst'))
+      anti_join(., remove_shrub, join_by('st_vst')) %>%
+        anti_join(remove_decshr, join_by('st_vst'))
       else
-        .} %>%
+        .
+      } %>%
     {if (group == 'betshr')
       anti_join(., remove_shrub, join_by('st_vst')) %>%
+        anti_join(remove_decshr, join_by('st_vst')) %>%
         anti_join(remove_betula, join_by('st_vst'))
       else
-        .} %>%
+        .
+      } %>%
     {if (group == 'bderishr')
       anti_join(., remove_dwashr, join_by('st_vst')) %>%
+        anti_join(remove_decshr, join_by('st_vst')) %>%
         anti_join(remove_shrub, join_by('st_vst'))
       else
         .} %>%
     {if (group == 'salix')
-      anti_join(., remove_shrub, join_by('st_vst'))
+      anti_join(., remove_shrub, join_by('st_vst')) %>%
+        anti_join(remove_decshr, join_by('st_vst'))
       else
-        .} %>%
+        .
+      } %>%
     {if (group == 'vaculi')
       anti_join(., remove_shrub, join_by('st_vst')) %>%
-        anti_join(remove_vaccinium, join_by('st_vst'))
+        anti_join(remove_decshr, join_by('st_vst')) %>%
+        anti_join(remove_vaccinium, join_by('st_vst')) %>%
+        filter(prjct_cd != 'yukon_landcover_2016')
       else
-        .} %>%
+        .
+      } %>%
     {if (group == 'bettre')
-      anti_join(., remove_betula, join_by('st_vst'))
+      anti_join(., remove_brotre, join_by('st_vst')) %>%
+        anti_join(remove_brotre, join_by('st_vst'))
       else
         .} %>%
-    {if (group == 'dectre')
+    {if (group == 'brotre')
       anti_join(., remove_betula, join_by('st_vst'))
       else
-        .} %>%
+        .
+      } %>%
     {if (group == 'picgla')
-      anti_join(., remove_picea, join_by('st_vst'))
+      anti_join(., remove_nedtre, join_by('st_vst')) %>%
+        anti_join(remove_picea, join_by('st_vst')) %>%
+        filter(st_vst != 'WRST_T31_07_20040721' &
+                 st_vst != 'KENA20170425_20170725' &
+                 st_vst != 'KENA20170377_20170725' &
+                 st_vst != 'KENA20170891_20170817' &
+                 st_vst != 'KENA20171155_20170901' &
+                 st_vst != 'KENA20171335_20170722' &
+                 st_vst != 'KENA20170916_20170712' &
+                 st_vst != 'KENA20170902_20170731' &
+                 st_vst != 'KENA20171144_20170804' &
+                 st_vst != 'KENA20171016_20170810' &
+                 st_vst != 'KENA20170896_20170901' &
+                 st_vst != 'KENA20171116_20170817' &
+                 st_vst != 'KENA20171112_20170817' &
+                 st_vst != 'KENA20171131_20170721' &
+                 st_vst != 'KENA20171130_20170721' &
+                 st_vst != 'KENA20171105_20170721' &
+                 st_vst != 'KENA20171277_20170721' &
+                 st_vst != 'KENA20170257_20170731' &
+                 st_vst != 'KENA20170241_20170731' &
+                 st_vst != 'KENA20171266_20170730' &
+                 st_vst != 'KENA20171265_20170730' &
+                 st_vst != 'KENA20170172_20170731' &
+                 st_vst != 'KENA20170132_20170731' &
+                 st_vst != 'KENA20171232_20170731' &
+                 st_vst != 'KENA20171229_20170731' &
+                 st_vst != 'KENA20171254_20170730' &
+                 st_vst != 'HAIN20000064_20000710' &
+                 st_vst != 'HAIN20000058_20000711' &
+                 st_vst != 'HAIN20000036_20000709' &
+                 st_vst != 'HAIN20000038_20000709' &
+                 st_vst != 'HAIN20000029_20000708' &
+                 st_vst != 'HAIN20000018_20000708' &
+                 st_vst != 'HAIN20000016_20000708' &
+                 st_vst != 'HAIN20000037_20000710' &
+                 st_vst != 'HAIN20000030_20000710' &
+                 st_vst != 'HAIN20000026_20000710' &
+                 st_vst != 'HAIN20000026_20000710' &
+                 st_vst != 'HAIN20000009_20000710' &
+                 st_vst != 'HAIN20000010_20000710' &
+                 st_vst != 'HAIN20000006_20000710' &
+                 st_vst != 'HAIN20000092_20000710' &
+                 st_vst != '12TD06901_20120923')
       else
-        .} %>%
+        .
+      } %>%
     {if (group == 'picmar')
-      anti_join(., remove_picea, join_by('st_vst'))
+      anti_join(., remove_nedtre, join_by('st_vst')) %>%
+        anti_join(remove_picea, join_by('st_vst'))
       else
-        .} %>%
+        .
+      } %>%
     {if (group == 'picsit')
-      anti_join(., remove_picea, join_by('st_vst'))
+      anti_join(., remove_nedtre, join_by('st_vst')) %>%
+        anti_join(remove_picea, join_by('st_vst')) %>%
+        filter(st_vst != 'WRST_T31_07_20040721' &
+                 st_vst != 'KENA20170425_20170725' &
+                 st_vst != 'KENA20170377_20170725' &
+                 st_vst != 'KENA20170891_20170817' &
+                 st_vst != 'KENA20171155_20170901' &
+                 st_vst != 'KENA20171335_20170722' &
+                 st_vst != 'KENA20170916_20170712' &
+                 st_vst != 'KENA20170902_20170731' &
+                 st_vst != 'KENA20171144_20170804' &
+                 st_vst != 'KENA20171016_20170810' &
+                 st_vst != 'KENA20170896_20170901' &
+                 st_vst != 'KENA20171116_20170817' &
+                 st_vst != 'KENA20171112_20170817' &
+                 st_vst != 'KENA20171131_20170721' &
+                 st_vst != 'KENA20171130_20170721' &
+                 st_vst != 'KENA20171105_20170721' &
+                 st_vst != 'KENA20171277_20170721' &
+                 st_vst != 'KENA20170257_20170731' &
+                 st_vst != 'KENA20170241_20170731' &
+                 st_vst != 'KENA20171266_20170730' &
+                 st_vst != 'KENA20171265_20170730' &
+                 st_vst != 'KENA20170172_20170731' &
+                 st_vst != 'KENA20170132_20170731' &
+                 st_vst != 'KENA20171232_20170731' &
+                 st_vst != 'KENA20171229_20170731' &
+                 st_vst != 'KENA20171254_20170730' &
+                 st_vst != 'HAIN20000064_20000710' &
+                 st_vst != 'HAIN20000058_20000711' &
+                 st_vst != 'HAIN20000036_20000709' &
+                 st_vst != 'HAIN20000038_20000709' &
+                 st_vst != 'HAIN20000029_20000708' &
+                 st_vst != 'HAIN20000018_20000708' &
+                 st_vst != 'HAIN20000016_20000708' &
+                 st_vst != 'HAIN20000037_20000710' &
+                 st_vst != 'HAIN20000030_20000710' &
+                 st_vst != 'HAIN20000026_20000710' &
+                 st_vst != 'HAIN20000026_20000710' &
+                 st_vst != 'HAIN20000009_20000710' &
+                 st_vst != 'HAIN20000010_20000710' &
+                 st_vst != 'HAIN20000006_20000710' &
+                 st_vst != 'HAIN20000092_20000710' &
+                 st_vst != '12TD06901_20120923')
       else
-        .} %>%
+        .
+      } %>%
     {if (group == 'populbt')
-      anti_join(., remove_populus, join_by('st_vst'))
+      anti_join(., remove_brotre, join_by('st_vst')) %>%
+        anti_join(remove_populus, join_by('st_vst'))
       else
-        .} %>%
+        .
+      } %>%
     {if (group == 'poptre')
-      anti_join(., remove_populus, join_by('st_vst'))
+      anti_join(., remove_brotre, join_by('st_vst')) %>%
+        anti_join(remove_populus, join_by('st_vst'))
       else
-        .} %>%
+        .
+      } %>%
     {if (group == 'tsumer')
-      anti_join(., remove_tsuga, join_by('st_vst'))
+      anti_join(., remove_nedtre, join_by('st_vst')) %>%
+        anti_join(remove_tsuga, join_by('st_vst'))
       else
-        .} %>%
+        .
+      } %>%
     # Create point geometry
     st_as_sf(x = ., coords = c('cent_x', 'cent_y'), crs = 3338, remove = FALSE) %>%
     # Extract raster data
@@ -586,7 +773,7 @@ for (group in group_list) {
     mutate(cvr_pct = case_when(cvr_pct > 100 ~ 100,
                                TRUE ~ cvr_pct)) %>%
     # Select columns
-    dplyr::select(st_vst, group_abbr, zone, valid, obs_yr, fire_yr, esa_type, cvr_pct, presence, cent_x, cent_y, geometry)
+    dplyr::select(st_vst, prjct_cd, group_abbr, zone, valid, obs_yr, fire_yr, esa_type, cvr_pct, presence, cent_x, cent_y, geometry)
   
   # Export data to shapefile
   st_write(vegetation_data, shape_output, append = FALSE)

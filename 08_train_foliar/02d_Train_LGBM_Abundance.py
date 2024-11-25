@@ -2,10 +2,14 @@
 # ---------------------------------------------------------------------------
 # Train LightGBM abundance model
 # Author: Timm Nawrocki
-# Last Updated: 2024-09-26
+# Last Updated: 2024-11-24
 # Usage: Must be executed in an Anaconda Python 3.12+ installation.
 # Description: "Train LightGBM abundance model" trains and saves a LightGBM classifier and regressor for use in prediction.
 # ---------------------------------------------------------------------------
+
+# Define model targets
+group = 'alnus'
+round_date = 'round_20241124'
 
 # Import packages
 import os
@@ -20,12 +24,6 @@ import joblib
 
 #### SET UP DIRECTORIES, FILES, AND FIELDS
 ####____________________________________________________
-
-# Set round date
-round_date = 'round_20240930'
-
-# Define species
-group = 'alnus'
 
 # Set root directory
 drive = 'D:/'
@@ -156,36 +154,42 @@ inner_test = inner_test.reset_index()
 
 print('Optimizing classifier parameters...')
 
-# Identify X and y train splits for the classifier
-X_class_outer = shuffled_data[predictor_all].astype(float).copy()
-y_class_outer = shuffled_data[obs_pres[0]].astype('int32').copy()
-groups_outer = shuffled_data[validation[0]].astype('int32').copy()
-
 # Optimize classifier
-classifier_params = optimize_lgbmclassifier(data=X_class_outer,
-                                            targets=y_class_outer,
-                                            groups=groups_outer,
-                                            init_points=30,
-                                            n_iter=70)
+classifier_params = optimize_lgbmclassifier(init_points=30,
+                                            n_iter=70,
+                                            data=shuffled_data,
+                                            all_variables=all_variables,
+                                            predictor_all=predictor_all,
+                                            target_field=obs_pres,
+                                            stratify_field=obs_pres,
+                                            group_field=validation)
 
 #### CONDUCT INNER REGRESSOR OPTIMIZATION
 ####____________________________________________________
 
 print('Optimizing regressor parameters...')
 
-# Identify X and y train splits for the classifier
-X_regress_outer = shuffled_data[predictor_all].astype(float).copy()
-y_regress_outer = shuffled_data[obs_cover[0]].astype(float).copy()
-
 # Optimize regressor
-regressor_params = optimize_lgbmregressor(data=X_regress_outer,
-                                          targets=y_regress_outer,
-                                          groups=groups_outer,
-                                          init_points=30,
-                                          n_iter=70)
+regressor_params = optimize_lgbmregressor(init_points=30,
+                                          n_iter=70,
+                                          data=shuffled_data,
+                                          all_variables=all_variables,
+                                          predictor_all=predictor_all,
+                                          target_field=obs_cover,
+                                          stratify_field=obs_pres,
+                                          group_field=validation)
 
 #### CONDUCT THRESHOLD DETERMINATION
 ####____________________________________________________
+
+# Identify X and y train splits for the classifier
+X_class_outer = shuffled_data[predictor_all].astype(float).copy()
+y_class_outer = shuffled_data[obs_pres[0]].astype('int32').copy()
+groups_outer = shuffled_data[validation[0]].astype('int32').copy()
+
+# Identify X and y train splits for the regressor
+X_regress_outer = shuffled_data[predictor_all].astype(float).copy()
+y_regress_outer = shuffled_data[obs_cover[0]].astype(float).copy()
 
 # Iterate through inner cross validation splits
 inner_cv_i = 1
@@ -217,7 +221,7 @@ while inner_cv_i <= inner_cv_length:
         colsample_bytree=classifier_params['colsample_bytree'],
         reg_alpha=classifier_params['reg_alpha'],
         reg_lambda=classifier_params['reg_lambda'],
-        n_jobs=4,
+        n_jobs=2,
         importance_type='gain',
         verbosity=-1
     )
@@ -267,7 +271,7 @@ final_classifier = LGBMClassifier(
     colsample_bytree=classifier_params['colsample_bytree'],
     reg_alpha=classifier_params['reg_alpha'],
     reg_lambda=classifier_params['reg_lambda'],
-    n_jobs=4,
+    n_jobs=2,
     importance_type='gain',
     verbosity=-1
 )
@@ -290,7 +294,7 @@ final_regressor = LGBMRegressor(
     colsample_bytree=regressor_params['colsample_bytree'],
     reg_alpha=regressor_params['reg_alpha'],
     reg_lambda=regressor_params['reg_lambda'],
-    n_jobs=4,
+    n_jobs=2,
     importance_type='gain',
     verbosity=-1
 )

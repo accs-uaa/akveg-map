@@ -2,10 +2,15 @@
 # ---------------------------------------------------------------------------
 # Validate LightGBM abundance model
 # Author: Timm Nawrocki
-# Last Updated: 2024-09-26
+# Last Updated: 2024-11-24
 # Usage: Must be executed in an Anaconda Python 3.12+ installation.
 # Description: "Validate LightGBM abundance model" validates a random forest classifier and a LightGBM regressor. The model validation accounts for spatial autocorrelation by grouping in 100 km blocks.
 # ---------------------------------------------------------------------------
+
+# Define model targets
+group = 'alnus'
+round_date = 'round_20241124'
+presence_threshold = 3
 
 # Import packages
 import numpy as np
@@ -25,12 +30,6 @@ from sklearn.metrics import r2_score
 
 #### SET UP DIRECTORIES, FILES, AND FIELDS
 ####____________________________________________________
-
-# Set round date
-round_date = 'round_20240930'
-
-# Define species
-group = 'alnus'
 
 # Set root directory
 drive = 'D:/'
@@ -217,35 +216,30 @@ while outer_cv_i <= outer_cv_length:
 
     print('\tOptimizing classifier parameters...')
 
-    # Identify X and y train splits for the classifier
-    X_class_outer = outer_train_iteration[predictor_all].astype(float).copy()
-    y_class_outer = outer_train_iteration[obs_pres[0]].astype('int32').copy()
-    groups_outer = outer_train_iteration[validation[0]].astype('int32').copy()
-    X_test_outer = outer_test_iteration[predictor_all].astype(float).copy()
-
     # Optimize classifier
-    classifier_params = optimize_lgbmclassifier(data=X_class_outer,
-                                                targets=y_class_outer,
-                                                groups=groups_outer,
-                                                init_points=7,
-                                                n_iter=3)
+    classifier_params = optimize_lgbmclassifier(init_points=30,
+                                                n_iter=70,
+                                                data=outer_train_iteration,
+                                                all_variables=all_variables,
+                                                predictor_all=predictor_all,
+                                                target_field=obs_pres,
+                                                stratify_field=obs_pres,
+                                                group_field=validation)
 
     #### CONDUCT INNER REGRESSOR OPTIMIZATION
     ####____________________________________________________
 
     print('\tOptimizing regressor parameters...')
 
-    # Identify X and y train splits for the classifier
-    regress_outer = outer_train_iteration[outer_train_iteration[obs_cover[0]] >= 0].copy()
-    X_regress_outer = regress_outer[predictor_all].astype(float).copy()
-    y_regress_outer = regress_outer[obs_cover[0]].astype(float).copy()
-
     # Optimize regressor
-    regressor_params = optimize_lgbmregressor(data=X_regress_outer,
-                                              targets=y_regress_outer,
-                                              groups=groups_outer,
-                                              init_points=7,
-                                              n_iter=3)
+    regressor_params = optimize_lgbmregressor(init_points=30,
+                                              n_iter=70,
+                                              data=outer_train_iteration,
+                                              all_variables=all_variables,
+                                              predictor_all=predictor_all,
+                                              target_field=obs_cover,
+                                              stratify_field=obs_pres,
+                                              group_field=validation)
 
     #### CONDUCT INNER THRESHOLD DETERMINATION
     ####____________________________________________________
@@ -280,7 +274,7 @@ while outer_cv_i <= outer_cv_length:
             colsample_bytree=classifier_params['colsample_bytree'],
             reg_alpha=classifier_params['reg_alpha'],
             reg_lambda=classifier_params['reg_lambda'],
-            n_jobs=4,
+            n_jobs=2,
             importance_type='gain',
             verbosity=-1)
         inner_classifier.fit(X_class_inner, y_class_inner)
@@ -312,6 +306,12 @@ while outer_cv_i <= outer_cv_length:
     #### CONDUCT OUTER CROSS VALIDATION
     ####____________________________________________________
 
+    # Identify X and y train splits for the classifier
+    X_class_outer = outer_train_iteration[predictor_all].astype(float).copy()
+    y_class_outer = outer_train_iteration[obs_pres[0]].astype('int32').copy()
+    groups_outer = outer_train_iteration[validation[0]].astype('int32').copy()
+    X_test_outer = outer_test_iteration[predictor_all].astype(float).copy()
+
     # Train classifier on the outer train data
     print('\tTraining outer classifier...')
     outer_classifier = LGBMClassifier(
@@ -330,10 +330,15 @@ while outer_cv_i <= outer_cv_length:
         colsample_bytree=classifier_params['colsample_bytree'],
         reg_alpha=classifier_params['reg_alpha'],
         reg_lambda=classifier_params['reg_lambda'],
-        n_jobs=4,
+        n_jobs=2,
         importance_type='gain',
         verbosity=-1)
     outer_classifier.fit(X_class_outer, y_class_outer)
+
+    # Identify X and y train splits for the classifier
+    regress_outer = outer_train_iteration[outer_train_iteration[obs_cover[0]] >= 0].copy()
+    X_regress_outer = regress_outer[predictor_all].astype(float).copy()
+    y_regress_outer = regress_outer[obs_cover[0]].astype(float).copy()
 
     # Train regressor on the outer train data
     print('\tTraining outer regressor...')
@@ -352,7 +357,7 @@ while outer_cv_i <= outer_cv_length:
         colsample_bytree=regressor_params['colsample_bytree'],
         reg_alpha=regressor_params['reg_alpha'],
         reg_lambda=regressor_params['reg_lambda'],
-        n_jobs=4,
+        n_jobs=2,
         importance_type='gain',
         verbosity=-1)
     outer_regressor.fit(X_regress_outer, y_regress_outer)
@@ -401,11 +406,11 @@ while outer_cv_i <= outer_cv_length:
 
 # Create a composite prediction
 outer_results[prediction[0]] = np.where((outer_results[pred_bin[0]] == 1)
-                                        & (outer_results[pred_cover[0]] >= 0.5),
+                                        & (outer_results[pred_cover[0]] >= presence_threshold),
                                         outer_results[pred_cover[0]],
                                         0)
 outer_results['distribution'] = np.where((outer_results[pred_bin[0]] == 1)
-                                         & (outer_results[pred_cover[0]] >= 0.5),
+                                         & (outer_results[pred_cover[0]] >= presence_threshold),
                                          1,
                                          0)
 

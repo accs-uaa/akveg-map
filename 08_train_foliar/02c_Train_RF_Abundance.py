@@ -26,7 +26,7 @@ import joblib
 round_date = 'round_20240930'
 
 # Define species
-group = 'ndsalix'
+group = 'fesalt'
 
 # Set root directory
 drive = 'D:/'
