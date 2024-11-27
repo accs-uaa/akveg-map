@@ -8,8 +8,8 @@
 # ---------------------------------------------------------------------------
 
 # Define model targets
-group = 'fesalt'
-round_date = 'round_20241124'
+group = 'bderishr'
+round_date = 'round_20241126_rf'
 presence_threshold = 3
 
 # Import packages
@@ -95,7 +95,7 @@ inner_columns = all_variables + pred_abs + pred_pres + inner_split
 outer_columns = all_variables + pred_abs + pred_pres + pred_cover + pred_bin + outer_split
 
 # Create a standardized parameter set for a random forest classifier
-classifier_params = {'n_estimators': 5,
+classifier_params = {'n_estimators': 500,
                      'criterion': 'gini',
                      'max_depth': None,
                      'min_samples_split': 2,
@@ -112,7 +112,7 @@ classifier_params = {'n_estimators': 5,
                      'random_state': 314}
 
 # Create a standardized parameter set for a random forest classifier
-regressor_params = {'n_estimators': 5,
+regressor_params = {'n_estimators': 500,
                     'criterion': 'poisson',
                     'max_depth': None,
                     'min_samples_split': 2,
@@ -349,11 +349,11 @@ while outer_cv_i <= outer_cv_length:
 
 # Create a composite prediction
 outer_results[prediction[0]] = np.where((outer_results[pred_bin[0]] == 1)
-                                        & (outer_results[pred_cover[0]] >= 0.5),
+                                        & (outer_results[pred_cover[0]] >= presence_threshold),
                                         outer_results[pred_cover[0]],
                                         0)
 outer_results['distribution'] = np.where((outer_results[pred_bin[0]] == 1)
-                                         & (outer_results[pred_cover[0]] >= 0.5),
+                                         & (outer_results[pred_cover[0]] >= presence_threshold),
                                          1,
                                          0)
 

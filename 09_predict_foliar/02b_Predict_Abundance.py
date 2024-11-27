@@ -8,7 +8,8 @@
 # ---------------------------------------------------------------------------
 
 # Define model targets
-group = 'picsit'
+group = 'alnus'
+block = 1
 round_date = 'round_20241124'
 presence_threshold = 3
 
@@ -33,7 +34,7 @@ root_folder = 'ACCS_Work/Projects/VegetationEcology/AKVEG_Map/Data'
 covariate_folder = os.path.join(drive, root_folder, 'Data_Output/covariate_tables')
 grid_folder = os.path.join(drive, root_folder, 'Data_Input/grid_050')
 model_folder = os.path.join(drive, root_folder, 'Data_Output/model_results', round_date, group)
-output_folder = os.path.join(drive, root_folder, 'Data_Output/rasters_final', round_date, group)
+output_folder = os.path.join(drive, root_folder, 'Data_Output/rasters_gridded', round_date, group)
 if os.path.exists(output_folder) == 0:
     os.mkdir(output_folder)
 
@@ -41,8 +42,7 @@ if os.path.exists(output_folder) == 0:
 threshold_input = os.path.join(model_folder, f'{group}_threshold_final.txt')
 classifier_input = os.path.join(model_folder, f'{group}_classifier.joblib')
 regressor_input = os.path.join(model_folder, f'{group}_regressor.joblib')
-grid_list = glob.glob(f'{grid_folder}/*.tif')
-grid_list = [os.path.join(grid_folder, 'AK050H055V019' + '_10m_3338.tif')]
+table_input = os.path.join(covariate_folder, 'PredictionGrid_050_v20240923.xlsx')
 
 # Define variable sets
 predictor_all = ['summer', 'january', 'precip',
@@ -68,6 +68,13 @@ predictor_all = ['summer', 'january', 'precip',
                  's2_5_redge3', 's2_5_nir', 's2_5_redge4', 's2_5_swir1', 's2_5_swir2',
                  's2_5_nbr', 's2_5_ngrdi', 's2_5_ndmi', 's2_5_ndsi', 's2_5_ndvi', 's2_5_ndwi']
 
+# Read grid table
+grid_data = pd.read_excel(table_input, sheet_name='grids')
+
+# Pull grid list
+grid_data = grid_data[grid_data['processor'] == block]
+grid_list = grid_data['grid_code'].tolist()
+
 # Read threshold
 threshold_reader = open(threshold_input, "r")
 threshold = float(threshold_reader.readlines()[0])
@@ -78,21 +85,22 @@ classifier = joblib.load(classifier_input)
 regressor = joblib.load(regressor_input)
 
 # Export model predictions for each grid in grid list
+grid_count = 1
 for grid in grid_list:
     # Define output file
-    grid_name = os.path.split(grid)[1].replace('_10m_3338.tif', '')
-    predict_output = os.path.join(output_folder, f'{group}_{grid_name}_10m_3338.tif')
+    grid_input = os.path.join(grid_folder, f'{grid}_10m_3338.tif')
+    predict_output = os.path.join(output_folder, f'{group}_{grid}_10m_3338.tif')
 
     # Create output raster if it does not already exist
     if os.path.exists(predict_output) == 0:
-        print(f'Predicting raster for {grid_name}...')
+        print(f'Predicting raster for {grid} ({grid_count} of {len(grid_list)})...')
         iteration_start = time.time()
 
         # Define input folder
-        input_folder = os.path.join(covariate_folder, grid_name)
+        input_folder = os.path.join(covariate_folder, grid)
 
         # Prepare raster data
-        grid_raster = rasterio.open(grid)
+        grid_raster = rasterio.open(grid_input)
         input_profile = grid_raster.profile.copy()
         input_profile.update(count=1)
         with rasterio.open(predict_output, 'w', **input_profile, BIGTIFF='YES') as dst:
@@ -107,11 +115,11 @@ for grid in grid_list:
 
                 # Define input file
                 if count < 10:
-                    covariate_input = os.path.join(input_folder, grid_name + f'_00{count}.parquet')
+                    covariate_input = os.path.join(input_folder, grid + f'_00{count}.parquet')
                 elif count < 100:
-                    covariate_input = os.path.join(input_folder, grid_name + f'_0{count}.parquet')
+                    covariate_input = os.path.join(input_folder, grid + f'_0{count}.parquet')
                 else:
-                    covariate_input = os.path.join(input_folder, grid_name + f'_{count}.parquet')
+                    covariate_input = os.path.join(input_folder, grid + f'_{count}.parquet')
 
                 # Define block shape
                 block_shape = grid_raster.read(1, window=window, masked=False).shape
@@ -131,11 +139,13 @@ for grid in grid_list:
 
                 # Write results
                 dst.write(response_2d,
-                      window=window,
-                      indexes=1)
+                          window=window,
+                          indexes=1)
                 # Report progress
                 count, progress = raster_block_progress(100, len(window_list), count, progress)
         end_timing(iteration_start)
     else:
-        print(f'Raster for {grid_name} already exists.')
+        print(f'Raster for {grid} ({grid_count} of {len(grid_list)}) already exists.')
         print('----------')
+    # Increase grid count
+    grid_count += 1
