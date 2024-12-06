@@ -2,19 +2,18 @@
 # ---------------------------------------------------------------------------
 # Predict abundance model
 # Author: Timm Nawrocki
-# Last Updated: 2024-11-24
+# Last Updated: 2024-11-27
 # Usage: Must be executed in an Anaconda Python 3.12+ installation.
 # Description: "Predict abundance model" predicts a classifier and regressor to raster outputs.
 # ---------------------------------------------------------------------------
 
 # Define model targets
-group = 'alnus'
+group = 'poptre'
 block = 1
-round_date = 'round_20241124'
+round_date = 'round_20241204_rf'
 presence_threshold = 3
 
 # Import packages
-import glob
 import os
 import pandas as pd
 import time
@@ -42,7 +41,7 @@ if os.path.exists(output_folder) == 0:
 threshold_input = os.path.join(model_folder, f'{group}_threshold_final.txt')
 classifier_input = os.path.join(model_folder, f'{group}_classifier.joblib')
 regressor_input = os.path.join(model_folder, f'{group}_regressor.joblib')
-table_input = os.path.join(covariate_folder, 'PredictionGrid_050_v20240923.xlsx')
+table_input = os.path.join(covariate_folder, 'PredictionGrid_050_v20241127.csv')
 
 # Define variable sets
 predictor_all = ['summer', 'january', 'precip',
@@ -69,11 +68,19 @@ predictor_all = ['summer', 'january', 'precip',
                  's2_5_nbr', 's2_5_ngrdi', 's2_5_ndmi', 's2_5_ndsi', 's2_5_ndvi', 's2_5_ndwi']
 
 # Read grid table
-grid_data = pd.read_excel(table_input, sheet_name='grids')
+grid_data = pd.read_csv(table_input)
 
 # Pull grid list
 grid_data = grid_data[grid_data['processor'] == block]
+if group in ['bettre', 'picgla', 'picmar', 'poptre']:
+    grid_data = grid_data[grid_data['dist_boreal'] == True]
+elif group in ['picsit', 'tsumer']:
+    grid_data = grid_data[grid_data['dist_temp'] == True]
+elif group == 'rubspe':
+    grid_data = grid_data[grid_data['dist_south'] == True]
+print(f'Predicting {len(grid_data)} grids...')
 grid_list = grid_data['grid_code'].tolist()
+grid_list = ['AK050H049V023']
 
 # Read threshold
 threshold_reader = open(threshold_input, "r")

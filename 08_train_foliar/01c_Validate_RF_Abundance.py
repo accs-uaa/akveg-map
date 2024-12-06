@@ -8,8 +8,8 @@
 # ---------------------------------------------------------------------------
 
 # Define model targets
-group = 'bderishr'
-round_date = 'round_20241126_rf'
+group = 'erivag'
+round_date = 'round_20241204_rf'
 presence_threshold = 3
 
 # Import packages

@@ -16,10 +16,10 @@ library(tibble)
 library(tidyr)
 
 # Set round date
-round_date = 'round_20241121'
+round_date = 'round_20241204_rf'
 
 # Define species
-group = 'alnus'
+group = 'dsalix'
 
 # Set root directory
 drive = 'D:'

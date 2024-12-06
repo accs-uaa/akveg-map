@@ -65,21 +65,21 @@ sudo apt-get install vim
 Install the latest Miniconda release. The version referenced in the example below may need to be updated. The repository version should match the Ubuntu Linux release version.
 
 ```bash
-mkdir -p ~/miniconda3
-wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda3/miniconda.sh
-bash ~/miniconda3/miniconda.sh -b -u -p ~/miniconda3
-rm -rf ~/miniconda3/miniconda.sh
-~/miniconda3/bin/conda init bash
-~/miniconda3/bin/conda init zsh
+mkdir ~/miniforge
+wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh -O ~/miniforge/miniforge.sh
+bash ~/miniforge/miniforge.sh -b -u -p ~/miniforge
+rm -rf ~/miniforge/miniforge.sh
+~/miniforge/bin/conda init bash
+~/miniforge/bin/conda init zsh
 source ~/.bashrc
+conda create -n akveg -c conda-forge
+conda activate akveg
 ```
 
 Install the necessary packages for geospatial processing and predictive modeling. In the example below, we install packages to support interactions with Earth Engine and statistical learning with LightGBM and Bayesian Optimization. We also install the "akutils" helper functions.
 
 ```bash
-conda install conda-forge::libmamba
-conda config --set solver libmamba
-conda install -c conda-forge numpy openpyxl pandas gdal geopandas rasterio scikit-learn imbalanced-learn lightgbm bayesian-optimization joblib earthengine-api geemap
+conda install -c conda-forge numpy openpyxl pandas gdal geopandas rasterio scikit-learn imbalanced-learn lightgbm bayesian-optimization joblib earthengine-api geemap pyarrow fastparquet
 python3 -m pip install git+https://github.com/accs-uaa/akutils
 ```
 

@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Train Random Forest abundance model
 # Author: Timm Nawrocki
-# Last Updated: 2024-09-26
+# Last Updated: 2024-12-05
 # Usage: Must be executed in an Anaconda Python 3.12+ installation.
 # Description: "Train Random Forest abundance model" trains and saves a Random Forest classifier and regressor for use in prediction.
 # ---------------------------------------------------------------------------
@@ -23,10 +23,10 @@ import joblib
 ####____________________________________________________
 
 # Set round date
-round_date = 'round_20240930'
+round_date = 'round_20241204_rf'
 
 # Define species
-group = 'fesalt'
+group = 'poptre'
 
 # Set root directory
 drive = 'D:/'
