@@ -41,7 +41,7 @@ if os.path.exists(output_folder) == 0:
 threshold_input = os.path.join(model_folder, f'{group}_threshold_final.txt')
 classifier_input = os.path.join(model_folder, f'{group}_classifier.joblib')
 regressor_input = os.path.join(model_folder, f'{group}_regressor.joblib')
-table_input = os.path.join(covariate_folder, 'PredictionGrid_050_v20241127.csv')
+table_input = os.path.join(covariate_folder, '00_PredictionGrid_050_v20241127.csv')
 
 # Define variable sets
 predictor_all = ['summer', 'january', 'precip',
