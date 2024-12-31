@@ -80,7 +80,6 @@ elif group == 'rubspe':
     grid_data = grid_data[grid_data['dist_south'] == True]
 print(f'Predicting {len(grid_data)} grids...')
 grid_list = grid_data['grid_code'].tolist()
-grid_list = ['AK050H049V023']
 
 # Read threshold
 threshold_reader = open(threshold_input, "r")

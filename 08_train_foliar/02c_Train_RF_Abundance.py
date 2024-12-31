@@ -26,10 +26,10 @@ import joblib
 round_date = 'round_20241204_rf'
 
 # Define species
-group = 'poptre'
+group = 'betshr'
 
 # Set root directory
-drive = 'D:/'
+drive = 'C:/'
 root_folder = 'ACCS_Work/Projects/VegetationEcology/AKVEG_Map/Data'
 
 # Define folder structure

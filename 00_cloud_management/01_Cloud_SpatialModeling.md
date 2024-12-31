@@ -67,6 +67,7 @@ Install the latest Miniconda release. The version referenced in the example belo
 ```bash
 mkdir ~/miniforge
 wget https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh -O ~/miniforge/miniforge.sh
+
 bash ~/miniforge/miniforge.sh -b -u -p ~/miniforge
 rm -rf ~/miniforge/miniforge.sh
 ~/miniforge/bin/conda init bash
@@ -100,9 +101,9 @@ mkdir ~/Data_Output/model_results/<round_date>
 Use Google Cloud SDK commands from the terminal to download data and scripts for the storage bucket to the vm.
 
 ```
-gsutil cp -r gs://akveg-data/extract_data/* ~/Data_Input/extract_data/
-gsutil cp -n -r gs://akveg-data/species_data/* ~/Data_Input/species_data/
-gsutil cp -r gs://akveg-data/scripts/* ~/scripts/
+gcloud storage rsync gs://akveg-data/extract_data ~/Data_Input/extract_data --recursive
+gcloud storage rsync gs://akveg-data/species_data ~/Data_Input/species_data --recursive
+gcloud storage rsync gs://akveg-data/scripts ~/scripts --recursive
 ```
 
 Use vim to update the scripts as necessary. To begin editing a file once it has been opened in vim, press "i". To save and close a file after editing it in vim, press ":wq".

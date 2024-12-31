@@ -19,7 +19,7 @@ library(tidyr)
 round_date = 'round_20241204_rf'
 
 # Define species
-group = 'dsalix'
+group = 'vacvit'
 
 # Set root directory
 drive = 'D:'

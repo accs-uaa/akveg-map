@@ -8,7 +8,7 @@
 # ---------------------------------------------------------------------------
 
 # Define model targets
-group = 'erivag'
+group = 'tsumer'
 round_date = 'round_20241204_rf'
 presence_threshold = 3
 
@@ -32,7 +32,7 @@ from sklearn.metrics import r2_score
 ####____________________________________________________
 
 # Set root directory
-drive = 'D:/'
+drive = 'C:/'
 root_folder = 'ACCS_Work/Projects/VegetationEcology/AKVEG_Map/Data'
 
 # Define folder structure
