@@ -2,17 +2,18 @@
 # ---------------------------------------------------------------------------
 # Convert raster grids to cloud-optimized geotiff
 # Author: Timm Nawrocki
-# Last Updated: 2024-12-30
+# Last Updated: 2025-01-03
 # Usage: Must be executed in a Python 3.11+ installation with GDAL 3.9+.
 # Description: "Convert raster grids to cloud-optimized geotiff" compiles raster grids and creates a cloud-optimized geotiff version.
 # ---------------------------------------------------------------------------
 
 # Define model targets
-group = 'alnus'
-range = True
-barren = True
-water = True
+group = 'betshr'
+range_boolean = True
+barren_boolean = True
+water_boolean = True
 round_date = 'round_20241124'
+presence_threshold = 3
 nodata = 255
 
 # Import packages
@@ -29,8 +30,8 @@ from akutils import *
 gdal.UseExceptions()
 
 # Set root directory
-drive = 'home'
-root_folder = 'twnawrocki'
+drive = 'C:/'
+root_folder = 'ACCS_Work/Projects/VegetationEcology/AKVEG_Map/Data'
 
 # Define folder structure
 postprocess_folder = os.path.join(drive, root_folder, 'Data_Input/postprocess_v20241230')
@@ -48,13 +49,14 @@ if os.path.exists(cog_folder) == 0:
 # Define input files
 area_input = os.path.join(postprocess_folder, 'AKVEG_FoliarCover_v2_ModelArea_3338.tif')
 esa_input = os.path.join(postprocess_folder, 'AlaskaYukon_ESAWorldCover2_v2_10m_3338.tif')
-if range == True:
+if range_boolean == True:
     range_input = os.path.join(postprocess_folder, f'range_{group}_v20241226.tif')
 else:
     range_input = area_input
 input_files = glob.glob(f'{input_folder}/*.tif')
 
 # Define intermediate files
+merged_vrt = os.path.join(intermediate_folder, f'{group}_merged.vrt')
 merged_file = os.path.join(intermediate_folder, f'{group}_merged.tif')
 
 # Define output files
@@ -68,22 +70,18 @@ area_bounds = raster_bounds(area_input)
 if os.path.exists(merged_file) == 0:
     print(f'Merging {len(input_files)} tiles...')
     iteration_start = time.time()
-    # Resample and reproject
-    gdal.Warp(merged_file,
-              input_files,
-              srcSRS='EPSG:3338',
-              dstSRS='EPSG:3338',
-              outputType=GDT_Byte,
-              workingType=GDT_Byte,
-              xRes=10,
-              yRes=-10,
-              srcNodata=nodata,
-              dstNodata=nodata,
-              outputBounds=area_bounds,
-              resampleAlg = 'bilinear',
-              targetAlignedPixels=False,
-              creationOptions = ['COMPRESS=LZW',
-                                 'BIGTIFF=YES'])
+    # Merge raster tiles
+    gdal.BuildVRT(merged_vrt,
+                  input_files,
+                  outputSRS='EPSG:3338',
+                  xRes=10,
+                  yRes=10,
+                  srcNodata=nodata,
+                  VRTNodata=nodata,
+                  outputBounds=area_bounds)
+    gdal.Translate(merged_file,
+                   merged_vrt,
+                   creationOptions=['COMPRESS=LZW', 'BIGTIFF=YES'])
     end_timing(iteration_start)
 else:
     print('Merged dataset already exists.')
@@ -97,7 +95,7 @@ if os.path.exists(foliar_output) == 0:
     raster_profile = merged_raster.profile.copy()
     area_raster = rasterio.open(area_input)
     esa_raster = rasterio.open(esa_input)
-    if range == True:
+    if range_boolean == True:
         range_raster = rasterio.open(range_input)
     else:
         range_raster = area_raster
@@ -116,23 +114,23 @@ if os.path.exists(foliar_output) == 0:
                                         masked=True)
             raster_block = merged_raster.read(window=window,
                                               masked=True)
-            if range == True:
+            if range_boolean == True:
                 range_block = range_raster.read(window=window,
                                                 masked=True)
-            # Set no data to 0
-            raster_block = np.where(raster_block == nodata, 0, raster_block)
+            # Set no data to zero
+            raster_block = np.where((raster_block >= presence_threshold) & (raster_block <= 100), raster_block, 0)
             # Remove snow/ice
             raster_block = np.where(esa_block == 70, 0, raster_block)
             # Remove anthropogenic
             raster_block = np.where(esa_block == 50, 0, raster_block)
             # Remove barren
-            if barren == True:
+            if barren_boolean == True:
                 raster_block = np.where(esa_block == 60, 0, raster_block)
             # Remove water
-            if water == True:
+            if water_boolean == True:
                 raster_block = np.where(esa_block == 80, 0, raster_block)
             # Enforce range
-            if range == True:
+            if range_boolean == True:
                 raster_block = np.where(range_block == 1, raster_block, 0)
             # Enforce study area boundary
             raster_block = np.where(area_block == 1, raster_block, nodata)
@@ -145,6 +143,16 @@ if os.path.exists(foliar_output) == 0:
 else:
     print('Model domain already enforced.')
     print('----------')
+
+# Build pyramids
+print('Building pyramids...')
+iteration_start = time.time()
+foliar_raster = gdal.Open(foliar_output, 0)  # 0 = read-only, 1 = read-write.
+gdal.SetConfigOption('COMPRESS_OVERVIEW', 'LZW')
+gdal.SetConfigOption('BIGTIFF_OVERVIEW', 'YES')
+foliar_raster.BuildOverviews('BILINEAR', [2, 4, 8, 16, 32, 64, 128, 256], gdal.TermProgress_nocb)
+del foliar_raster  # close the dataset (Python object and pointers)
+end_timing(iteration_start)
 
 # Create cloud-optimized geotiff if it does not already exist
 if os.path.exists(cog_output) == 0:
@@ -163,13 +171,3 @@ if os.path.exists(cog_output) == 0:
 else:
     print(f'Cloud-optimized raster already exists.')
     print('----------')
-
-# Build pyramids
-print('Building pyramids...')
-iteration_start = time.time()
-foliar_raster = gdal.Open(foliar_output, 0)  # 0 = read-only, 1 = read-write.
-gdal.SetConfigOption('COMPRESS_OVERVIEW', 'LZW')
-gdal.SetConfigOption('BIGTIFF_OVERVIEW', 'IF_SAFER')
-foliar_raster.BuildOverviews('BILINEAR', [2, 4, 8, 16, 32, 64, 128, 256], gdal.TermProgress_nocb)
-del foliar_raster  # close the dataset (Python object and pointers)
-end_timing(iteration_start)

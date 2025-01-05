@@ -16,13 +16,13 @@ library(tibble)
 library(tidyr)
 
 # Set round date
-round_date = 'round_20241204_rf'
+round_date = 'round_20241129'
 
 # Define species
-group = 'vacvit'
+group = 'tsumer'
 
 # Set root directory
-drive = 'D:'
+drive = 'C:'
 root_folder = 'ACCS_Work/Projects/VegetationEcology/AKVEG_Map/Data'
 
 # Define folder structure

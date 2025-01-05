@@ -8,7 +8,7 @@
 # ---------------------------------------------------------------------------
 
 # Define model targets
-group = 'tsumer'
+group = 'rhoshr'
 round_date = 'round_20241204_rf'
 presence_threshold = 3
 
