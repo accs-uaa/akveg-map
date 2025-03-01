@@ -21,6 +21,9 @@ library(gdalUtilities)
 w <- '/data/gis/'
 
 ```
+Alaska, downloaded 2024-09-12:
+https://blm-egis.maps.arcgis.com/apps/instant/portfolio/index.html?appid=240bd83e9ba34a63b46f7d18c524cb73&locale=en&sectionId=924f70cc3ee9419c81a77b46216f65b1
+pro json to feature tool
 
 Alaska, downloaded 2024-03-09:
 https://fire.ak.blm.gov/predsvcs/maps.php
@@ -37,6 +40,13 @@ https://open.canada.ca/data/en/dataset/cdfc2d7b-c046-4bf0-90ac-4897232619e1
 
 
 ```{r ingest and standardize on 3338}
+ak_20240912 <- read_sf(path(w, 'vector_base/Alaska/Statewide/Fire/Provisional/fire_2024.gdb'), layer='WFIGS_Interagency_Perimeters_YearToDate_20240912') %>%
+  mutate(source = 'WFIGS_Interagency_Perimeters_YearToDate, downloaded 2024-09-12',
+         fire_year = 2024) %>%
+  select(source, fire_year) %>%
+  st_transform(3338) %>%
+  st_set_geometry("geometry")
+
 ak_firepoly <- read_sf(path(w, 'vector_base/Alaska/Statewide/Fire/AlaskaFireHistory_PerimeterPolygons_gdb_20240309/AlaskaFireHistory_Polygons.gdb'),
                        layer='AK_fire_location_polygons_AKAlbersNAD83') %>%
   rename(geometry = Shape) %>%
@@ -88,7 +98,7 @@ can_nfdb_unk <- can_nfdb %>%
 can_firepoly_3338 <- bind_rows(can_nfdb_thru_1985, can_nbac, can_2023, can_nfdb_unk) %>%
   arrange(fire_year)
 
-ak_above <- read_sf(path(w, 'gis_projects/2019/19-301_ABoVE_Biome_Shift/akvegmap_v2/studyAreas',
+ak_above <- read_sf(path(w, 'gis_projects/2022/22-301_NASA_ABoVE_Biome_Shift/akvegmap_v2/studyAreas',
                     'ABoVE_Alaska_3parts_Buff10km_BuffMinus5km_Simplify5km_3338_v20230328.shp')) %>%
   st_zm(drop=T)
 ak_above
@@ -97,14 +107,15 @@ ak_above
 ak_above_union <- st_union(ak_above)
 can_firepoly_3338_akabove <- st_intersection(can_firepoly_3338, ak_above_union)
 
-akcan_firepoly_3338 <- bind_rows(ak_firepoly, can_firepoly_3338) %>%
-  arrange(fire_year)
-write_sf(akcan_firepoly_3338, path(w, 'vector_base/Alaska/Statewide/Fire/akcan_firepoly_thru_2023_v20240309.shp'))
+# akcan_firepoly_3338 <- bind_rows(ak_20240912, ak_firepoly, can_firepoly_3338) %>%
+#   arrange(fire_year)
+# write_sf(akcan_firepoly_3338, path(w, 'vector_base/Alaska/Statewide/Fire/akcan_firepoly_thru_2023_v20240309.shp'))
 
 
-akcan_above_firepoly_3338 <- bind_rows(ak_firepoly, can_firepoly_3338_akabove) %>%
-  arrange(fire_year)
-write_sf(akcan_firepoly_3338, path(w, 'vector_base/Alaska/Statewide/Fire/akcan_above_firepoly_thru_2023_v20240309.shp'))
+akcan_above_firepoly_3338 <- bind_rows(ak_20240912, ak_firepoly, can_firepoly_3338_akabove) %>%
+  arrange(fire_year) %>%
+  st_zm(drop=T)
+write_sf(akcan_above_firepoly_3338, path(w, 'vector_base/Alaska/Statewide/Fire/akcan_above_firepoly_thru_2023_wProvisionalAK2024_v20240912.shp'))
 
 by_year <- akcan_firepoly_3338 %>% st_drop_geometry() %>% group_by(fire_year) %>% tally()
 akcan_firepoly_3338 %>% st_drop_geometry() %>% group_by(source) %>% tally()
@@ -119,7 +130,7 @@ akcan_firepoly_3338 <- read_sf(path(w, 'vector_base/Alaska/Statewide/Fire/akcan_
 # akcan_firepoly_3338 <- st_cast(akcan_firepoly_3338, 'MULTIPOLYGON')
 akcan_firepoly_3338_vect <- vect(akcan_firepoly_3338)
 
-ak_above <- read_sf(path(w, 'gis_projects/2019/19-301_ABoVE_Biome_Shift/akvegmap_v2/studyAreas',
+ak_above <- read_sf(path(w, 'gis_projects/2022/22-301_NASA_ABoVE_Biome_Shift/akvegmap_v2/studyAreas',
                     'ABoVE_Alaska_3parts_Buff10km_BuffMinus5km_Simplify5km_3338_v20230328.shp')) %>%
   st_zm(drop=T)
 
@@ -136,10 +147,10 @@ fire_30m_3338
 
 #SLOOOOW
 akcan_fire_rast <- rasterize(akcan_firepoly_3338_vect, fire_30m_3338, 'fire_year', fun='max', datatype='INT2U',
-                          filename='/data/gis/gis_projects/2019/19-301_ABoVE_Biome_Shift/akvegmap_v2/flt32_mrfy_akcan_1917_2023_30m_3338_v20240309.tif')
+                          filename='/data/gis/gis_projects/2022/22-301_NASA_ABoVE_Biome_Shift/akvegmap_v2/flt32_mrfy_akcan_1917_2024p_30m_3338_v20240912.tif')
 
-gdal_translate('/data/gis/gis_projects/2019/19-301_ABoVE_Biome_Shift/akvegmap_v2/flt32_mrfy_akcan_1917_2023_30m_3338_v20240309.tif',
-               '/data/gis/gis_projects/2019/19-301_ABoVE_Biome_Shift/akvegmap_v2/mrfy_akcan_1917_2023_30m_3338_v20240309.tif',
+gdal_translate('/data/gis/gis_projects/2022/22-301_NASA_ABoVE_Biome_Shift/akvegmap_v2/flt32_mrfy_akcan_1917_2024p_30m_3338_v20240912.tif',
+               '/data/gis/gis_projects/2022/22-301_NASA_ABoVE_Biome_Shift/akvegmap_v2/mrfy_akcan_1917_2024p_30m_3338_v20240912.tif',
                ot='UInt16', of='COG', a_nodata=0, co=c("OVERVIEWS=IGNORE_EXISTING", "RESAMPLING=MODE", "COMPRESS=DEFLATE", "PREDICTOR=2", "BIGTIFF=IF_SAFER", "NUM_THREADS=16"))
 
 #10m version, Alaska and Yukon bbox only
