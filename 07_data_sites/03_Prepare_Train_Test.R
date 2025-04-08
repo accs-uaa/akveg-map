@@ -56,9 +56,9 @@ site_point_output = path(project_folder, 'site_data', 'AKVEG_Sites_Points_3338.s
 site_buffer_output = path(project_folder, 'site_data', 'AKVEG_Sites_Buffered_3338.shp')
 
 # Define queries
-taxa_file = path(database_repository, '05_queries/analysis/00_taxon_query.sql')
-site_visit_file = path(database_repository, '05_queries/analysis/03_site_visit_query.sql')
-vegetation_file = path(database_repository, '05_queries/analysis/05_vegetation_query.sql')
+taxa_file = path(database_repository, '05_queries/analysis/00_taxonomy.sql')
+site_visit_file = path(database_repository, '05_queries/analysis/03_site_visit.sql')
+vegetation_file = path(database_repository, '05_queries/analysis/05_vegetation.sql')
 
 # Read collection data
 collection_site = read_csv(collection_site_input) %>%

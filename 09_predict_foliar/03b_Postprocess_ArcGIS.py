@@ -8,8 +8,8 @@
 # ---------------------------------------------------------------------------
 
 # Define model targets
-group = 'betshr'
-range_boolean = True
+group = 'sphagn'
+range_boolean = False
 barren_boolean = True
 water_boolean = True
 round_date = 'round_20241124'
