@@ -191,6 +191,12 @@ site_buffer_data = site_visit_data %>%
 vegetation_query = read_file(vegetation_file)
 vegetation_data = as_tibble(dbGetQuery(database_connection, vegetation_query))
 
+# Sites with valid vegetation cover data
+veg_sites = vegetation_data %>%
+  distinct(st_vst)
+missing_data = site_visit_data %>%
+  anti_join(veg_sites, by = 'st_vst')
+
 # Check number of cover observations per project
 project_summary = vegetation_data %>%
   left_join(site_visit_data, join_by('st_vst')) %>%
