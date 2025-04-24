@@ -8,11 +8,11 @@
 # ---------------------------------------------------------------------------
 
 # Define model targets
-group = 'betshr'
+group = 'picsit'
 range_boolean = True
 barren_boolean = True
 water_boolean = True
-round_date = 'round_20241124'
+round_date = 'round_20241204_rf'
 presence_threshold = 3
 nodata = 255
 
@@ -144,16 +144,6 @@ else:
     print('Model domain already enforced.')
     print('----------')
 
-# Build pyramids
-print('Building pyramids...')
-iteration_start = time.time()
-foliar_raster = gdal.Open(foliar_output, 0)  # 0 = read-only, 1 = read-write.
-gdal.SetConfigOption('COMPRESS_OVERVIEW', 'LZW')
-gdal.SetConfigOption('BIGTIFF_OVERVIEW', 'YES')
-foliar_raster.BuildOverviews('BILINEAR', [2, 4, 8, 16, 32, 64, 128, 256], gdal.TermProgress_nocb)
-del foliar_raster  # close the dataset (Python object and pointers)
-end_timing(iteration_start)
-
 # Create cloud-optimized geotiff if it does not already exist
 if os.path.exists(cog_output) == 0:
     print(f'Creating cloud-optimized raster...')
@@ -171,3 +161,13 @@ if os.path.exists(cog_output) == 0:
 else:
     print(f'Cloud-optimized raster already exists.')
     print('----------')
+
+# Build pyramids
+print('Building pyramids...')
+iteration_start = time.time()
+foliar_raster = gdal.Open(foliar_output, 0)  # 0 = read-only, 1 = read-write.
+gdal.SetConfigOption('COMPRESS_OVERVIEW', 'LZW')
+gdal.SetConfigOption('BIGTIFF_OVERVIEW', 'YES')
+foliar_raster.BuildOverviews('BILINEAR', [2, 4, 8, 16, 32, 64, 128, 256], gdal.TermProgress_nocb)
+del foliar_raster  # close the dataset (Python object and pointers)
+end_timing(iteration_start)
