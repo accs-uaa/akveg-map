@@ -1,0 +1,236 @@
+---
+title: "landfire_disturbance"
+author: "Matt Macander"
+date: "2025-03-16"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(RPostgres)
+library(dbplyr)
+library(lubridate)
+library(fs)
+library(glue)
+library(janitor)
+library(purrr)
+library(sf)
+library(mapview)
+library(ranger)
+library(gdalUtilities)
+library(terra)
+library(exifr)
+library(exactextractr)
+library(spsurvey)
+library(readxl)
+library(flextable)
+library(ftExtra)
+library(officer)
+library(here)
+library(foreign)
+library(datapasta)
+
+if (.Platform$OS.type == "unix") {
+  p <- "/home/shared/projects/"
+  w <- "/data/gis/"
+} else {
+  p <- "P:/"
+  w <- "W:/"
+}
+
+options(scipen = 999)
+
+geeDir <- path(w, "gis_base/GEE/GEE_Exports")
+```
+
+```{r landfire vats}
+#Manual ESRI lookups, background cleanup and 8-bit conversions
+
+severity_vat <- foreign::read.dbf(path(w, "/raster_base/Alaska/Statewide/Vegetation/Alaska_Landfire/2023/HDist/LF2023_HDist_240_AK/Tif/LA23_HDst_240_SEVERITY_na0.tif.vat.dbf")) |>
+  rename(severity_co = Value, severity_de = SEVERITY)
+
+dist_type_vat <- foreign::read.dbf(path(w, "raster_base/Alaska/Statewide/Vegetation/Alaska_Landfire/2023/HDist/LF2023_HDist_240_AK/Tif/LA23_HDst_240_DIST_TYPE_u8.tif.vat.dbf")) |>
+  rename(distType_co = Value, distType_de = DIST_TYPE)
+
+dist_yr_vat <- foreign::read.dbf(path(w, "raster_base/Alaska/Statewide/Vegetation/Alaska_Landfire/2023/HDist/LF2023_HDist_240_AK/Tif/LA23_HDst_240_HDIST_YR.tif.vat.dbf"))
+
+
+```
+
+```{r get individual DBF files}
+# Define folder path (change to your directory)
+folder_path <- path(w, "/raster_base/Alaska/Statewide/Vegetation/Alaska_Landfire/2024/AKAnnualDisturbance_1999_present")
+
+# Find all .dbf files recursively
+dbf_files <- dir_ls(folder_path, glob = "*Tif/*.dbf", recurse = TRUE)
+
+folder_path_2024 <- path(w, "/raster_base/Alaska/Statewide/Vegetation/Alaska_Landfire/2024/LF2024_PDist_250_AK")
+dbf_file_p2024 <- dir_ls(folder_path_2024, glob = "*Tif/*.dbf", recurse = TRUE)
+
+dbf_files = c(dbf_files, dbf_file_p2024)
+# Import and combine .dbf files with cleaned column names
+combined_disturbance_df_raw <- bind_rows(lapply(dbf_files, function(file) {
+  tryCatch({
+    data <- read.dbf(file) %>%
+      clean_names() %>%                   # Clean column names
+      mutate(across(everything(), as.character))  # Standardize as character
+    data$source_path <- file              # Add source file column
+    data
+  }, error = function(e) {
+    message(paste("Failed to read:", file))
+    NULL
+  })
+}))
+
+combined_disturbance_df_raw_check <- combined_disturbance_df_raw |>
+  filter(value %in% c(910, 960, 970, 971, 980, 1000, 1001, 1010, 1040, 1060))
+
+combined_disturbance_df <- combined_disturbance_df_raw |>
+  mutate(source_file = path_file(source_path)) |>
+  mutate(value = as.integer(value),
+         count = as.numeric(count),
+         dist_type_agg = case_when(dist_type %in% c('Wildfire','Wildland Fire','Wildland Fire Use', 'Prescribed Fire') ~ 'Fire',
+                                   TRUE ~ dist_type),
+         source_base = str_split_i(source_file, '\\.', 1),
+         dist_year = coalesce(year, dist_year, calendar_y),
+         source_year = case_when(str_starts(source_base, 'ak') ~ str_sub(source_base, 8, 11),
+                                     TRUE ~ str_sub(source_base, 3, 4)),
+         source_year = as.numeric(source_year),
+         source_year = case_when(source_year < 1000 ~ source_year + 2000,
+                                 TRUE ~ source_year),
+         severity_orig = severity,
+         # Within disturbance perimeter but severity not mapped, e.g. SLC-Off gaps. Will over-map inclusions and approx edges
+         severity = case_when(value %in% c(910, 960, 970, 971, 980, 1000, 1001, 1010, 1040, 1060) ~ 'No Severity', 
+                              TRUE ~ severity_orig)) |>
+  select(source_base, value, dist_year, dist_type_agg, severity, dist_type, descriptio, confidence, type_confi, sev_confid, 
+         source1, source2, source3, source4, sev_source, everything())
+
+check_year <- combined_disturbance_df |>
+  # filter(!is.na(year) & !is.na(dist_year))
+  filter(source_year != dist_year)
+
+combined_disturbance_df <- combined_disturbance_df %>%
+  filter(!(dist_year == 2023 & source_year == 2024))
+
+severities <- combined_disturbance_df |>
+  select(severity) |>
+  distinct() 
+  
+# tribble_paste(severities)
+
+ref_severity = tibble::tribble(
+                                ~severity, ~sev_co,
+                                       NA, 0,
+                                     "NA", 0,
+                            "Fill-NoData", 0,
+             "Nodata/Non-processing mask", 0, # Excluded as non-burnable landcover, e.g. water
+                        "Increased Green", 1,
+                           "Unburned/Low", 2,
+                                    "Low", 3,
+                           "Low-Moderate", 4,
+                             "Low-Medium", 4,
+                             "Medium-Low", 4,
+                                 "Medium", 5,
+                               "Moderate", 5,
+                            "Medium-High", 6,
+                          "Moderate-High", 6,
+                            "High-Medium", 6,
+                                   "High", 7,
+                            "No Severity", 8  # Severity Not Mapped, e.g. cloudy post-fire imagery
+             )
+
+dist_types <- combined_disturbance_df |>
+  select(dist_type_agg, dist_type) |>
+  distinct() |>
+  arrange(dist_type_agg, dist_type)
+
+# tribble_paste(dist_types)
+
+ref_dist_type = tibble::tribble(
+        ~dist_type_agg,          ~dist_type,  ~dist_type_agg2,
+          "Biological",        "Biological", "Other",
+            "Chemical",          "Chemical", "Other",
+            "Clearcut",          "Clearcut", "Other",
+         "Development",       "Development", "Other",
+             "Disease",           "Disease", "Other",
+         "Fill-NoData",       "Fill-NoData",  "None",
+                "Fire",              "Fire",  "Fire",
+                "Fire",   "Prescribed Fire",  "Fire",
+                "Fire",          "Wildfire",  "Fire",
+                "Fire",     "Wildland Fire",  "Fire",
+                "Fire", "Wildland Fire Use",  "Fire",
+             "Harvest",           "Harvest", "Other",
+           "Herbicide",         "Herbicide", "Other",
+             "Insects",           "Insects", "Other",
+     "Insects/Disease",   "Insects/Disease", "Other",
+         "Mastication",       "Mastication", "Other",
+                  "NA",                "NA",  "None",
+              "NoData",            "NoData",  "None",
+    "Other Mechanical",  "Other Mechanical", "Other",
+      "Mechanical Add",    "Mechanical Add", "Other",
+   "Mechanical Remove", "Mechanical Remove", "Other",
+            "Thinning",          "Thinning", "Other",
+             "Unknown",           "Unknown", "Other",
+               "Water",             "Water", "Other",
+             "Weather",           "Weather", "Other",
+                    NA,                  NA,  "None",
+    ) |>
+  left_join(tribble(
+    ~dist_co, ~dist_type_agg2,
+     0, "None",
+    10, "Fire",
+    20, "Other"
+  ))
+
+combined_disturbance_df_join <- combined_disturbance_df |>
+  left_join(ref_severity) |>
+  left_join(ref_dist_type) |>
+  mutate(distsev_co = dist_co + sev_co) |>
+  select(source_base, value, distsev_co, dist_co, sev_co, everything())
+
+combined_disturbance_df_join |> group_by(distsev_co) |> tally()
+
+remap_tbl <- combined_disturbance_df_join |>
+  select(source_year, source_base, value, distsev_co)
+
+# Convert to JavaScript-style lists
+result <- remap_tbl %>%
+  group_by(source_year, source_base) %>%
+  summarise(
+    from = paste0("[", paste(value, collapse = ", "), "]"),
+    to = paste0("[", paste(distsev_co, collapse = ", "), "]")
+  ) %>%
+  ungroup() %>%
+  arrange(source_year) %>%
+  mutate(bandName = glue('b{row_number()}'), .before=1)
+
+# Format as text string
+formatted_text <- result %>%
+  # mutate(text = paste0("'", bandName, "', ", from, ", ", to)) %>%
+  mutate(text = glue("var dist_agg_{source_year} = annual_dist_stack.select('{bandName}').rename('lf_raw').addBands(annual_dist_stack.select('{bandName}').remap({from}, {to}, 99).rename('lf_agg'));")) %>%
+  pull(text) %>%
+  paste(collapse = "\n")
+
+# Print output
+cat(formatted_text)
+
+```
+
+```{ interim checks}
+check_severity <- combined_disturbance_df |>
+  group_by(value, severity) |>
+  tally() |>
+  mutate(n_vals = n())
+
+check_dist_type <- combined_disturbance_df |>
+  group_by(value, dist_type) |>
+  tally() |>
+  mutate(n_vals = n())
+
+check_dist_type_agg <- combined_disturbance_df |>
+  group_by(value, dist_type_agg) |>
+  tally() |>
+  mutate(n_vals = n())
+```
