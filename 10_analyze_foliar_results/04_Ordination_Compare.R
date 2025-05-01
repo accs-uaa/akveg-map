@@ -174,14 +174,15 @@ stressplot(nmds_normalized, main="Stress Plot for Normalized Cover/Bray-Curtis")
 
 # Assign scores from NMDS axes
 analysis_data = ordination_data %>%
-  mutate(nmds_axis_1 = scores(nmds_normalized, display = "sites")[, 1]) %>%
-  mutate(nmds_axis_2 = scores(nmds_normalized, display = "sites")[, 2]) %>%
-  mutate(nmds_axis_3 = scores(nmds_normalized, display = "sites")[, 3])
+  mutate(nmds_axis_1 = scores(nmds_normalized, display = "sites")[, 1],
+         nmds_axis_2 = scores(nmds_normalized, display = "sites")[, 2],
+         nmds_axis_3 = scores(nmds_normalized, display = "sites")[, 3])
 
 # Calculate a multivariate GAM to model the NMDS axes from the foliar cover cross-validation results
 library(mgcv)
 gam_all = gam(list(nmds_axis_1 ~ s(betshr) + s(dryas) + s(dsalix) + s(empnig) + s(mwcalama) + s(ndsalix) + s(nerishr) + s(rhoshr) + s(sphagn) + s(vaculi) + s(vacvit) + s(wetsed),
                    nmds_axis_2 ~ s(betshr) + s(dryas) + s(dsalix) + s(empnig) + s(mwcalama) + s(ndsalix) + s(nerishr) + s(rhoshr) + s(sphagn) + s(vaculi) + s(vacvit) + s(wetsed),
-                   nmds_axis_3 ~ s(betshr) + s(dryas) + s(dsalix) + s(empnig) + s(mwcalama) + s(ndsalix) + s(nerishr) + s(rhoshr) + s(sphagn) + s(vaculi) + s(vacvit) + s(wetsed)),
+                   nmds_axis_3 ~ s(betshr) + s(dryas) + s(dsalix) + s(empnig) + s(mwcalama) + s(ndsalix) + s(nerishr) + s(rhoshr) + s(sphagn) + s(vaculi) + s(vacvit) + s(wetsed)
+                   ),
     data = analysis_data, family = mvn(d = 3))
 summary(gam_all)
