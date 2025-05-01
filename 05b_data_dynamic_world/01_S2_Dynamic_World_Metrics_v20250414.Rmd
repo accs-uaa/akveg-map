@@ -1,11 +1,13 @@
 ---
 title: "Prepare Dynamic World metrics"
 output: html_document
-Last Updated: 2025-04-23
+date: 2025-04-23
+---
+
 Author: Matt Macander, ABR
 Usage: Script should be executed in R 4.3.1+.
 Description: "Prepare Dynamic World metrics" prepares ancillary rasters from compiled Dynamic World time-series
----
+
 # Dynamic World Metrics
 
 The Dynamic World V1 product (DW, https://developers.google.com/earth-engine/datasets/catalog/GOOGLE_DYNAMICWORLD_V1) is generated for all Sentinel 2 granules with <35% cloud cover. It is a 10 m resolution product with 9 classes. It can be summarized to provide continuous and categorical products that characterize the snow phenology and land cover dynamics at fine spatial resolution.
@@ -55,41 +57,39 @@ n: Total number of DW observations, May-September. 254 indicates value >= 254.
 ## Workflow
 
 1. Generate MGRS tile polygons with 100 m overlap
-
+    
 1. Run GEE script s2_dynamic_world_lc_metrics_v20250414_mgrs.js 
 
-https://code.earthengine.google.com/?scriptPath=users%2Fmmacander%2Fakveg_map%3Adynamic_world_metrics%2Fs2_dynamic_world_lc_metrics_v20250414_mgrs.js
-https://code.earthengine.google.com/a0bea63ac42cbac1a26c3d622aba7267  (link generated 2025-04-23)
+    https://code.earthengine.google.com/?scriptPath=users%2Fmmacander%2Fakveg_map%3Adynamic_world_metrics%2Fs2_dynamic_world_lc_metrics_v20250414_mgrs.js
+    https://code.earthengine.google.com/a0bea63ac42cbac1a26c3d622aba7267  (link generated 2025-04-23)
 
-Static copy saved in this code repo.
+    Static copy saved in this code repo.
 
-Generates monthly rasters for each MGRS tile. Saves result to GCS bucket.
-
+    Generates monthly rasters for each MGRS tile. Saves result to GCS bucket.
 1. Run 05b_data_dynamic_world/dw_months_to_cog_backed_ic.ipynb
 
-Create and manage the cloud-backed image collection.
+    Create and manage the cloud-backed image collection.
 
 1. Run GEE script dynamic_world_metrics/s2_dynamic_world_lc_metrics_v20240414_akalb
 
-https://code.earthengine.google.com/?scriptPath=users%2Fmmacander%2Fakveg_map%3Adynamic_world_metrics%2Fs2_dynamic_world_lc_metrics_v20240414_akalb.js
-https://code.earthengine.google.com/265fa1ef2490a07f315d6f27465e8bc4  (link generated 2025-04-23)
+    https://code.earthengine.google.com/?scriptPath=users%2Fmmacander%2Fakveg_map%3Adynamic_world_metrics%2Fs2_dynamic_world_lc_metrics_v20240414_akalb.js
+    https://code.earthengine.google.com/265fa1ef2490a07f315d6f27465e8bc4  (link generated 2025-04-23)
 
-Mosaics MGRS results into 5 monthly rasters for study area (on-the-fly).
+    Mosaics MGRS results into 5 monthly rasters for study area (on-the-fly).
+  
+    Combines monthly rasters to June/July/August and/or May-Sept sums.
 
-Combines monthly rasters to June/July/August and/or May-Sept sums.
+    Calculates standardized percentage metrics and modal classes.
 
-Calculates standardized percentage metrics and modal classes.
-
-Exports results to tiled or study area rasters in AKVeg-Map CRS.
+    Exports results to tiled or study area rasters in AKVeg-Map CRS.
 
 1. Run second block in 05b_data_dynamic_world/dw_months_to_cog_backed_ic.ipynb
 
-Create and manage the cloud-backed image collection for percentage AKALB tiles.
-
-
+    Create and manage the cloud-backed image collection for percentage AKALB tiles.
 1. Check results using GEE script 
-https://code.earthengine.google.com/?scriptPath=users%2Fmmacander%2Fakveg_map%3Adynamic_world_metrics%2Fs2_dynamic_world_lc_metrics_v20250414_viz
-https://code.earthengine.google.com/c7d98c84222c428e799d5e3ec9838654 (link generated 2025-04-24)
+
+    https://code.earthengine.google.com/?scriptPath=users%2Fmmacander%2Fakveg_map%3Adynamic_world_metrics%2Fs2_dynamic_world_lc_metrics_v20250414_viz
+    https://code.earthengine.google.com/c7d98c84222c428e799d5e3ec9838654 (link generated 2025-04-24)
 
 
 ## References
