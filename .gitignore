@@ -30,6 +30,7 @@ Thumbs.db
 .idea
 .ipynb_checkpoints
 .Rhistory
+.Rproj
 .Rdata
 __pycache__
 venv
