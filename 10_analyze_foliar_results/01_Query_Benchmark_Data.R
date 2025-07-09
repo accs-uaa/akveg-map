@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Query benchmark data from AKVEG Database
 # Author: Timm Nawrocki, Amanda Droghini, Alaska Center for Conservation Science
-# Last Updated: 2025-06-26
+# Last Updated: 2025-07-06
 # Usage: Script should be executed in R 4.4.3+.
 # Description: "Query benchmark data from AKVEG Database" pulls data from the AKVEG Database for selected datasets. The script connects to the AKVEG database, executes queries, and performs simple spatial analyses (i.e., subset the data to specific study areas, extract raster values to surveyed plots). The outputs are a series of CSV files (one for each non-metadata table in the database) whose results are restricted to the study area in the script.
 # ---------------------------------------------------------------------------
@@ -22,7 +22,8 @@ library(terra)
 library(tibble)
 library(tidyr)
 
-#### Set up directories and files ------------------------------
+#### SET UP DIRECTORIES AND FILES
+#### ------------------------------
 
 # Set round date
 round_date = 'round_20241124'
@@ -92,7 +93,8 @@ alpine_raster = rast(alpine_input)
 akvwc_raster = rast(akvwc_input)
 landfire_raster = rast(landfire_input)
 
-#### Query AKVEG database ------------------------------
+#### QUERY AKVEG DATABASE
+####------------------------------
 
 # Import database connection function
 connection_script = path(database_repository, 'pull_functions', 'connect_database_postgresql.R')
@@ -357,7 +359,8 @@ site_visit_data = site_visit_data %>%
                 ecoregion, mlra, zone, group_id, subregion, focal_unit, tree_percent, vascular_percent,
                 total_percent, homogeneous, plot_dimensions_m, latitude_dd, longitude_dd, cent_x, cent_y)
 
-#### Add cross-validation and prediction results ------------------------------
+#### ADD CROSS-VALIDATION AND PREDICTION RESULTS
+#### ------------------------------
 
 # Read data frame of combined results
 for (indicator in indicators) {
@@ -436,6 +439,9 @@ subregion_data = site_visit_data %>%
   group_by(group_id, subregion, focal_unit) %>%
   mutate(obs_years = paste(toString(min_year), toString(max_year), sep = '-')) %>%
   select(-min_year, -max_year)
+
+#### EXPORT DATA
+####------------------------------
 
 # Export data to csv files
 taxa_data %>%
