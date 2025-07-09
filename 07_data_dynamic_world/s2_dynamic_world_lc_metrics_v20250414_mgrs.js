@@ -24,7 +24,7 @@
 
 // https://code.earthengine.google.com/?scriptPath=users%2Fmmacander%2Fakveg_map%3Adynamic_world_metrics%2Fs2_dynamic_world_lc_metrics_v20250414_mgrs.js
 // https://code.earthengine.google.com/16999ded2815d3e4dbeb71f0198b1a6a
-// 05b_data_dynamic_world/s2_dynamic_world_lc_metrics_v20250414_mgrs.js
+// 07_data_dynamic_world/s2_dynamic_world_lc_metrics_v20250414_mgrs.js
 
 var version = 'v20250414';
 
