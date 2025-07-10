@@ -121,39 +121,38 @@ for trace in ref_point_scaled.data:
 # Style the plot
 combined_plot.update_layout(
     template='plotly_white',
-    title=dict(
-        text='Comparison of performance metrics calculated at site and landscape scales',
-        font=dict(size=24)
-    ),
+    title=None,
     width=1000,
     height=500,
     showlegend=False,
-    font=dict(size=18),
+    font=dict(size=18, color='black'),
     xaxis=dict(range=[0.15, 1.05],
                #scaleanchor="y",
                tick0=0.2,
                dtick=0.2,
-               tickfont=dict(size=16)
+               tickfont=dict(size=16, color='black')
                ),
     yaxis=dict(range=[0.2, 1.05],
                tick0=0.4,
                dtick=0.2,
-               tickfont=dict(size=16)
+               tickfont=dict(size=16, color='black')
                ),
     xaxis2=dict(range=[0.15, 1.05],
                 #scaleanchor="y2",
                 tick0=0.2,
                 dtick=0.2,
-                tickfont=dict(size=16)),
+                tickfont=dict(size=16, color='black')
+                ),
     yaxis2=dict(range=[0.2, 1.05],
                 tick0=0.4,
                 dtick=0.2,
-                tickfont=dict(size=16)),
+                tickfont=dict(size=16, color='black')
+                ),
     shapes=shapes
 )
 
 # Increase the font size of the x and y axis titles and subplot titles
-combined_plot.update_annotations(font=dict(size=20))
+combined_plot.update_annotations(font=dict(size=20, color='black'))
 
 # Add labels for perfect predictions
 combined_plot.add_annotation(
@@ -165,7 +164,7 @@ combined_plot.add_annotation(
     arrowwidth=2,
     arrowsize=1,
     ax=-10, ay=30,
-    font=dict(size=16)
+    font=dict(size=16, color='black')
     )
 combined_plot.add_annotation(
     x=0.99, y=0.98,
@@ -176,12 +175,9 @@ combined_plot.add_annotation(
     arrowwidth=2,
     arrowsize=1,
     ax=-10, ay=30,
-    font=dict(size=16)
+    font=dict(size=16, color='black')
     )
 
-# Export to HTML (interactive)
+# Export to HTML (interactive) and SVG (publication)
 combined_plot.write_html(html_output)
-
-# Export to SVG for publication
-combined_plot.update_layout(title=None)
 pio.write_image(combined_plot, plot_output, format='svg', width=1000, height=500, scale=1)

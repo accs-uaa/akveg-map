@@ -7,13 +7,14 @@
 # ---------------------------------------------------------------------------
 
 # Import libraries
-import numpy as np
 import pandas as pd
 import plotly.express as px
 from plotly.subplots import make_subplots
 import plotly.io as pio
 import os
 import kaleido
+
+# Initialize kaleido
 kaleido.get_chrome_sync()
 
 # Set root directory
@@ -65,17 +66,21 @@ cover_data = training_data.groupby(['cover_version', 'region']).size().reset_ind
 # Summarize data by year interval
 year_data = training_data.groupby(['year_interval', 'region']).size().reset_index(name='count')
 
-# Define custom color palettes
+# Define custom fill
 cover_colors = {
-    'absolute': '#446589',
-    'top': '#A6CDF8'
+    'absolute': '#000000',
+    'top': '#000000'
+}
+cover_patterns = {
+    'absolute': 'x',
+    'top': '\\'
 }
 year_colors = {
-    '2000-2004': '#EBFEFE',
-    '2005-2009': '#7ABFD1',
-    '2010-2014': '#427BB8',
-    '2015-2019': '#383975',
-    '2020-2024': '#040613'
+    '2000-2004': '#E1E5EE',
+    '2005-2009': '#B2B7C3',
+    '2010-2014': '#838897',
+    '2015-2019': '#535A6C',
+    '2020-2024': '#242B40'
 }
 
 # Define x-axis ordering
@@ -96,7 +101,17 @@ cover_plot = px.bar(cover_data,
                     color='cover_version',
                     color_discrete_map=cover_colors,
                     category_orders={'region': category_order})
-cover_plot.update_traces(marker_line_color='black', marker_line_width=1)
+
+# Replace colors with patterns
+for trace in cover_plot.data:
+    map_name = trace.name
+    pattern_shape = cover_patterns.get(map_name, '')
+    trace.marker.line.width = 1
+    trace.marker.line.color = 'black'
+    trace.marker.pattern.shape = pattern_shape
+    trace.marker.pattern.fillmode = 'replace'
+    trace.marker.pattern.fgcolor = 'black'
+    trace.marker.pattern.size = 6
 
 # Create year-range plot
 year_plot = px.bar(year_data,
@@ -109,7 +124,7 @@ year_plot.update_traces(marker_line_color='black', marker_line_width=1)
 
 # Create combined plot
 combined_plot = make_subplots(rows=1, cols=2,
-                              subplot_titles=('Observations by top or absolute cover', 'Observations by year'),
+                              subplot_titles=('Site visits by top or absolute cover', 'Site visits by year'),
                               horizontal_spacing=0.1,
                               shared_yaxes=True)
 for trace in cover_plot.data:
@@ -125,18 +140,15 @@ for trace in year_plot.data:
 combined_plot.update_layout(
     barmode='stack',
     template='plotly_white',
-    title=dict(
-        text='Number of site visits per region',
-        font=dict(size=24)
-    ),
+    title=None,
     width=1000,
     height=700,
     showlegend=True,
-    font=dict(size=18),
-    xaxis=dict(tickfont=dict(size=16)),
-    yaxis=dict(tickfont=dict(size=16)),
-    xaxis2=dict(tickfont=dict(size=16)),
-    yaxis2=dict(tickfont=dict(size=16))
+    font=dict(size=18, color='black'),
+    xaxis=dict(tickfont=dict(size=16, color='black')),
+    yaxis=dict(tickfont=dict(size=16, color='black')),
+    xaxis2=dict(tickfont=dict(size=16, color='black')),
+    yaxis2=dict(tickfont=dict(size=16, color='black'))
 )
 
 # Rotate the x-axis labels
@@ -155,7 +167,7 @@ combined_plot.update_xaxes(
 )
 
 # Increase the font size of the subplot titles
-combined_plot.update_annotations(font=dict(size=20))
+combined_plot.update_annotations(font=dict(size=20, color='black'))
 
 # Add annotations for x and y titles
 combined_plot.add_annotation(
@@ -167,7 +179,7 @@ combined_plot.add_annotation(
     showarrow=False,
     xanchor="center",
     yanchor="top",
-    font=dict(size=20)
+    font=dict(size=20, color='black')
 )
 
 combined_plot.add_annotation(
@@ -180,10 +192,9 @@ combined_plot.add_annotation(
     xanchor="right",
     yanchor="middle",
     textangle=-90,
-    font=dict(size=20)
+    font=dict(size=20, color='black')
 )
 
-# Export to HTML (interactive)
+# Export to HTML (interactive) and SVG (publication)
 combined_plot.write_html(html_output)
-combined_plot.update_layout(title=None)
 pio.write_image(combined_plot, plot_output, format='svg', width=1000, height=700, scale=1)

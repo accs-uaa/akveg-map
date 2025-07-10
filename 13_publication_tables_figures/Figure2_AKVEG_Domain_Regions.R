@@ -76,7 +76,7 @@ custom_colors = c(
 
 # Define pattern mapping for four biomes (excluding wave and none)
 pattern_map = c(
-  "Arctic" = "crosshatch",
+  "Arctic" = "stripe",
   "Boreal" = "none",
   "Northern Subpolar Oceanic" = "stripe",
   "Temperate" = "circle"

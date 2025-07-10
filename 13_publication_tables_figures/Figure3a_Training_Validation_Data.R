@@ -192,8 +192,8 @@ region_data = st_read(region_input) %>%
 
 # Define custom fill colors
 custom_colors = c(
-  'absolute' = '#446589',
-  'top' = '#A6CDF8',
+  'absolute' = '#535A6C',
+  'top' = '#E1E5EE',
   'Alaska-Yukon Map Domain' = 'black'
 )
 

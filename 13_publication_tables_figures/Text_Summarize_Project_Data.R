@@ -128,7 +128,7 @@ site_visit_public = site_visit_data %>%
 
 # Prepare empty data frames
 site_visit_selected = tibble(site_visit_code = 'a')[0,]
-site_visit_count = tibble(indicator = 'a', site_visits = 1)[0,]
+site_visit_count = tibble(indicator = 'a', site_visits = 1, presence = 1, absence = 1)[0,]
 
 # Read data frame of combined selected data
 for (indicator in indicators) {
@@ -137,20 +137,25 @@ for (indicator in indicators) {
   
   # Read results
   indicator_data = read_csv(indicator_input) %>%
-    select(st_vst) %>%
-    rename(site_visit_code = st_vst) %>%
+    rename(site_visit_code = st_vst)
+  
+  # Process indicator site visits
+  indicator_sites = indicator_data %>%
     distinct(site_visit_code)
   
-  # Omit the generated absences from the counts
-  site_visit_true = indicator_data %>%
-    inner_join(site_visit_data, by = 'site_visit_code')
-  
   # Store number of site visits per indicator
-  indicator_sites = tibble(indicator = indicator, site_visits = nrow(site_visit_true))
+  indicator_count = indicator_data %>%
+    inner_join(site_visit_data, by = 'site_visit_code') %>%
+    group_by(group_abbr) %>%
+    summarize(site_visits = n(), presence = sum(presence))
+  indicator_count = indicator_count %>%
+    mutate(absence = site_visits - presence,
+           indicator = indicator) %>%
+    select(-group_abbr)
   
   # Bind rows
-  site_visit_selected = rbind(site_visit_selected, indicator_data)
-  site_visit_count = rbind(site_visit_count, indicator_sites)
+  site_visit_selected = rbind(site_visit_selected, indicator_sites)
+  site_visit_count = rbind(site_visit_count, indicator_count)
   
 }
 
@@ -246,5 +251,5 @@ summary_data = summary_data %>%
   pivot_longer(colnames(summary_data), names_to = 'characteristic', values_to = 'value')
 
 # Export data to xlsx
-sheets = list('summary' = summary_data)
+sheets = list('summary' = summary_data, 'site_visits' = site_visit_count)
 write_xlsx(sheets, summary_output, format_headers = FALSE)
