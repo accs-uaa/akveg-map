@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
 # Summarize project data
-# Author: Timm Nawrocki, Amanda Droghini, Alaska Center for Conservation Science
+# Author: Timm Nawrocki, Alaska Center for Conservation Science
 # Last Updated: 2025-07-07
 # Usage: Script should be executed in R 4.4.3+.
 # Description: "Summarize project data" creates a table for publication to display a summary of the characteristics per project of data used to train and validate foliar cover maps.
 # ---------------------------------------------------------------------------
 
-# Import required libraries ----
+# Import required libraries
 library(dplyr)
 library(fs)
 library(janitor)
@@ -22,7 +22,8 @@ library(terra)
 library(tibble)
 library(tidyr)
 
-#### Set up directories and files ------------------------------
+#### SET UP DIRECTORIES AND FILES
+####------------------------------
 
 # Set round date
 round_date = 'round_20241124'
@@ -47,8 +48,7 @@ output_folder = path(project_folder, 'Documents/Manuscript_FoliarCover_Floristic
 fireyear_input = path(project_folder, 'Data/Data_Input/ancillary_data/processed/AlaskaYukon_FireYear_10m_3338.tif')
 
 # Define output files
-summary_output = path(output_folder, 'text_summary_data.xlsx')
-project_output = path(output_folder, 'appendixS5_project_summary.xlsx')
+summary_output = path(output_folder, 'Text_AKVEG_Summary.xlsx')
 
 # Define queries
 taxa_file = path(database_repository, 'queries/00_taxonomy.sql')
@@ -248,23 +248,3 @@ summary_data = summary_data %>%
 # Export data to xlsx
 sheets = list('summary' = summary_data)
 write_xlsx(sheets, summary_output, format_headers = FALSE)
-
-#### SUMMARIZE PROJECT METADATA
-####------------------------------
-
-# Summarize cover type
-cover_type = vegetation_data %>%
-  distinct(site_visit_code, cover_type)
-
-# Summarize site visits per project
-site_visit_summary = site_visit_data %>%
-  inner_join(site_data, by = 'site_visit_code') %>%
-  left_join(cover_type, by = 'site_visit_code') %>%
-  group_by(project_code, perspective, cover_method, cover_type) %>%
-  summarize(site_visit_count = n())
-
-# Identify unique projects
-project_list = site_visit_summary %>%
-  distinct(project_code)
-  
-
