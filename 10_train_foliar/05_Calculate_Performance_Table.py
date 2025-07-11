@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Calculate performance table
 # Author: Timm Nawrocki
-# Last Updated: 2025-06-18
+# Last Updated: 2025-07-10
 # Usage: Must be executed in an Anaconda Python 3.7+ installation.
 # Description: "Calculate performance table" calculates a table of performance metrics at the site scale and landscape scale for all mapped indicators.
 # ---------------------------------------------------------------------------
@@ -35,29 +35,29 @@ performance_output = os.path.join(data_folder, 'performance_table.csv')
 indicators = ['alnus', 'betshr', 'bettre', 'brotre', 'dryas', 'dsalix', 'empnig', 'erivag', 'mwcalama',
               'ndsalix', 'nerishr', 'picgla', 'picmar', 'picsit', 'poptre', 'populbt', 'rhoshr', 'rubspe',
               'sphagn', 'tsumer', 'vaculi', 'vacvit', 'wetsed']
-names = ['Alder (Alnus) Shrubs',
-         'Birch (Betula) Shrubs',
-         'Birch (Betula) Trees',
-         'Broadleaf Trees',
-         'Dryas Dwarf Shrubs',
-         'Willow (Salix) Dwarf Shrubs',
+names = ['alder shrubs',
+         'birch shrubs',
+         'birch trees',
+         'broadleaf trees',
+         'Dryas dwarf shrubs',
+         'willow dwarf shrubs',
          'Empetrum nigrum',
          'Eriophorum vaginatum',
-         'Mesic-wet Calamagrostis',
-         'Willow (Salix) Non-dwarf Shrubs',
-         'Needleleaf Ericaceous Dwarf Shrubs',
-         'White Spruce (Picea glauca / ×lutzii)',
-         'Black Spruce (Picea mariana)',
-         'Sitka Spruce (Picea sitchensis)',
-         'Aspen (Populus tremuloides)',
-         'Poplar (Populus balsamifera / trichocarpa)',
-         'Rhododendron Shrubs',
-         'Salmonberry (Rubus spectabilis)',
-         'Sphagnum Moss',
-         'Mountain Hemlock (Tsuga mertensiana)',
-         'Bog Blueberry (Vaccinium uliginosum)',
-         'Lingonberry (Vaccinium vitis-idaea)',
-         'Wetland Sedges']
+         'mesic-wet Calamagrostis',
+         'willow non-dwarf shrubs',
+         'needleleaf ericaceous dwarf shrubs',
+         'white spruce',
+         'black spruce',
+         'Sitka spruce',
+         'aspen',
+         'poplar',
+         'Rhododendron shrubs',
+         'salmonberry',
+         'Sphagnum moss',
+         'mountain hemlock',
+         'bog blueberry',
+         'lingonberry',
+         'wetland sedges']
 model_types = ['lgbm', 'lgbm', 'lgbm', 'lgbm', 'lgbm no_clim', 'lgbm no_clim', 'lgbm no_clim',
                'lgbm', 'lgbm', 'lgbm', 'lgbm no_clim', 'lgbm', 'lgbm', 'rf', 'lgbm no_clim',
                'lgbm', 'lgbm', 'rf', 'lgbm', 'lgbm no_clim', 'lgbm', 'rf', 'lgbm']
