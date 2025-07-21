@@ -23,11 +23,11 @@ library(tidyr)
 # Set round date
 round_date = 'round_20241124'
 
-# Set root directory (modify to your folder structure)
+# Set root directory
 drive = 'C:'
 root_folder = 'ACCS_Work'
 
-# Define input folders
+# Define folder structure
 project_folder = path(drive, root_folder, 'Projects/VegetationEcology/AKVEG_Map')
 input_folder = path(project_folder, 'Data/Data_Output/model_results', round_date)
 output_folder = path(project_folder, 'Documents/Manuscript_FoliarCover_FloristicGradients/tables')
@@ -43,7 +43,7 @@ performance_output = path(output_folder, 'Table2_Individual_Performance.xlsx')
 
 # Format performance results
 performance_data = read_csv(performance_input) %>%
-  select(indicator_name, n_presence, r2_site, rmse_site, auc_site, acc_site, r2_scaled, rmse_scaled, cover_median, cover_mean) %>%
+  select(indicator_name, r2_site, rmse_site, auc_site, acc_site, r2_scaled, rmse_scaled, n_presence, cover_mean) %>%
   mutate(r2_site = round(r2_site, 2),
          rmse_site = str_c(round(rmse_site, 0), '%'),
          auc_site = round(auc_site, 2),

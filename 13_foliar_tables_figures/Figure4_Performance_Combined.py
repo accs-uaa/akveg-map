@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------
 # Plot foliar cover performance combined
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Last Updated: 2025-07-09
+# Last Updated: 2025-07-21
 # Usage: Script should be executed in R 4.1.0+.
 # Description: "Plot foliar cover performance combined" plots the performance of all foliar cover models in two panels for site scale and landscape scale results.
 # ---------------------------------------------------------------------------
@@ -17,6 +17,9 @@ import kaleido
 # Initialize kaleido
 kaleido.get_chrome_sync()
 
+#### SET UP DIRECTORIES AND FILES
+####------------------------------
+
 # Set round date
 round_date = 'round_20241124'
 
@@ -24,18 +27,19 @@ round_date = 'round_20241124'
 drive = 'C:/'
 root_folder = 'ACCS_Work/Projects/VegetationEcology/AKVEG_Map'
 
+# Define folder structure
+model_folder = os.path.join(drive, root_folder, 'Data/Data_Output/model_results', round_date)
+output_folder = os.path.join(drive, root_folder, 'Documents/Manuscript_FoliarCover_FloristicGradients/figures')
+
 # Define input file
-performance_input = os.path.join(drive, root_folder,
-                                 'Data/Data_Output/model_results', round_date,
-                                 'performance_table.csv')
+performance_input = os.path.join(model_folder, 'performance_table.csv')
 
 # Define output files
-html_output = os.path.join(drive, root_folder,
-                           'Documents/Manuscript_FoliarCover_FloristicGradients/figures',
-                           'Figure4_Performance_Combined.html')
-plot_output = os.path.join(drive, root_folder,
-                           'Documents/Manuscript_FoliarCover_FloristicGradients/figures',
-                           'Figure4_Performance_Combined.svg')
+html_output = os.path.join(output_folder, 'Figure4_Performance_Combined.html')
+plot_output = os.path.join(output_folder, 'Figure4_Performance_Combined.png')
+
+#### CREATE PLOT
+####------------------------------
 
 # Read performance data
 performance_data = pd.read_csv(performance_input)
@@ -84,7 +88,7 @@ scaled_plot.update_traces(hovertemplate='%{customdata[0]}<br>' +
 
 # Create combined plot
 combined_plot = make_subplots(rows=1, cols=2,
-                              subplot_titles=('Site-scale', 'Landscape-scale'),
+                              subplot_titles=('a. Site-scale', 'b. Landscape-scale'),
                               x_title='R squared',
                               y_title='Inverse standardized RMSE',
                               horizontal_spacing=0.1)
@@ -151,6 +155,13 @@ combined_plot.update_layout(
     shapes=shapes
 )
 
+# Align subplot titles to the left
+subplot_domains = [0.0, 0.55]
+for i, annotation in enumerate(combined_plot['layout']['annotations']):
+    if 'text' in annotation and annotation['text'].startswith(('a.', 'b.')):
+        annotation['xanchor'] = 'left'
+        annotation['x'] = subplot_domains[i] + 0.01
+
 # Increase the font size of the x and y axis titles and subplot titles
 combined_plot.update_annotations(font=dict(size=20, color='black'))
 
@@ -178,6 +189,6 @@ combined_plot.add_annotation(
     font=dict(size=16, color='black')
     )
 
-# Export to HTML (interactive) and SVG (publication)
+# Export to HTML (interactive) and PNG (publication)
 combined_plot.write_html(html_output)
-pio.write_image(combined_plot, plot_output, format='svg', width=1000, height=500, scale=1)
+pio.write_image(combined_plot, plot_output, width=1000, height=500, scale=10)

@@ -23,11 +23,11 @@ library(tidyr)
 # Set round date
 round_date = 'round_20241124'
 
-# Set root directory (modify to your folder structure)
+# Set root directory
 drive = 'C:'
 root_folder = 'ACCS_Work'
 
-# Define input folders
+# Define folder structure
 project_folder = path(drive, root_folder, 'Projects/VegetationEcology/AKVEG_Map')
 input_folder = path(project_folder, 'Data/Data_Output/ordination_results', round_date)
 output_folder = path(project_folder, 'Documents/Manuscript_FoliarCover_FloristicGradients/tables')

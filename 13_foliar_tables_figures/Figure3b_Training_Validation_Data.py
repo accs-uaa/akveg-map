@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------
 # Plot characteristics of training and validation data
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Last Updated: 2025-07-09
+# Last Updated: 2025-07-21
 # Usage: Script should be executed in R 4.1.0+.
 # Description: "Plot characteristics of training and validation data" plots stacked bar charts for the cover version and temporal range of data.
 # ---------------------------------------------------------------------------
@@ -17,22 +17,26 @@ import kaleido
 # Initialize kaleido
 kaleido.get_chrome_sync()
 
+#### SET UP DIRECTORIES AND FILES
+####------------------------------
+
 # Set root directory
 drive = 'C:/'
 root_folder = 'ACCS_Work/Projects/VegetationEcology/AKVEG_Map'
 
+# Define folder structure
+species_folder = os.path.join(drive, root_folder, 'Data/Data_Input/species_data')
+output_folder = os.path.join(drive, root_folder, 'Documents/Manuscript_FoliarCover_FloristicGradients/figures')
+
 # Define input file
-training_input = os.path.join(drive, root_folder,
-                              'Data/Data_Input/species_data',
-                              '00_training_data_summary.xlsx')
+training_input = os.path.join(species_folder, '00_training_data_summary.xlsx')
 
 # Define output files
-html_output = os.path.join(drive, root_folder,
-                           'Documents/Manuscript_FoliarCover_FloristicGradients/figures',
-                           'Figure3b_Training_Validation_Data.html')
-plot_output = os.path.join(drive, root_folder,
-                           'Documents/Manuscript_FoliarCover_FloristicGradients/figures',
-                           'Figure3b_Training_Validation_Data.svg')
+html_output = os.path.join(output_folder, 'Figure3b_Training_Validation_Data.html')
+plot_output = os.path.join(output_folder, 'Figure3b_Training_Validation_Data.png')
+
+#### CREATE PLOT
+####------------------------------
 
 # Read training data
 training_data = pd.read_excel(training_input, sheet_name='training')
@@ -68,8 +72,8 @@ year_data = training_data.groupby(['year_interval', 'region']).size().reset_inde
 
 # Define custom fill
 cover_colors = {
-    'absolute': '#000000',
-    'top': '#000000'
+    'absolute': '#242B40',
+    'top': '#E1E5EE'
 }
 cover_patterns = {
     'absolute': 'x',
@@ -109,9 +113,10 @@ for trace in cover_plot.data:
     trace.marker.line.width = 1
     trace.marker.line.color = 'black'
     trace.marker.pattern.shape = pattern_shape
-    trace.marker.pattern.fillmode = 'replace'
-    trace.marker.pattern.fgcolor = 'black'
-    trace.marker.pattern.size = 6
+    trace.marker.pattern.fillmode = 'overlay'
+    fg_color = 'white' if map_name == 'absolute' else 'black'
+    trace.marker.pattern.fgcolor = fg_color
+    trace.marker.pattern.size = 10
 
 # Create year-range plot
 year_plot = px.bar(year_data,
@@ -124,7 +129,8 @@ year_plot.update_traces(marker_line_color='black', marker_line_width=1)
 
 # Create combined plot
 combined_plot = make_subplots(rows=1, cols=2,
-                              subplot_titles=('Site visits by top or absolute cover', 'Site visits by year'),
+                              subplot_titles=('b. Site visits by absolute or top cover',
+                                              'c. Site visits by year'),
                               horizontal_spacing=0.1,
                               shared_yaxes=True)
 for trace in cover_plot.data:
@@ -166,6 +172,13 @@ combined_plot.update_xaxes(
     row=1, col=2
 )
 
+# Align subplot titles to the left
+subplot_domains = [0.0, 0.55]
+for i, annotation in enumerate(combined_plot['layout']['annotations']):
+    if 'text' in annotation and annotation['text'].startswith(('b.', 'c.')):
+        annotation['xanchor'] = 'left'
+        annotation['x'] = subplot_domains[i] + 0.01
+
 # Increase the font size of the subplot titles
 combined_plot.update_annotations(font=dict(size=20, color='black'))
 
@@ -195,6 +208,6 @@ combined_plot.add_annotation(
     font=dict(size=20, color='black')
 )
 
-# Export to HTML (interactive) and SVG (publication)
+# Export to HTML (interactive) and PNG (publication)
 combined_plot.write_html(html_output)
-pio.write_image(combined_plot, plot_output, format='svg', width=1000, height=700, scale=1)
+pio.write_image(combined_plot, plot_output, width=1000, height=700, scale=10)

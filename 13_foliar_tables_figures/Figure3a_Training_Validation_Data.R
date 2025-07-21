@@ -35,11 +35,11 @@ indicators = c('alnus', 'betshr', 'bettre', 'brotre', 'dryas', 'dsalix', 'empnig
                'ndsalix', 'nerishr', 'picgla', 'picmar', 'picsit', 'poptre', 'populbt', 'rhoshr', 'rubspe',
                'sphagn', 'tsumer', 'vaculi', 'vacvit', 'wetsed')
 
-# Set root directory (modify to your folder structure)
+# Set root directory
 drive = 'C:'
 root_folder = 'ACCS_Work'
 
-# Define input folders (modify to your folder structure)
+# Define folder structure
 database_repository = path(drive, root_folder, 'Repositories/akveg-database-public')
 credentials_folder = path(drive, root_folder, 'Credentials/akveg_private_read')
 project_folder = path(drive, root_folder, 'Projects/VegetationEcology/AKVEG_Map')
@@ -251,6 +251,7 @@ map_plot = ggplot() +
   ) +
   scale_x_continuous(breaks = seq(-180, 180, by = 20))+
   scale_y_continuous(breaks = seq(50,70, by = 5)) +
+  ggtitle('a. Map of site visits by absolute or top cover') +
   theme_minimal() +
   theme(
     axis.title = element_blank(),
@@ -259,7 +260,8 @@ map_plot = ggplot() +
     legend.text = element_text(size = 18),
     legend.title = element_blank(),
     legend.position = 'top',
-    legend.margin = margin(t = 10)
+    legend.margin = margin(t = 10),
+    plot.title = element_text(size = 20),
   ) +
   guides(
     fill = guide_legend(override.aes = list(size = 5)),

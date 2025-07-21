@@ -33,11 +33,11 @@ indicators = c('alnus', 'betshr', 'bettre', 'brotre', 'dryas', 'dsalix', 'empnig
                'ndsalix', 'nerishr', 'picgla', 'picmar', 'picsit', 'poptre', 'populbt', 'rhoshr', 'rubspe',
                'sphagn', 'tsumer', 'vaculi', 'vacvit', 'wetsed')
 
-# Set root directory (modify to your folder structure)
+# Set root directory
 drive = 'C:'
 root_folder = 'ACCS_Work'
 
-# Define input folders (modify to your folder structure)
+# Define folder structure
 database_repository = path(drive, root_folder, 'Repositories/akveg-database-public')
 credentials_folder = path(drive, root_folder, 'Credentials/akveg_private_read')
 project_folder = path(drive, root_folder, 'Projects/VegetationEcology/AKVEG_Map')

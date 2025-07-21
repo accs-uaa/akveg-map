@@ -19,11 +19,11 @@ library(tidyterra)
 #### SET UP DIRECTORIES AND FILES
 ####------------------------------
 
-# Set root directory (modify to your folder structure)
+# Set root directory
 drive = 'C:'
 root_folder = 'ACCS_Work'
 
-# Define input folders (modify to your folder structure)
+# Define folder structure
 project_folder = path(drive, root_folder, 'Projects/VegetationEcology/AKVEG_Map')
 base_folder = path(project_folder, 'Data/Data_Input/basemap')
 region_folder = path(project_folder, 'Data/Data_Input/region_data')
