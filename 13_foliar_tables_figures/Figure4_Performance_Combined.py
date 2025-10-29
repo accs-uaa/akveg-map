@@ -1,9 +1,9 @@
 # ---------------------------------------------------------------------------
 # Plot foliar cover performance combined
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Last Updated: 2025-07-21
+# Last Updated: 2025-07-24
 # Usage: Script should be executed in R 4.1.0+.
-# Description: "Plot foliar cover performance combined" plots the performance of all foliar cover models in two panels for site scale and landscape scale results.
+# Description: "Plot foliar cover performance combined" plots the performance of all foliar cover models in two panels for site-scale and local-scale results.
 # ---------------------------------------------------------------------------
 
 # Import libraries
@@ -88,7 +88,7 @@ scaled_plot.update_traces(hovertemplate='%{customdata[0]}<br>' +
 
 # Create combined plot
 combined_plot = make_subplots(rows=1, cols=2,
-                              subplot_titles=('a. Site-scale', 'b. Landscape-scale'),
+                              subplot_titles=('a. Site scale', 'b. Local scale'),
                               x_title='R squared',
                               y_title='Inverse standardized RMSE',
                               horizontal_spacing=0.1)

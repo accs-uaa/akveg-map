@@ -2,9 +2,9 @@
 # ---------------------------------------------------------------------------
 # Table 2. Individual performance
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Last Updated: 2025-07-10
+# Last Updated: 2025-07-24
 # Usage: Script should be executed in R 4.4.3+.
-# Description: "Table 2. Individual performance" formats a table for publication to display the results of the individual performance assessment at the site-scale and landscape-scale.
+# Description: "Table 2. Individual performance" formats a table for publication to display the results of the individual performance assessment at the site scale and local scale.
 # ---------------------------------------------------------------------------
 
 # Import required libraries

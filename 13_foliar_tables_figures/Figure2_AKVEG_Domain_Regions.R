@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Figure 2. AKVEG domain and regions
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Last Updated: 2025-07-09
+# Last Updated: 2025-08-21
 # Usage: Script should be executed in R 4.4.3+.
 # Description: "Figure 2. AKVEG domain and regions" creates a map figure for publication that shows the AKVEG map domain overlaying the regions and biomes.
 # ---------------------------------------------------------------------------
@@ -78,7 +78,7 @@ custom_colors = c(
 pattern_map = c(
   "Arctic" = "stripe",
   "Boreal" = "none",
-  "Northern Subpolar Oceanic" = "stripe",
+  "Northern Subpolar Oceanic" = "none",
   "Temperate" = "circle"
 )
 
@@ -123,7 +123,6 @@ map_plot = ggplot() +
     pattern_spacing = .01,
     pattern_angle = 45
   ) +
-  geom_sf(data = subpolar_data, aes(fill = biome), color = 'black', linewidth = 0.5, alpha = 1) +
   geom_sf(data = boreal_data, aes(fill = biome), color = 'black', linewidth = 0.5) +
   geom_sf_pattern(
     data = arctic_data,
@@ -142,6 +141,7 @@ map_plot = ggplot() +
   geom_sf(data = na_data, color = 'white', fill = NA, linewidth = 1.2) +
   geom_sf(data = na_data, color = 'black', fill = NA, linewidth = 0.2) +
   geom_sf(data = region_data, color = 'white', fill = NA, linewidth = 2) +
+  geom_sf(data = subpolar_data, aes(fill = biome), color = 'black', linewidth = 0.5, alpha = 1) +
   geom_sf(data = region_data, color = 'black', fill = NA, linewidth = 0.5) +
   geom_sf(data = domain_data, aes(color = name), fill = NA, linewidth = 1.5) +
   geom_label_repel(
