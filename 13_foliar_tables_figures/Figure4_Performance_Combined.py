@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------
 # Plot foliar cover performance combined
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Last Updated: 2025-07-24
+# Last Updated: 2025-11-04
 # Usage: Script should be executed in R 4.1.0+.
 # Description: "Plot foliar cover performance combined" plots the performance of all foliar cover models in two panels for site-scale and local-scale results.
 # ---------------------------------------------------------------------------
@@ -44,30 +44,30 @@ plot_output = os.path.join(output_folder, 'Figure4_Performance_Combined.png')
 # Read performance data
 performance_data = pd.read_csv(performance_input)
 
-# Calculate inverse standardized RMSE
-performance_data['inv_rmse_site'] = round(
-  1 - (performance_data['rmse_site']/performance_data['cover_mean']),
+# Calculate standardized RMSE
+performance_data['std_rmse_site'] = round(
+  (performance_data['rmse_site']/performance_data['cover_mean']),
   2)
-performance_data['inv_rmse_scaled'] = round(
-  1 - (performance_data['rmse_scaled']/performance_data['cover_mean']),
+performance_data['std_rmse_scaled'] = round(
+  (performance_data['rmse_scaled']/performance_data['cover_mean']),
   2)
 
 # Create reference line shapes representing "good" model performance
 shapes = [
-    dict(type="line", x0=0.4, y0=0.4, x1=1, y1=0.2, xref="x", yref="y",
+    dict(type="line", x0=0.4, y0=0.6, x1=1, y1=0.8, xref="x", yref="y",
          line=dict(color="black", dash="dash", width=1)),
-    dict(type="line", x0=0.4, y0=0.4, x1=0.2, y1=1, xref="x", yref="y",
+    dict(type="line", x0=0.4, y0=0.6, x1=0.2, y1=0, xref="x", yref="y",
          line=dict(color="black", dash="dash", width=1)),
-    dict(type="line", x0=0.4, y0=0.4, x1=1, y1=0.2, xref="x2", yref="y2",
+    dict(type="line", x0=0.4, y0=0.6, x1=1, y1=0.8, xref="x2", yref="y2",
          line=dict(color="black", dash="dash", width=1)),
-    dict(type="line", x0=0.4, y0=0.4, x1=0.2, y1=1, xref="x2", yref="y2",
+    dict(type="line", x0=0.4, y0=0.6, x1=0.2, y1=0, xref="x2", yref="y2",
          line=dict(color="black", dash="dash", width=1))
 ]
 
 # Create site plot
 site_plot = px.scatter(performance_data,
-                       x="r2_site",
-                       y="inv_rmse_site",
+                       x='r2_site',
+                       y='std_rmse_site',
                        custom_data=['indicator_name', 'rmse_site', 'cover_mean', 'n_presence'])
 site_plot.update_traces(hovertemplate='%{customdata[0]}<br>' +
                                       'R squared: %{x}<br>' +
@@ -77,8 +77,8 @@ site_plot.update_traces(hovertemplate='%{customdata[0]}<br>' +
 
 # Create scaled plot
 scaled_plot = px.scatter(performance_data,
-                         x="r2_scaled",
-                         y="inv_rmse_scaled",
+                         x='r2_scaled',
+                         y='std_rmse_scaled',
                          custom_data=['indicator_name', 'rmse_scaled', 'cover_mean', 'n_grid'])
 scaled_plot.update_traces(hovertemplate='%{customdata[0]}<br>' +
                                         'R squared: %{x}<br>' +
@@ -90,7 +90,7 @@ scaled_plot.update_traces(hovertemplate='%{customdata[0]}<br>' +
 combined_plot = make_subplots(rows=1, cols=2,
                               subplot_titles=('a. Site scale', 'b. Local scale'),
                               x_title='R squared',
-                              y_title='Inverse standardized RMSE',
+                              y_title='Standardized RMSE',
                               horizontal_spacing=0.1)
 for trace in site_plot.data:
     trace.marker.update(size=10, color='rgba(68,101,137,0.5)', line=dict(color='black', width=1))
@@ -101,14 +101,14 @@ for trace in scaled_plot.data:
     combined_plot.add_trace(trace, row=1, col=2)
 
 # Create reference points representing perfect predictions
-ref_point_site = px.scatter(x=[1], y=[1])
+ref_point_site = px.scatter(x=[1], y=[0])
 ref_point_site.update_traces(
     marker=dict(size=10, color='black', symbol='circle'),
     showlegend=False,
     hovertemplate='R squared: 1<br>' +
                   'RMSE: 0'
 )
-ref_point_scaled = px.scatter(x=[1], y=[1])
+ref_point_scaled = px.scatter(x=[1], y=[0])
 ref_point_scaled.update_traces(
     marker=dict(size=10, color='black', symbol='circle'),
     showlegend=False,
@@ -136,7 +136,7 @@ combined_plot.update_layout(
                dtick=0.2,
                tickfont=dict(size=16, color='black')
                ),
-    yaxis=dict(range=[0.2, 1.05],
+    yaxis=dict(range=[-0.05, 0.8],
                tick0=0.4,
                dtick=0.2,
                tickfont=dict(size=16, color='black')
@@ -147,7 +147,7 @@ combined_plot.update_layout(
                 dtick=0.2,
                 tickfont=dict(size=16, color='black')
                 ),
-    yaxis2=dict(range=[0.2, 1.05],
+    yaxis2=dict(range=[-0.05, 0.8],
                 tick0=0.4,
                 dtick=0.2,
                 tickfont=dict(size=16, color='black')
@@ -167,25 +167,25 @@ combined_plot.update_annotations(font=dict(size=20, color='black'))
 
 # Add labels for perfect predictions
 combined_plot.add_annotation(
-    x=0.99, y=0.98,
+    x=0.99, y=0.02,
     xref="x", yref="y",
     text="Perfect prediction",
     showarrow=True,
     arrowhead=2,
     arrowwidth=2,
     arrowsize=1,
-    ax=-10, ay=30,
+    ax=-15, ay=-30,
     font=dict(size=16, color='black')
     )
 combined_plot.add_annotation(
-    x=0.99, y=0.98,
+    x=0.99, y=0.02,
     xref="x2", yref="y2",
     text="Perfect prediction",
     showarrow=True,
     arrowhead=2,
     arrowwidth=2,
     arrowsize=1,
-    ax=-10, ay=30,
+    ax=-15, ay=-30,
     font=dict(size=16, color='black')
     )
 

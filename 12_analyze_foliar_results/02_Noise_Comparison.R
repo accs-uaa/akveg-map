@@ -62,7 +62,7 @@ group_number = max(site_data$group_id)
 #### COMPARE CLUSTER SOLUTIONS FOR EACH GROUP
 ####------------------------------
 
-count = 11
+count = 1
 while (count <= group_number) {
   
   # Define output file

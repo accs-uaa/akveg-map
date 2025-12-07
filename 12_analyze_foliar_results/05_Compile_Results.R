@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+# ---------------------------------------------------------------------------
+# Compile results
+# Author: Timm Nawrocki, Alaska Center for Conservation Science
+# Last Updated: 2025-10-29
+# Usage: Script should be executed in R 4.4.3+.
+# Description: "Compile results" creates a summary table of the ordination and clustering results from all subregions.
+# ---------------------------------------------------------------------------
+
 # Import required libraries
 library(dplyr)
 library(fs)
