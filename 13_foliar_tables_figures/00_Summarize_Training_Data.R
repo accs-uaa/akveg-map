@@ -2,8 +2,8 @@
 # ---------------------------------------------------------------------------
 # Summarize project data
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Last Updated: 2025-07-22
-# Usage: Script should be executed in R 4.4.3+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in a R 4.4.3+ installation.
 # Description: "Summarize project data" creates a table for publication to display a summary of the characteristics per project of data used to train and validate foliar cover maps.
 # ---------------------------------------------------------------------------
 
@@ -22,9 +22,6 @@ library(terra)
 library(tibble)
 library(tidyr)
 
-#### SET UP DIRECTORIES AND FILES
-####------------------------------
-
 # Set round date
 round_date = 'round_20241124'
 
@@ -32,6 +29,9 @@ round_date = 'round_20241124'
 indicators = c('alnus', 'betshr', 'bettre', 'brotre', 'dryas', 'dsalix', 'empnig', 'erivag', 'mwcalama',
                'ndsalix', 'nerishr', 'picgla', 'picmar', 'picsit', 'poptre', 'populbt', 'rhoshr', 'rubspe',
                'sphagn', 'tsumer', 'vaculi', 'vacvit', 'wetsed')
+
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
 
 # Set root directory
 drive = 'C:'
@@ -54,8 +54,8 @@ fireyear_input = path(project_folder, 'Data/Data_Input/ancillary_data/processed/
 # Define output files
 summary_output = path(output_folder, '00_Training_Data_Summary.xlsx')
 
-#### LOAD DATABASE EXTRACT
-####------------------------------
+#### LOAD DATABASE EXTRACTIONS
+####____________________________________________________
 
 # Read local data
 fireyear_raster = rast(fireyear_input)
@@ -123,7 +123,7 @@ site_visit_public = site_visit_data %>%
   filter(private == FALSE)
 
 #### COMPILE SELECTED SITE VISITS
-####------------------------------
+####____________________________________________________
 
 # Prepare empty data frames
 site_visit_selected = tibble(site_visit_code = 'a')[0,]
@@ -175,7 +175,7 @@ site_visit_final = site_visit_selected %>%
   filter(!is.na(project_code))
 
 #### SUMMARIZE AKVEG DATABASE
-####------------------------------
+####____________________________________________________
 
 # Summarize vegetation observations
 vegetation_observations = vegetation_data %>%
@@ -230,7 +230,7 @@ project_selected = site_visit_final %>%
   distinct(project_code)
 
 #### CREATE SITE VISIT DATASET FOR PLOTTING
-####------------------------------
+####____________________________________________________
 
 # Process cover type
 cover_data = vegetation_data %>%
@@ -244,7 +244,7 @@ site_visit_export = site_visit_final %>%
                                    TRUE ~ 'error'))
 
 #### EXPORT SUMMARY DATA
-####------------------------------
+####____________________________________________________
 
 # Create export table
 summary_data = tibble(project_total = nrow(project_data),

@@ -2,8 +2,8 @@
 # ---------------------------------------------------------------------------
 # Download Alaska IFSAR 5m DTM tiles
 # Author: Timm Nawrocki
-# Last Updated: 2023-11-03
-# Usage: Execute in Python 3.9+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in a Python 3.12+ installation.
 # Description: "Download Alaska IFSAR 5m DTM tiles" contacts the DGGS FTP server to download all 5 m IFSAR DTM tiles for Alaska.
 # ---------------------------------------------------------------------------
 
@@ -15,6 +15,9 @@ from tqdm import tqdm
 import requests
 from bs4 import BeautifulSoup
 from akutils import end_timing
+
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
 
 # Define base folder structure
 drive = 'D:/'
@@ -34,6 +37,9 @@ if os.path.exists(download_folder) == 0:
 if os.path.exists(extract_folder) == 0:
     os.mkdir(extract_folder)
 
+#### PROCESS DATA DOWNLOADS
+####____________________________________________________
+
 # Get all links from source url
 source_requests = requests.get(base_url)
 source_format = BeautifulSoup(source_requests.text, features='lxml')
@@ -52,7 +58,7 @@ for download in file_list:
     # Download file if it does not already exist on local disk
     if os.path.exists(download_file) == 0:
         try:
-            print(f'Downloading file {count} of {len(download_list)}...')
+            print(f'Downloading file {count} of {len(file_list)}...')
             iteration_start = time.time()
             response = requests.get(base_url + download, stream=True)
             total_size = int(response.headers.get('content-length', 0))
@@ -71,9 +77,9 @@ for download in file_list:
                 print(f'{os.path.split(download_file)[1]} is not an archive.')
             end_timing(iteration_start)
         except:
-            print(f'File {count} of {len(download_list)} not available for download. Check url.')
+            print(f'File {count} of {len(file_list)} not available for download. Check url.')
             print('----------')
     else:
-        print(f'\tFile {count} of {len(download_list)} already exists...')
+        print(f'\tFile {count} of {len(file_list)} already exists...')
         print('\t----------')
     count += 1

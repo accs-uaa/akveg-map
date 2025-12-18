@@ -1,8 +1,8 @@
 # ---------------------------------------------------------------------------
 # Plot characteristics of training and validation data
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Last Updated: 2025-07-22
-# Usage: Script should be executed in R 4.1.0+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in a Python 3.12+ installation.
 # Description: "Plot characteristics of training and validation data" plots stacked bar charts for the cover version and temporal range of data.
 # ---------------------------------------------------------------------------
 
@@ -19,8 +19,8 @@ import kaleido
 # Initialize kaleido
 kaleido.get_chrome_sync()
 
-#### SET UP DIRECTORIES AND FILES
-####------------------------------
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
 
 # Set root directory
 drive = 'C:/'
@@ -40,7 +40,7 @@ html_output = os.path.join(output_folder, 'Figure3b_Training_Validation_Data.htm
 plot_output = os.path.join(output_folder, 'Figure3b_Training_Validation_Data.png')
 
 #### CREATE PLOT
-####------------------------------
+####____________________________________________________
 
 # Read region data to geopandas dataframe
 region_data = gpd.read_file(region_input)[['region', 'geometry']]

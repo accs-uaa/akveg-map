@@ -2,9 +2,9 @@
 # ---------------------------------------------------------------------------
 # Compile ESA World Cover 2
 # Author: Timm Nawrocki
-# Last Updated: 2024-09-04
-# Usage: Execute in Python 3.9+.
-# Description: "Compile ESA World Cover 2" combines exported tiles to a single raster where water has a value of 1 and all other types have a value of zero.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in a Python 3.12+ installation.
+# Description: "Compile ESA World Cover 2" merges exported tiles and creates a single raster where water has a value of 1 and all other types have a value of zero.
 # ---------------------------------------------------------------------------
 
 # Import packages
@@ -29,6 +29,9 @@ os.environ['PROJ_LIB'] = os.environ['CONDA_PREFIX'] + r'\Library\share'
 # Set nodata value
 nodata = -32768
 
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
+
 # Set root directory
 drive = 'D:/'
 root_folder = 'ACCS_Work'
@@ -45,6 +48,9 @@ input_files = glob.glob(f'{input_folder}/AlaskaYukon_ESAWorldCover2*.tif')
 # Define output files
 esa_output = os.path.join(output_folder, 'AlaskaYukon_ESAWorldCover2_10m_3338.tif')
 water_output = os.path.join(output_folder, 'AlaskaYukon_ESAWorldCover2_Water_10m_3338.tif')
+
+#### PROCESS RASTER DATA
+####____________________________________________________
 
 # Merge tiles
 if os.path.exists(esa_output) == 0:

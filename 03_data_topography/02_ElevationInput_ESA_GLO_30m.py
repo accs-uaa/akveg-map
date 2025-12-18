@@ -2,8 +2,8 @@
 # ---------------------------------------------------------------------------
 # Process ESA GLO 30 m DEM
 # Author: Timm Nawrocki
-# Last Updated: 2024-05-04
-# Usage: Execute in Python 3.9+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in a Python 3.12+ installation.
 # Description: "Process ESA GLO 30 m DEM" combines individual DEM tiles to a single raster, resamples to 10 m, and replaces erroneous values.
 # ---------------------------------------------------------------------------
 
@@ -22,6 +22,9 @@ from akutils import raster_bounds
 
 # Set nodata value
 nodata = -32768
+
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
 
 # Set root directory
 drive = 'D:/'
@@ -42,6 +45,9 @@ input_files = glob.glob(f'{input_folder}/*dem.tif')
 
 # Define output files
 elevation_output = os.path.join(output_folder, 'ESA_GLO_30m_3338.tif')
+
+#### PROCESS AND MERGE TILES
+####____________________________________________________
 
 # Define empty tile list
 tile_list = []

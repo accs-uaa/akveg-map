@@ -2,8 +2,8 @@
 # ---------------------------------------------------------------------------
 # Create cloud-optimized geotiffs for covariates
 # Author: Timm Nawrocki
-# Last Updated: 2024-07-12
-# Usage: Must be executed in a Python 3.11+ installation with GDAL 3.9+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in a Python 3.12+ installation.
 # Description: "Create cloud-optimized geotiffs for covariates" creates cloud-optimized geotiff versions of all covariates for use as COG-backed assets in Google Earth Engine.
 # ---------------------------------------------------------------------------
 
@@ -15,6 +15,9 @@ from osgeo import gdal
 
 # Configure GDAL
 gdal.UseExceptions()
+
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
 
 # Set root directory
 drive = '/home'
@@ -32,6 +35,9 @@ input_files = [input_files[i] for i in [1, 2]]
 print('Processing the following rasters:')
 for input_file in input_files:
     print(f'\t{os.path.split(input_file)[1]}')
+
+#### PROCESS CLOUD-OPTIMIZED GEOTIFFS
+####____________________________________________________
 
 # Convert each raster to cloud-optimized geotiff
 count = 1

@@ -2,8 +2,8 @@
 # ---------------------------------------------------------------------------
 # Figure 3a. Training and validation data
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Last Updated: 2025-07-22
-# Usage: Script should be executed in R 4.4.3+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in a R 4.4.3+ installation.
 # Description: "Figure 3a. Training and validation data" creates a map figure for publication that shows the training and validation data selected for the AKVEG foliar cover maps.
 # ---------------------------------------------------------------------------
 
@@ -23,8 +23,8 @@ library(tidyterra)
 library(tibble)
 library(tidyr)
 
-#### SET UP DIRECTORIES AND FILES
-####------------------------------
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
 
 # Set root directory
 drive = 'C:'
@@ -50,7 +50,7 @@ region_input = path(region_folder, 'AlaskaYukon_Regions_v2.0_3338.shp')
 figure_output = path(output_folder, 'Figure3a_Training_Validation_Data.jpg')
 
 #### CREATE MAP PLOT
-####------------------------------
+####____________________________________________________
 
 # Read input data
 site_visit_selected = read_xlsx(site_input, sheet = 'data') %>%

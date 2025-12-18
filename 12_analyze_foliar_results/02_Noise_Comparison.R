@@ -2,8 +2,8 @@
 # ---------------------------------------------------------------------------
 # Noise cluster comparison
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Last Updated: 2025-07-03
-# Usage: Script should be executed in R 4.4.3+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in a R 4.4.3+ installation.
 # Description: "Noise cluster comparison" creates comparison tables by subregions and focal units for performance metrics from fuzzy noise clustering results with different numbers of clusters.
 # ---------------------------------------------------------------------------
 
@@ -29,14 +29,14 @@ library(indicspecies)
 library(viridis)
 library(mgcv)
 
-#### SET UP DIRECTORIES AND FILES
-####------------------------------
-
 # Set random seed
 set.seed(314)
 
 # Set round date
 round_date = 'round_20241124'
+
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
 
 # Set root directory (modify to your folder structure)
 drive = 'C:'
@@ -60,7 +60,7 @@ site_data = read_csv(site_visit_input)
 group_number = max(site_data$group_id)
 
 #### COMPARE CLUSTER SOLUTIONS FOR EACH GROUP
-####------------------------------
+####____________________________________________________
 
 count = 1
 while (count <= group_number) {

@@ -2,8 +2,8 @@
 # ---------------------------------------------------------------------------
 # Compile most recent fire year
 # Author: Timm Nawrocki
-# Last Updated: 2024-09-04
-# Usage: Execute in Python 3.9+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in a Python 3.12+ installation.
 # Description: "Compile most recent fire year" combines exported tiles to a single raster.
 # ---------------------------------------------------------------------------
 
@@ -25,6 +25,9 @@ os.environ['PROJ_LIB'] = os.environ['CONDA_PREFIX'] + r'\Library\share'
 # Set nodata value
 nodata = -32768
 
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
+
 # Set root directory
 drive = 'D:/'
 root_folder = 'ACCS_Work'
@@ -40,6 +43,9 @@ input_files = glob.glob(f'{input_folder}/AlaskaYukon_FireYear*.tif')
 
 # Define output files
 fire_output = os.path.join(output_folder, 'AlaskaYukon_FireYear_10m_3338.tif')
+
+#### PROCESS RASTER DATA
+####____________________________________________________
 
 # Merge tiles
 print(f'Merging {len(input_files)} tiles...')

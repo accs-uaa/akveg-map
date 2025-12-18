@@ -2,8 +2,8 @@
 # ---------------------------------------------------------------------------
 # Calculate distance to coast
 # Author: Timm Nawrocki
-# Last Updated: 2024-07-02
-# Usage: Execute in Python 3.9+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in an ArcGIS Pro Python 3.11+ installation.
 # Description: "Calculate distance to coast" calculates the distance from the coastline and marine waters.
 # ---------------------------------------------------------------------------
 
@@ -22,6 +22,9 @@ from akutils import *
 
 # Set nodata value
 nodata = -32768
+
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
 
 # Set root directory
 drive = 'D:/'
@@ -50,6 +53,9 @@ mosaic_raster = os.path.join(intermediate_folder, 'AlaskaYukon_CoastDist_10m_333
 
 # Define output files
 coast_output = os.path.join(output_folder, 'CoastDist_10m_3338.tif')
+
+#### CALCULATE DISTANCE TO COAST
+####____________________________________________________
 
 # Define output projection
 output_system = arcpy.SpatialReference(3338)

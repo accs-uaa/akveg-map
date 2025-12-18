@@ -2,8 +2,8 @@
 # ---------------------------------------------------------------------------
 # Figure 2. AKVEG domain and regions
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Last Updated: 2025-10-29
-# Usage: Script should be executed in R 4.4.3+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in a R 4.4.3+ installation.
 # Description: "Figure 2. AKVEG domain and regions" creates a map figure for publication that shows the AKVEG map domain overlaying the regions and biomes.
 # ---------------------------------------------------------------------------
 
@@ -16,8 +16,8 @@ library(sf)
 library(terra)
 library(tidyterra)
 
-#### SET UP DIRECTORIES AND FILES
-####------------------------------
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
 
 # Set root directory
 drive = 'C:'
@@ -40,8 +40,8 @@ region_input = path(region_folder, 'AlaskaYukon_Regions_v2.0_3338.shp')
 # Define output files
 figure_output = path(output_folder, 'Figure2_AKVEG_Domain_Region.jpg')
 
-#### CREATE PLOT
-####------------------------------
+#### CREATE MAP PLOT
+####____________________________________________________
 
 # Read shapes
 ocean_data = st_read(ocean_input)

@@ -2,8 +2,8 @@
 # ---------------------------------------------------------------------------
 # Performance comparison
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Last Updated: 2025-07-03
-# Usage: Script should be executed in R 4.4.3+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in a R 4.4.3+ installation.
 # Description: "Performance comparison" creates a 3-axis NMDS ordination of plant community composition data and models the deviance explained across the three ordination axes relative to the results of a selected set of clusters. The deviance explained by the clusters then provides a baseline to compare the deviance predicted by the AKVEG foliar cover maps, the Alaska Vegetation and Wetland Composite, and the Landfire 2023 EVT.
 # ---------------------------------------------------------------------------
 
@@ -30,14 +30,14 @@ library(indicspecies)
 library(viridis)
 library(mgcv)
 
-#### SET UP DIRECTORIES AND FILES
-####------------------------------
-
 # Set random seed
 set.seed(314)
 
 # Set round date
 round_date = 'round_20241124'
+
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
 
 # Set root directory (modify to your folder structure)
 drive = 'C:'
@@ -61,7 +61,7 @@ site_data = read_csv(site_visit_input)
 group_number = max(site_data$group_id)
 
 #### COMPARE PERFORMANCE FOR EACH GROUP
-####------------------------------
+####____________________________________________________
 
 count = 1
 while (count <= group_number) {
@@ -91,7 +91,7 @@ while (count <= group_number) {
     print(count)
     
     #### CONDUCT CLUSTERING
-    ####------------------------------
+    ####____________________________________________________
     
     # Read cluster comparison
     hardc_comparison = read_xlsx(hardc_input, sheet = 'hardc')
@@ -158,7 +158,7 @@ while (count <= group_number) {
       inner_join(cluster_data, by = 'site_visit_code')
     
     #### CONDUCT ORDINATION
-    ####------------------------------
+    ####____________________________________________________
     
     # Calculate bray dissimilarity on normalized vegetation matrix
     bray_normalized = vegdist(revised_normalized, method="bray")
@@ -181,10 +181,10 @@ while (count <= group_number) {
              nmds_axis_3 = scores(nmds_normalized, display = "sites")[, 3])
     
     #### ASSESS CLUSTER PERFORMANCE RELATIVE TO ORDINATION
-    ####------------------------------
-    print(paste('Calculating cluster performance for group ', toString(count), '...', sep = ''))
-    
+    ####____________________________________________________
+
     # Create one hot encoded variables for cluster membership
+    print(paste('Calculating cluster performance for group ', toString(count), '...', sep = ''))
     one_hot_data = as_tibble(model.matrix(~ cluster - 1, analysis_data))
     cluster_data = cbind(analysis_data, one_hot_data)
     
@@ -206,10 +206,10 @@ while (count <= group_number) {
     summary(cluster_gam)
     
     #### ASSESS FOLIAR COVER PERFORMANCE RELATIVE TO ORDINATION
-    ####------------------------------
-    print(paste('Calculating foliar cover performance for group ', toString(count), '...', sep = ''))
-    
+    ####____________________________________________________
+
     # Calculate foliar cover predictions > 3%
+    print(paste('Calculating foliar cover performance for group ', toString(count), '...', sep = ''))
     prediction_numbers = analysis_data %>%
       select(site_visit_code, alnus, betshr, bettre, brotre, dryas, dsalix, empnig, erivag, mwcalama,
              ndsalix, nerishr, picgla, picmar, picsit, poptre, populbt, rhoshr, rubspe,
@@ -264,10 +264,10 @@ while (count <= group_number) {
     summary(indicator_gam)
     
     #### ASSESS AKVWC PERFORMANCE RELATIVE TO ORDINATION
-    ####------------------------------
-    print(paste('Calculating AKVWC performance for group ', toString(count), '...', sep = ''))
+    ####____________________________________________________
     
     # Create one hot encoded variables for akvwc fine classes
+    print(paste('Calculating AKVWC performance for group ', toString(count), '...', sep = ''))
     one_hot_data = as_tibble(model.matrix(~ akvwc_fine - 1, analysis_data))
     akvwc_data = cbind(analysis_data, one_hot_data)
     
@@ -292,10 +292,10 @@ while (count <= group_number) {
     summary(akvwc_gam)
     
     #### ASSESS LANDFIRE PERFORMANCE RELATIVE TO ORDINATION
-    ####------------------------------
-    print(paste('Calculating Landfire performance for group ', toString(count), '...', sep = ''))
+    ####____________________________________________________
     
     # Create one hot encoded variables for landfire classes
+    print(paste('Calculating Landfire performance for group ', toString(count), '...', sep = ''))
     one_hot_data = as_tibble(model.matrix(~ landfire_evt - 1, analysis_data))
     landfire_data = cbind(analysis_data, one_hot_data)
     
@@ -321,7 +321,7 @@ while (count <= group_number) {
     summary(landfire_gam)
     
     #### EXPORT RESULTS TABLE
-    ####------------------------------
+    ####____________________________________________________
     
     # Extract information
     mean_variance = hardc_comparison %>%

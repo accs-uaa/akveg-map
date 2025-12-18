@@ -2,8 +2,8 @@
 # ---------------------------------------------------------------------------
 # Calculate flow accumulation
 # Author: Timm Nawrocki
-# Last Updated: 2024-05-04
-# Usage: Execute in ArcGIS Pro Python 3.9+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in an ArcGIS Pro Python 3.11+ installation.
 # Description: "Calculate flow accumulation" calculates flow accumulation for all tiles in a folder.
 # ---------------------------------------------------------------------------
 
@@ -13,6 +13,9 @@ import glob
 import time
 from akutils import *
 from akgeomorph import calculate_flow
+
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
 
 # Set root directory
 drive = 'D:/'
@@ -28,6 +31,9 @@ if os.path.exists(output_folder) == 0:
 
 # Define input files
 input_files = glob.glob(f'{tile_folder}/*.tif')
+
+#### CALCULATE FLOW ACCUMULATION
+####____________________________________________________
 
 # Calculate flow accumulation for each tile if it does not already exist
 count = 1

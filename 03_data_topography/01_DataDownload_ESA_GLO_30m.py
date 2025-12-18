@@ -2,8 +2,8 @@
 # ---------------------------------------------------------------------------
 # Download ESA GLO DEM 30 m tiles
 # Author: Timm Nawrocki
-# Last Updated: 2024-04-03
-# Usage: Execute in Python 3.9+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in a Python 3.12+ installation.
 # Description: "Download ESA GLO DEM 30 m tiles" contacts a server to download a series of 30 m DEM tiles for the ESA GLO 30 m DEM: https://spacedata.copernicus.eu/en/web/guest/collections/copernicus-digital-elevation-model
 # ---------------------------------------------------------------------------
 
@@ -16,6 +16,9 @@ from tqdm import tqdm
 import pandas as pd
 import requests
 from akutils import end_timing
+
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
 
 # Define base folder structure
 drive = 'D:/'
@@ -36,6 +39,9 @@ if os.path.exists(extract_folder) == 0:
 input_table = os.path.join(data_folder, 'ESA_GLO_30m_Index.csv')
 block_field = 'Product30'
 base_url = 'https://prism-dem-open.copernicus.eu/pd-desk-open-access/prismDownload/COP-DEM_GLO-30-DGED__2022_1/'
+
+#### PROCESS DATA DOWNLOADS
+####____________________________________________________
 
 # Import a csv file with the download urls for the Arctic DEM tiles
 download_items = pd.read_csv(input_table)

@@ -1,8 +1,8 @@
 # ---------------------------------------------------------------------------
 # Plot foliar cover performance combined
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Last Updated: 2025-11-04
-# Usage: Script should be executed in R 4.1.0+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in a Python 3.12+ installation.
 # Description: "Plot foliar cover performance combined" plots the performance of all foliar cover models in two panels for site-scale and local-scale results.
 # ---------------------------------------------------------------------------
 
@@ -17,8 +17,8 @@ import kaleido
 # Initialize kaleido
 kaleido.get_chrome_sync()
 
-#### SET UP DIRECTORIES AND FILES
-####------------------------------
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
 
 # Set round date
 round_date = 'round_20241124'
@@ -39,7 +39,7 @@ html_output = os.path.join(output_folder, 'Figure4_Performance_Combined.html')
 plot_output = os.path.join(output_folder, 'Figure4_Performance_Combined.png')
 
 #### CREATE PLOT
-####------------------------------
+####____________________________________________________
 
 # Read performance data
 performance_data = pd.read_csv(performance_input)

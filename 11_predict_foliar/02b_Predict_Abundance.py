@@ -3,7 +3,7 @@
 # Predict abundance model
 # Author: Timm Nawrocki
 # Last Updated: 2024-11-27
-# Usage: Must be executed in an Anaconda Python 3.12+ installation.
+# Usage: Must be executed in a Python 3.12+ installation.
 # Description: "Predict abundance model" predicts a classifier and regressor to raster outputs.
 # ---------------------------------------------------------------------------
 

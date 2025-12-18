@@ -1,8 +1,8 @@
 # ---------------------------------------------------------------------------
 # Plot foliar cover performance individual
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Last Updated: 2025-07-19
-# Usage: Script should be executed in R 4.1.0+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in a Python 3.12+ installation.
 # Description: "Plot foliar cover performance individual" plots the performance of each foliar cover model in two panels for site scale and landscape scale results.
 # ---------------------------------------------------------------------------
 
@@ -19,11 +19,11 @@ import kaleido
 # Initialize kaleido
 kaleido.get_chrome_sync()
 
-#### SET UP DIRECTORIES AND FILES
-####------------------------------
-
 # Set round date
 round_date = 'round_20241124'
+
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
 
 # Set root directory
 drive = 'C:/'
@@ -40,7 +40,7 @@ indicators = ['alnus', 'betshr', 'bettre', 'brotre', 'dryas', 'dsalix', 'empnig'
               'sphagn', 'tsumer', 'vaculi', 'vacvit', 'wetsed']
 
 #### CREATE PLOTS
-####------------------------------
+####____________________________________________________
 
 # Create output plot for each indicator
 for indicator in indicators:

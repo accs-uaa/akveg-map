@@ -2,8 +2,8 @@
 # ---------------------------------------------------------------------------
 # Calculate site and species number correlations
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Last Updated: 2025-10-29
-# Usage: Script should be executed in R 4.4.3+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in a R 4.4.3+ installation.
 # Description: "Calculate site and species number correlations" calculates the Pearson correlations between NMDS stress and number of sites or species per subregion. The script prints (rather than exports) the correlation values.
 # ---------------------------------------------------------------------------
 
@@ -30,20 +30,20 @@ library(indicspecies)
 library(viridis)
 library(mgcv)
 
-#### SET UP DIRECTORIES AND FILES
-####------------------------------
-
 # Set random seed
 set.seed(314)
 
 # Set round date
 round_date = 'round_20241124'
 
-# Set root directory (modify to your folder structure)
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
+
+# Set root directory
 drive = 'C:'
 root_folder = 'ACCS_Work'
 
-# Define input folders (modify to your folder structure)
+# Define input folders
 project_folder = path(drive, root_folder, 'Projects/VegetationEcology/AKVEG_Map/Data')
 input_folder = path(project_folder, 'Data_Input/ordination_data')
 output_folder = path(project_folder, 'Data_Output/ordination_results', round_date)
@@ -62,7 +62,7 @@ subregion_data = read_xlsx(subregion_input, sheet = 'summary') %>%
 group_number = max(subregion_data$group_id)
 
 #### SUMMARIZE TAXA NUMBERS
-####------------------------------
+####____________________________________________________
 
 # Calculate taxa number per group
 count = 1
@@ -97,7 +97,7 @@ while (count <= group_number) {
 }
 
 #### CALCULATE CORRELATION
-####------------------------------
+####____________________________________________________
 
 pearson_sites = cor.test(subregion_data$nmds_stress, subregion_data$selected_n, method = 'pearson')
 pearson_taxa = cor.test(subregion_data$nmds_stress, subregion_data$taxa_n, method = 'pearson')

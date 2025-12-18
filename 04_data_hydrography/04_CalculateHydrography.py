@@ -2,8 +2,8 @@
 # ---------------------------------------------------------------------------
 # Calculate hydrography datasets
 # Author: Timm Nawrocki
-# Last Updated: 2024-05-06
-# Usage: Execute in ArcGIS Pro Python 3.9+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in an ArcGIS Pro Python 3.11+ installation.
 # Description: "Calculate hydrography datasets" calculates topographic wetness index, distance from streams, and distance from rivers.
 # ---------------------------------------------------------------------------
 
@@ -14,6 +14,9 @@ import time
 from akutils import *
 from akgeomorph import calculate_wetness
 from akgeomorph import calculate_flowline_distance
+
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
 
 # Set root directory
 drive = 'D:/'
@@ -27,6 +30,9 @@ hydrography_folder = os.path.join(drive, root_folder, 'Data/hydrography', 'tiles
 
 # Define input files
 input_files = glob.glob(f'{elevation_folder}/*.tif')
+
+#### CALCULATE HYDROGRAPHIC RASTERS
+####____________________________________________________
 
 # Calculate hydrography for each tile if it does not already exist
 count = 1

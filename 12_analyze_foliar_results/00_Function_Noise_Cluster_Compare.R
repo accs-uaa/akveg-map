@@ -2,8 +2,8 @@
 # ---------------------------------------------------------------------------
 # Define function to compare noise clusters
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Last Updated: 2025-06-23
-# Usage: Script should be executed in R 4.4.3+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in a R 4.4.3+ installation.
 # Description: "Define function to compare noise clusters" defines a function that iterates through sequential integer cluster numbers using fuzzy noise clustering to produce results that can be summarized to mean variance and mean silhouette width for evaluation of the most appropriate cluster number.
 # ---------------------------------------------------------------------------
 

@@ -2,8 +2,8 @@
 # ---------------------------------------------------------------------------
 # Compile results
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Last Updated: 2025-10-29
-# Usage: Script should be executed in R 4.4.3+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in a R 4.4.3+ installation.
 # Description: "Compile results" creates a summary table of the ordination and clustering results from all subregions.
 # ---------------------------------------------------------------------------
 
@@ -30,20 +30,20 @@ library(indicspecies)
 library(viridis)
 library(mgcv)
 
-#### SET UP DIRECTORIES AND FILES
-####------------------------------
-
 # Set random seed
 set.seed(314)
 
 # Set round date
 round_date = 'round_20241124'
 
-# Set root directory (modify to your folder structure)
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
+
+# Set root directory
 drive = 'C:'
 root_folder = 'ACCS_Work'
 
-# Define input folders (modify to your folder structure)
+# Define input folders
 project_folder = path(drive, root_folder, 'Projects/VegetationEcology/AKVEG_Map/Data')
 input_folder = path(project_folder, 'Data_Input/ordination_data')
 
@@ -64,7 +64,7 @@ equation_data = read_xlsx(subregion_input, sheet = 'subregions') %>%
 group_number = max(subregion_data$group_id)
 
 #### READ PERFORMANCE DATA
-####------------------------------
+####____________________________________________________
 
 # Prepare empty data frames
 performance_rows = tibble(group_id = 0,
