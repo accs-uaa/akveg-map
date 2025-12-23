@@ -36,7 +36,7 @@ if os.path.exists(extract_folder) == 0:
     os.mkdir(extract_folder)
 
 # Define input csv table
-input_table = os.path.join(data_folder, 'ESA_GLO_30m_Index.csv')
+download_input = os.path.join(data_folder, 'ESA_GLO_30m_Index.csv')
 block_field = 'Product30'
 base_url = 'https://prism-dem-open.copernicus.eu/pd-desk-open-access/prismDownload/COP-DEM_GLO-30-DGED__2022_1/'
 
@@ -44,7 +44,7 @@ base_url = 'https://prism-dem-open.copernicus.eu/pd-desk-open-access/prismDownlo
 ####____________________________________________________
 
 # Import a csv file with the download urls for the Arctic DEM tiles
-download_items = pd.read_csv(input_table)
+download_items = pd.read_csv(download_input)
 
 # Download each zip file if it has not already been downloaded
 count = 1
