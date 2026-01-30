@@ -2,9 +2,9 @@
 # ---------------------------------------------------------------------------
 # Table 2. Individual performance
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Last Updated: 2025-07-10
-# Usage: Script should be executed in R 4.4.3+.
-# Description: "Table 2. Individual performance" formats a table for publication to display the results of the individual performance assessment at the site-scale and landscape-scale.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in a R 4.4.3+ installation.
+# Description: "Table 2. Individual performance" formats a table for publication to display the results of the individual performance assessment at the site scale and local scale.
 # ---------------------------------------------------------------------------
 
 # Import required libraries
@@ -17,11 +17,11 @@ library(stringr)
 library(tibble)
 library(tidyr)
 
-#### SET UP DIRECTORIES AND FILES
-####------------------------------
-
 # Set round date
 round_date = 'round_20241124'
+
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
 
 # Set root directory
 drive = 'C:'
@@ -39,7 +39,7 @@ performance_input = path(input_folder, 'performance_table.csv')
 performance_output = path(output_folder, 'Table2_Individual_Performance.xlsx')
 
 #### FORMAT PERFORMANCE RESULTS
-####------------------------------
+####____________________________________________________
 
 # Format performance results
 performance_data = read_csv(performance_input) %>%

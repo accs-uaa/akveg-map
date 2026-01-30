@@ -1,8 +1,8 @@
 # ---------------------------------------------------------------------------
 # Plot foliar cover performance individual
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Last Updated: 2025-07-19
-# Usage: Script should be executed in R 4.1.0+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in a Python 3.12+ installation.
 # Description: "Plot foliar cover performance individual" plots the performance of each foliar cover model in two panels for site scale and landscape scale results.
 # ---------------------------------------------------------------------------
 
@@ -19,28 +19,29 @@ import kaleido
 # Initialize kaleido
 kaleido.get_chrome_sync()
 
-#### SET UP DIRECTORIES AND FILES
-####------------------------------
-
 # Set round date
 round_date = 'round_20241124'
+
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
 
 # Set root directory
 drive = 'C:/'
 root_folder = 'ACCS_Work/Projects/VegetationEcology/AKVEG_Map'
 
 # Define folder structure
-data_folder = os.path.join(drive,
-                           root_folder,
+data_folder = os.path.join(drive, root_folder,
                            'Data/Data_Output/model_results', round_date)
+plot_folder = os.path.join(drive, root_folder,
+                           'Documents/Manuscript_FoliarCover_FloristicGradients/appendix_s1/figures')
 
 # Define indicators
-indicators = ['alnus', 'betshr', 'bettre', 'brotre', 'dryas', 'dsalix', 'empnig', 'erivag', 'mwcalama',
-              'ndsalix', 'nerishr', 'picgla', 'picmar', 'picsit', 'poptre', 'populbt', 'rhoshr', 'rubspe',
-              'sphagn', 'tsumer', 'vaculi', 'vacvit', 'wetsed']
+indicators = ['alnus', 'betshr', 'bettre', 'brotre', 'dryas', 'dsalix', 'empnig', 'erivag',
+              'mwcalama', 'ndsalix', 'nerishr', 'picgla', 'picmar', 'picsit', 'poptre',
+              'populbt', 'rhoshr', 'rubspe', 'sphagn', 'tsumer', 'vaculi', 'vacvit', 'wetsed']
 
 #### CREATE PLOTS
-####------------------------------
+####____________________________________________________
 
 # Create output plot for each indicator
 for indicator in indicators:
@@ -51,12 +52,10 @@ for indicator in indicators:
     scaled_input = os.path.join(data_folder, indicator, indicator + '_scaled.csv')
 
     # Define output files
-    html_output = os.path.join(drive, root_folder,
-                               'Documents/Manuscript_FoliarCover_FloristicGradients/appendix_s1/figures',
-                               'figure_cvresults_' + indicator + '.html')
-    plot_output = os.path.join(drive, root_folder,
-                               'Documents/Manuscript_FoliarCover_FloristicGradients/appendix_s1/figures',
-                               'figure_cvresults_' + indicator + '.svg')
+    html_output = os.path.join(plot_folder,
+                               f'figure_performance_{indicator}.html')
+    plot_output = os.path.join(plot_folder,
+                               f'figure_performance_{indicator}.png')
 
     # Process performance data
     site_data = pd.read_csv(site_input)[['st_vst', 'cvr_pct', 'prediction']]
@@ -160,16 +159,22 @@ for indicator in indicators:
         width=1000,
         height=500,
         showlegend=True,
-        font=dict(size=18),
+        font = dict(size=18, color='black'),
         legend=dict(font=dict(size=16)),
-        xaxis=dict(range=[0, 100], scaleanchor="y", tick0=0, dtick=10, tickfont=dict(size=15)),
-        yaxis=dict(range=[0, 100], tick0=0, dtick=10, tickfont=dict(size=15)),
-        xaxis2=dict(range=[0, 100], scaleanchor="y2", tick0=0, dtick=10, tickfont=dict(size=15)),
-        yaxis2=dict(range=[0, 100], tick0=0, dtick=10, tickfont=dict(size=15)),
+        xaxis=dict(range=[0, 100], scaleanchor="y", tick0=0, dtick=10, tickfont=dict(size=16)),
+        yaxis=dict(range=[0, 100], tick0=0, dtick=10, tickfont=dict(size=16)),
+        xaxis2=dict(range=[0, 100], scaleanchor="y2", tick0=0, dtick=10, tickfont=dict(size=16)),
+        yaxis2=dict(range=[0, 100], tick0=0, dtick=10, tickfont=dict(size=16)),
         shapes=shapes,
         annotations=annotations
     )
 
     # Export to HTML (interactive)
     combined_plot.write_html(html_output)
-    pio.write_image(combined_plot, plot_output, format='svg', width=1000, height=500, scale=1)
+
+    # Remove title for PNG export
+    combined_plot.update_layout(title=None)
+    combined_plot.update_layout(margin=dict(t=50))
+
+    # Export plot to PNG
+    pio.write_image(combined_plot, plot_output, format='png', width=1000, height=500, scale=3)

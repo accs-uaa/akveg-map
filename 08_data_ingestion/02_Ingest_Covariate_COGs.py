@@ -2,8 +2,8 @@
 # ---------------------------------------------------------------------------
 # Ingest covariate data
 # Author: Timm Nawrocki
-# Last Updated: 2024-07-11
-# Usage: Must be executed in an ArcGIS Pro Python 3.9+ installation.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in a Python 3.12+ installation.
 # Description: "Ingest covariate data" creates COG-backed assets for a folder of geotiffs in GEE.
 # ---------------------------------------------------------------------------
 
@@ -15,6 +15,9 @@ import re
 from google.auth.transport.requests import AuthorizedSession
 from google.cloud import storage
 from pprint import pprint
+
+#### SET UP GEE ENVIRONMENT
+####____________________________________________________
 
 # Define paths
 ee_project = 'akveg-map'
@@ -45,6 +48,9 @@ geotiff_list = list(filter(reg.search, file_list))
 asset_list = []
 for asset in ee.data.listAssets(f'projects/{ee_project}/assets/{storage_prefix}')['assets']:
   asset_list.append(os.path.split(asset['name'])[1] + '.tif')
+
+#### INGEST COGS INTO GEE
+####____________________________________________________
 
 # Ingest each geotiff in the storage folder
 for geotiff in geotiff_list:

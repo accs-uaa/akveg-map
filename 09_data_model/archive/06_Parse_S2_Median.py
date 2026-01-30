@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Parse Sentinel-2 median to modeling grids
 # Author: Timm Nawrocki
-# Last Updated: 2024-09-22
+# Last Updated: 2025-12-16
 # Usage: Must be executed in a Python 3.12+ installation.
 # Description: "Parse Sentinel-2 median to modeling grids" parses the Sentinel-2 growing season median variables to modeling grids for use in prediction.
 # ---------------------------------------------------------------------------
@@ -21,6 +21,9 @@ nodata = -32768
 # Configure GDAL
 gdal.UseExceptions()
 
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
+
 # Set root directory
 drive = '/home'
 root_folder = 'twnawrocki'
@@ -37,6 +40,9 @@ s2_list = glob.glob(f'{covariate_folder}/*.tif')
 
 # Define output files
 s2_vrt = os.path.join(intermediate_folder, 's2_median.vrt')
+
+#### PARSE DATA TO GRIDS
+####____________________________________________________
 
 # Build virtual raster
 if os.path.exists(s2_vrt) == 0:

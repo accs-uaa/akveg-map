@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Parse covariates to modeling grids
 # Author: Timm Nawrocki
-# Last Updated: 2024-09-18
+# Last Updated: 2025-12-16
 # Usage: Must be executed in a Python 3.12+ installation.
 # Description: "Parse covariates to modeling grids" parses the topographic, hydrographic, and climate variables to modeling grids for use in prediction.
 # ---------------------------------------------------------------------------
@@ -21,6 +21,9 @@ nodata = -32768
 # Configure GDAL
 gdal.UseExceptions()
 
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
+
 # Set root directory
 drive = 'D:/'
 root_folder = 'ACCS_Work/Projects/VegetationEcology/AKVEG_Map/Data'
@@ -33,6 +36,9 @@ output_folder = os.path.join(drive, root_folder, 'Data_Input/covariates_050')
 # Create list of grids and covariates
 grid_list = glob.glob(f'{grid_folder}/*.tif')
 covariate_list = glob.glob(f'{covariate_folder}/*.tif')
+
+#### PARSE DATA TO GRIDS
+####____________________________________________________
 
 # Parse each covariate to grids
 count = 1

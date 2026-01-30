@@ -2,8 +2,8 @@
 # ---------------------------------------------------------------------------
 # Calculate topographic indices
 # Author: Timm Nawrocki
-# Last Updated: 2024-05-04
-# Usage: Execute in ArcGIS Pro Python 3.9+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in an ArcGIS Pro Python 3.11+ installation.
 # Description: "Calculate topographic indices" calculates a suite of topographic indices as new rasters from a DTM input raster.
 # ---------------------------------------------------------------------------
 
@@ -16,6 +16,9 @@ from akgeomorph import *
 # Set parameter values
 z_unit = 'METER'
 position_width = 5000
+
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
 
 # Set root directory
 drive = 'D:/'
@@ -45,6 +48,7 @@ roughness_output = os.path.join(output_folder, 'Roughness_10m_3338.tif')
 surfacerelief_output = os.path.join(output_folder, 'Relief_10m_3338.tif')
 
 #### CALCULATE FOUNDATIONAL TOPOGRAPHY DATASETS
+####____________________________________________________
 
 # Calculate integer elevation if it does not already exist
 if os.path.exists(elevation_output) == 0:
@@ -78,6 +82,7 @@ else:
     print('----------')
 
 #### CALCULATE DERIVED INDICES
+####____________________________________________________
 
 # Calculate solar exposure index if it does not already exist
 if os.path.exists(exposure_output) == 0:

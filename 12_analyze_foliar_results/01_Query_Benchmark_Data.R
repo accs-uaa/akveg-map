@@ -2,12 +2,12 @@
 # ---------------------------------------------------------------------------
 # Query benchmark data from AKVEG Database
 # Author: Timm Nawrocki, Amanda Droghini, Alaska Center for Conservation Science
-# Last Updated: 2025-07-06
-# Usage: Script should be executed in R 4.4.3+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in a R 4.4.3+ installation.
 # Description: "Query benchmark data from AKVEG Database" pulls data from the AKVEG Database for selected datasets. The script connects to the AKVEG database, executes queries, and performs simple spatial analyses (i.e., subset the data to specific study areas, extract raster values to surveyed plots). The outputs are a series of CSV files (one for each non-metadata table in the database) whose results are restricted to the study area in the script.
 # ---------------------------------------------------------------------------
 
-# Import required libraries ----
+# Import required libraries
 library(dplyr)
 library(fs)
 library(janitor)
@@ -22,9 +22,6 @@ library(terra)
 library(tibble)
 library(tidyr)
 
-#### SET UP DIRECTORIES AND FILES
-#### ------------------------------
-
 # Set round date
 round_date = 'round_20241124'
 
@@ -32,6 +29,9 @@ round_date = 'round_20241124'
 indicators = c('alnus', 'betshr', 'bettre', 'brotre', 'dryas', 'dsalix', 'empnig', 'erivag', 'mwcalama',
                'ndsalix', 'nerishr', 'picgla', 'picmar', 'picsit', 'poptre', 'populbt', 'rhoshr', 'rubspe',
                'sphagn', 'tsumer', 'vaculi', 'vacvit', 'wetsed')
+
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
 
 # Set root directory (modify to your folder structure)
 drive = 'C:'
@@ -74,27 +74,50 @@ site_visit_file = path(database_repository, 'queries/03_site_visit.sql')
 vegetation_file = path(database_repository, 'queries/05_vegetation.sql')
 abiotic_file = path(database_repository, 'queries/06_abiotic_top_cover.sql')
 
-# Read local data ----
+#### READ LOCAL DATA
+####____________________________________________________
+
+# Read domain shape
 domain_shape = st_read(domain_input)
+
+# Read region shape and select fields
 region_shape = st_read(region_input) %>%
   select(biome, region)
+
+# Read ecoregion shape and select fields
 ecoregion_shape = st_read(ecoregion_input) %>%
   select(COMMONER) %>%
   rename(ecoregion = COMMONER)
+
+# Read MLRA shape and select fields
 mlra_shape = st_read(mlra_input) %>%
   select(MLRA_NAME) %>%
   rename(mlra = MLRA_NAME)
+
+# Read zone shape and select fields
 zone_shape = st_read(zone_input) %>%
   select(zone)
+
+# Read fire year raster
 fireyear_raster = rast(fireyear_input)
+
+# Read distance to coast raster
 coast_raster = rast(coast_input)
+
+# Read elevation raster
 elevation_raster = rast(elevation_input)
+
+# Read alpine distribution raster
 alpine_raster = rast(alpine_input)
+
+# Read Alaska Vegetation and Wetland Composite raster
 akvwc_raster = rast(akvwc_input)
+
+# Read Landfire 2023 Existing Vegetation Types raster
 landfire_raster = rast(landfire_input)
 
 #### QUERY AKVEG DATABASE
-####------------------------------
+####____________________________________________________
 
 # Import database connection function
 connection_script = path(database_repository, 'pull_functions', 'connect_database_postgresql.R')
@@ -252,6 +275,9 @@ site_visit_data = site_visit_data %>%
 vegetation_data = vegetation_data %>%
   anti_join(sparse_barren, by = 'site_visit_code')
 
+#### ASSIGN ANALYSIS GROUPS
+####____________________________________________________
+
 # Assign analysis subregions
 site_visit_data = site_visit_data %>%
   mutate(subregion = case_when((region == 'Arctic Northern' &
@@ -360,7 +386,7 @@ site_visit_data = site_visit_data %>%
                 total_percent, homogeneous, plot_dimensions_m, latitude_dd, longitude_dd, cent_x, cent_y)
 
 #### ADD CROSS-VALIDATION AND PREDICTION RESULTS
-#### ------------------------------
+####____________________________________________________
 
 # Read data frame of combined results
 for (indicator in indicators) {
@@ -402,6 +428,9 @@ vegetation_sites = vegetation_data %>%
 site_visit_data = site_visit_data %>%
   inner_join(vegetation_sites, by = 'site_visit_code')
 
+#### EXPORT DATA
+####____________________________________________________
+
 # Export site visit data to shapefile
 site_visit_data %>%
   # Convert geometries to points with EPSG:3338
@@ -439,9 +468,6 @@ subregion_data = site_visit_data %>%
   group_by(group_id, subregion, focal_unit) %>%
   mutate(obs_years = paste(toString(min_year), toString(max_year), sep = '-')) %>%
   select(-min_year, -max_year)
-
-#### EXPORT DATA
-####------------------------------
 
 # Export data to csv files
 taxa_data %>%

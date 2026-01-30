@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Calculate performance table
 # Author: Timm Nawrocki
-# Last Updated: 2025-07-10
+# Last Updated: 2025-07-24
 # Usage: Must be executed in an Anaconda Python 3.7+ installation.
 # Description: "Calculate performance table" calculates a table of performance metrics at the site scale and landscape scale for all mapped indicators.
 # ---------------------------------------------------------------------------
@@ -68,7 +68,8 @@ life_forms = ['shrub', 'shrub', 'tree', 'tree', 'dwarf shrub', 'dwarf shrub', 'd
 
 # Define output variables
 output_variables = ['abbrev', 'indicator_name', 'model_type', 'life_form', 'n_presence', 'r2_site', 'rmse_site',
-                    'auc_site', 'acc_site', 'cover_median', 'cover_mean', 'r2_scaled', 'rmse_scaled', 'n_grid']
+                    'auc_site', 'acc_site', 'cover_median', 'cover_mean', 'r2_scaled', 'rmse_scaled', 'n_grid',
+                    'r2_region', 'rmse_region']
 
 # Create empty data frame to store results
 performance_data = pd.DataFrame(columns=output_variables)
@@ -87,10 +88,12 @@ for indicator in indicators:
     acc_input = os.path.join(indicator_folder, indicator + '_acc.txt')
     site_input = os.path.join(indicator_folder, indicator + '_results.csv')
     scaled_input = os.path.join(indicator_folder, indicator + '_scaled.csv')
+    region_input = os.path.join(indicator_folder, indicator + '_region.csv')
 
     # Read input data
     site_data = pd.read_csv(site_input)
     scaled_data = pd.read_csv(scaled_input)
+    region_data = pd.read_csv(region_input)
 
     # Convert values to floats
     site_data['cvr_pct'] = site_data['cvr_pct'].astype(float)
@@ -117,12 +120,17 @@ for indicator in indicators:
     # Calculate scaled performance
     y_regress_observed = scaled_data['mean_cvr_pct'].astype(float)
     y_regress_predicted = scaled_data['mean_prediction'].astype(float)
-
-    # Calculate performance metrics from output_results
     r2_scaled = r2_score(y_regress_observed, y_regress_predicted, sample_weight=None,
                          multioutput='uniform_average')
     rmse_scaled = np.sqrt(mean_squared_error(y_regress_observed, y_regress_predicted))
     n_grid = len(scaled_data[scaled_data['mean_cvr_pct'] >= 1])
+
+    # Calculate region performance
+    y_regress_observed = region_data['mean_cvr_pct'].astype(float)
+    y_regress_predicted = region_data['mean_prediction'].astype(float)
+    r2_region = r2_score(y_regress_observed, y_regress_predicted, sample_weight=None,
+                         multioutput='uniform_average')
+    rmse_region = np.sqrt(mean_squared_error(y_regress_observed, y_regress_predicted))
 
     # Create row in performance data frame to store results
     indicator_results = pd.DataFrame([[indicator,
@@ -138,7 +146,9 @@ for indicator in indicators:
                                        cover_mean,
                                        round(r2_scaled, 3),
                                        round(rmse_scaled, 1),
-                                       n_grid]],
+                                       n_grid,
+                                       round(r2_region, 3),
+                                       round(rmse_region, 1)]],
                                      columns=output_variables)
     performance_data = pd.concat([performance_data if not performance_data.empty else None,
                                   indicator_results],

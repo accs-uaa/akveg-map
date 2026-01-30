@@ -2,8 +2,8 @@
 # ---------------------------------------------------------------------------
 # Create elevation composite
 # Author: Timm Nawrocki
-# Last Updated: 2024-05-04
-# Usage: Execute in Python 3.9+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in a Python 3.12+ installation.
 # Description: "Create elevation composite" combines overlapping elevation input datasets into a single raster output.
 # ---------------------------------------------------------------------------
 
@@ -17,6 +17,9 @@ from akutils import *
 
 # Set nodata value
 nodata = -32768
+
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
 
 # Set root directory
 drive = 'D:/'
@@ -36,6 +39,9 @@ canada_input = os.path.join(topography_folder, 'ESA_GLO_30m/processed', 'ESA_GLO
 merge_vrt = os.path.join(output_folder, 'intermediate', 'Elevation_10m_3338_Merged.vrt')
 merge_output = os.path.join(output_folder, 'intermediate', 'Elevation_10m_3338_Merged.tif')
 elevation_output = os.path.join(output_folder, 'float', 'Elevation_10m_3338.tif')
+
+#### CREATE COMPOSITE RASTER
+####____________________________________________________
 
 # Merge input rasters
 print(f'Merging input rasters...')

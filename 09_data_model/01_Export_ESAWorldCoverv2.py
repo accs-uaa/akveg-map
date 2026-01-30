@@ -2,14 +2,17 @@
 # ---------------------------------------------------------------------------
 # Export ESA World Cover v2.0
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Last Updated: 2024-08-22
-# Usage: Must be executed in a Python 3.12+ installation with authentication to Google Earth Engine.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in a Python 3.12+ installation.
 # Description: "Export ESA World Cover v2.0" exports the ESA World Cover 2.0 data to Google Cloud storage.
 # ---------------------------------------------------------------------------
 
 # Import packages
 import ee
 from google.auth.transport.requests import AuthorizedSession
+
+#### SET UP GEE ENVIRONMENT
+####____________________________________________________
 
 # Define paths
 asset_project = 'akveg-map'
@@ -26,8 +29,6 @@ session = AuthorizedSession(
   ee.data.get_persistent_credentials().with_quota_project(asset_project)
 )
 
-#### 1. INITIALIZE
-
 # Define asset path
 asset_path = f'projects/{asset_project}/assets'
 
@@ -41,7 +42,8 @@ worldcover_image = ee.ImageCollection("ESA/WorldCover/v200").first()
 # Define output projection
 projection = elevation_image.select('elevation').projection().getInfo()
 
-#### 2. EXPORT
+#### EXPORT DATA TO STORAGE
+####____________________________________________________
 
 # Export tiff to storage
 print('Creating GEE task...')

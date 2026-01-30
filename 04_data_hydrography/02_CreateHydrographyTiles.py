@@ -2,8 +2,8 @@
 # ---------------------------------------------------------------------------
 # Create hydrography tiles
 # Author: Timm Nawrocki
-# Last Updated: 2024-05-04
-# Usage: Execute in ArcGIS Pro Python 3.9+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in an ArcGIS Pro Python 3.11+ installation.
 # Description: "Create hydrography tiles" creates overlapping tiles from which to calculate stream network properties.
 # ---------------------------------------------------------------------------
 
@@ -13,6 +13,9 @@ import time
 import arcpy
 from arcpy.sa import Raster
 from akutils import *
+
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
 
 # Set root directory
 drive = 'D:/'
@@ -28,6 +31,9 @@ if os.path.exists(output_folder) == 0:
 # Define input files
 area_input = os.path.join(project_folder, 'Data_Input', 'AlaskaYukon_HydrographicArea_10m_3338.tif')
 elevation_input = os.path.join(hydrography_folder, 'intermediate', 'Elevation_10m_3338.tif')
+
+#### EXPORT OVERLAPPING HYDROGRAPHY TILES
+####____________________________________________________
 
 # Set overwrite option
 arcpy.env.overwriteOutput = True

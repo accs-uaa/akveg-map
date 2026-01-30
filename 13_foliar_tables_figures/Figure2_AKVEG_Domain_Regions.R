@@ -2,8 +2,8 @@
 # ---------------------------------------------------------------------------
 # Figure 2. AKVEG domain and regions
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Last Updated: 2025-07-09
-# Usage: Script should be executed in R 4.4.3+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in a R 4.4.3+ installation.
 # Description: "Figure 2. AKVEG domain and regions" creates a map figure for publication that shows the AKVEG map domain overlaying the regions and biomes.
 # ---------------------------------------------------------------------------
 
@@ -16,8 +16,8 @@ library(sf)
 library(terra)
 library(tidyterra)
 
-#### SET UP DIRECTORIES AND FILES
-####------------------------------
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
 
 # Set root directory
 drive = 'C:'
@@ -40,8 +40,8 @@ region_input = path(region_folder, 'AlaskaYukon_Regions_v2.0_3338.shp')
 # Define output files
 figure_output = path(output_folder, 'Figure2_AKVEG_Domain_Region.jpg')
 
-#### CREATE PLOT
-####------------------------------
+#### CREATE MAP PLOT
+####____________________________________________________
 
 # Read shapes
 ocean_data = st_read(ocean_input)
@@ -69,7 +69,6 @@ temperate_data = region_data %>%
 # Define custom fill colors
 custom_colors = c(
   'Boreal' = 'white',
-  'Northern Subpolar Oceanic' = '#006D62',
   'Alaska-Yukon Map Domain' = 'black'
 )
 
@@ -78,7 +77,7 @@ custom_colors = c(
 pattern_map = c(
   "Arctic" = "stripe",
   "Boreal" = "none",
-  "Northern Subpolar Oceanic" = "stripe",
+  "Northern Subpolar Oceanic" = "crosshatch",
   "Temperate" = "circle"
 )
 
@@ -123,7 +122,6 @@ map_plot = ggplot() +
     pattern_spacing = .01,
     pattern_angle = 45
   ) +
-  geom_sf(data = subpolar_data, aes(fill = biome), color = 'black', linewidth = 0.5, alpha = 1) +
   geom_sf(data = boreal_data, aes(fill = biome), color = 'black', linewidth = 0.5) +
   geom_sf_pattern(
     data = arctic_data,
@@ -142,6 +140,17 @@ map_plot = ggplot() +
   geom_sf(data = na_data, color = 'white', fill = NA, linewidth = 1.2) +
   geom_sf(data = na_data, color = 'black', fill = NA, linewidth = 0.2) +
   geom_sf(data = region_data, color = 'white', fill = NA, linewidth = 2) +
+  geom_sf_pattern(
+    data = subpolar_data,
+    aes(pattern = biome),
+    color = 'black',
+    linewidth = 0.5,
+    fill = "white",
+    pattern_fill = "black",
+    pattern_density = .05,
+    pattern_spacing = .01,
+    pattern_angle = 45
+  ) +
   geom_sf(data = region_data, color = 'black', fill = NA, linewidth = 0.5) +
   geom_sf(data = domain_data, aes(color = name), fill = NA, linewidth = 1.5) +
   geom_label_repel(

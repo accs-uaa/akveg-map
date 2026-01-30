@@ -2,8 +2,8 @@
 # ---------------------------------------------------------------------------
 # Merge hydrography datasets
 # Author: Timm Nawrocki
-# Last Updated: 2024-05-17
-# Usage: Execute in Python 3.9+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in an ArcGIS Pro Python 3.11+ installation.
 # Description: "Merge hydrography datasets" combines individual tiles into final rasters for each hydrography dataset.
 # ---------------------------------------------------------------------------
 
@@ -18,6 +18,9 @@ from akutils import *
 
 # Set nodata value
 nodata = -32768
+
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
 
 # Set root directory
 drive = 'D:/'
@@ -43,6 +46,9 @@ stream_intermediate = 'StreamDist_10m_3338_Merged.tif'
 stream_output = os.path.join(output_folder, 'StreamDist_10m_3338.tif')
 river_intermediate = 'RiverDist_10m_3338_Merged.tif'
 river_output = os.path.join(output_folder, 'RiverDist_10m_3338.tif')
+
+#### MERGE HYDROGRAPHIC RASTERS
+####____________________________________________________
 
 # Define output projection
 output_system = arcpy.SpatialReference(3338)

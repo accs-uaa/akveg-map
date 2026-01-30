@@ -1,8 +1,8 @@
 # ---------------------------------------------------------------------------
 # Plot regional summary
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Last Updated: 2025-07-21
-# Usage: Script should be executed in R 4.1.0+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in a Python 3.12+ installation.
 # Description: "Plot regional summary" plots the mean composition for each region.
 # ---------------------------------------------------------------------------
 
@@ -28,8 +28,8 @@ gdal.UseExceptions()
 # Initialize kaleido
 kaleido.get_chrome_sync()
 
-#### SET UP DIRECTORIES AND FILES
-####------------------------------
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
 
 # Set round date
 round_date = 'round_20241124'
@@ -58,7 +58,7 @@ html_output = os.path.join(output_folder, 'Figure5_Regional_Summary.html')
 plot_output = os.path.join(output_folder, 'Figure5_Regional_Summary.png')
 
 #### CALCULATE ZONAL STATISTICS
-####------------------------------
+####____________________________________________________
 
 # Create regional summary table if it does not already exist
 if os.path.exists(zonal_output) == 0:
@@ -171,10 +171,10 @@ if os.path.exists(zonal_output) == 0:
      .to_excel(zonal_output, sheet_name='summary', index=False))
 
 #### CREATE PLOT
-####------------------------------
-print('Creating plot...')
+####____________________________________________________
 
 # Load regional summary data
+print('Creating plot...')
 summary_data = (pd.read_excel(zonal_output, sheet_name='summary')
                 .drop(columns=['biome', 'wetland']))
 

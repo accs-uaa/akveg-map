@@ -2,14 +2,17 @@
 # ---------------------------------------------------------------------------
 # Delete assets on GEE
 # Author: Timm Nawrocki
-# Last Updated: 2024-09-22
-# Usage: Must be executed in an Anaconda Python 3.12+ installation.
-# Description: "Delete assets on GEE" deletes a set of assets within a folder or image collection.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in a Python 3.12+ installation.
+# Description: "Delete assets on GEE" deletes a set of assets within a folder or image collection on Google Earth Engine (GEE).
 # ---------------------------------------------------------------------------
 
 # Import packages
 import ee
 from google.auth.transport.requests import AuthorizedSession
+
+#### SET UP GEE ENVIRONMENT
+####____________________________________________________
 
 # Specify cloud project
 ee_project = 'akveg-map'
@@ -32,6 +35,9 @@ asset_list = ee.data.getList(asset_list_path)
 print("Asset list:")
 for asset in asset_list:
     print(asset['id'])
+
+#### CONDUCT DELETE OPERATIONS ON GEE
+####____________________________________________________
 
 # Delete assets
 for asset in asset_list:

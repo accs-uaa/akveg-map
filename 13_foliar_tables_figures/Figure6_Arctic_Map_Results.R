@@ -2,8 +2,8 @@
 # ---------------------------------------------------------------------------
 # Figure 6. Arctic map results
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Last Updated: 2025-07-20
-# Usage: Script should be executed in R 4.4.3+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in a R 4.4.3+ installation.
 # Description: "Figure 6. Arctic map results" creates a map figure for publication that shows three select foliar cover maps in the Arctic Northern region.
 # ---------------------------------------------------------------------------
 
@@ -18,11 +18,11 @@ library(terra)
 library(tidyterra)
 library(magick)
 
-#### SET UP DIRECTORIES AND FILES
-####------------------------------
-
 # Set round date
 round_date = 'version_2.0_20250103'
+
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
 
 # Set root directory
 drive = 'C:'
@@ -52,7 +52,7 @@ region_input = path(region_folder, 'AlaskaYukon_Regions_v2.0_3338.shp')
 figure_output = path(output_folder, 'Figure6_Arctic_Map_Results.jpg')
 
 #### CREATE DETAIL PLOTS
-####------------------------------
+####____________________________________________________
 
 # Define center coordinates
 center_lon = -151.5377
@@ -234,7 +234,7 @@ wetsed_plot = ggplot() +
   guides(fill = guide_colorbar(barwidth = 2, barheight = 15))
 
 #### CREATE LOCATOR PLOT
-####------------------------------
+####____________________________________________________
 
 # Read shapes
 ocean_data = st_read(ocean_input)
@@ -297,7 +297,7 @@ locator_plot = ggplot() +
   )
 
 #### MERGE AND EXPORT PLOTS
-####------------------------------
+####____________________________________________________
 
 # Read photo file
 photo_data = image_read(photo_input)

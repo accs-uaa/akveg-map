@@ -2,8 +2,8 @@
 # ---------------------------------------------------------------------------
 # Create analysis grids
 # Author: Timm Nawrocki
-# Last Updated: 2023-03-30
-# Usage: Must be executed in an ArcGIS Pro Python 3.6 installation.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in an ArcGIS Pro Python 3.11+ installation.
 # Description: "Create analysis grids" creates major and minor grid indices and overlapping grid tiles from a manually-generated study area polygon.
 # ---------------------------------------------------------------------------
 
@@ -13,6 +13,9 @@ from package_GeospatialProcessing import arcpy_geoprocessing
 from package_GeospatialProcessing import create_grid_tiles
 from package_GeospatialProcessing import select_location
 import os
+
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
 
 # Set root directory
 drive = 'N:/'
@@ -51,6 +54,7 @@ tnp_050 = os.path.join(regions_geodatabase, 'TemperateNorthPacific_050_Tiles_333
 tnp_010 = os.path.join(regions_geodatabase, 'TemperateNorthPacific_010_Tiles_3338')
 
 #### GENERATE 400 KM GRIDS
+####____________________________________________________
 
 # Create the 400 km grid tiles
 full_400_kwargs = {'distance_km': 400,
@@ -106,6 +110,7 @@ else:
     print('----------')
 
 #### GENERATE 100 KM GRIDS
+####____________________________________________________
 
 # Create the 100 km grid tiles
 full_100_kwargs = {'distance_km': 100,
@@ -161,6 +166,7 @@ else:
     print('----------')
 
 #### GENERATE 50 KM GRIDS
+####____________________________________________________
 
 # Create the 50 km grid tiles
 full_050_kwargs = {'distance_km': 50,
@@ -216,6 +222,7 @@ else:
     print('----------')
 
 #### GENERATE 10 KM GRIDS
+####____________________________________________________
 
 # Create the 100 km grid tiles
 full_010_kwargs = {'distance_km': 10,

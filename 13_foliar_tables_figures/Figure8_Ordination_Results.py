@@ -1,8 +1,8 @@
 # ---------------------------------------------------------------------------
 # Plot results of ordination performance assessment
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Last Updated: 2025-07-21
-# Usage: Script should be executed in R 4.1.0+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in a Python 3.12+ installation.
 # Description: "Plot results of ordination performance assessment" plots bar charts comparing the performance of three vegetation maps relative to the information preserved in clusters from 3-axis NMDS ordinations.
 # ---------------------------------------------------------------------------
 
@@ -17,11 +17,11 @@ import kaleido
 # Initialize kaleido
 kaleido.get_chrome_sync()
 
-#### SET UP DIRECTORIES AND FILES
-####------------------------------
-
 # Set round date
 round_date = 'round_20241124'
+
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
 
 # Set root directory
 drive = 'C:/'
@@ -49,7 +49,7 @@ tree_list = ['Bristol Bay', 'Alaska Western', 'Alaska-Yukon Northwest',
              'Nelchina Uplands', 'Susitna Valley', 'Alaska Pacific Western']
 
 #### CREATE PLOT
-####------------------------------
+####____________________________________________________
 
 # Read ordination results
 ordination_data = pd.read_excel(ordination_input, sheet_name='summary')

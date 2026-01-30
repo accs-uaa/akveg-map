@@ -2,8 +2,8 @@
 # ---------------------------------------------------------------------------
 # Table 3. Ordination and clustering results
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Last Updated: 2025-07-10
-# Usage: Script should be executed in R 4.4.3+.
+# Last Updated: 2025-12-16
+# Usage: Must be executed in a R 4.4.3+ installation.
 # Description: "Table 3. Ordination and clustering results" formats a table for publication to display the results of the ordination and clustering from field data.
 # ---------------------------------------------------------------------------
 
@@ -17,11 +17,11 @@ library(stringr)
 library(tibble)
 library(tidyr)
 
-#### SET UP DIRECTORIES AND FILES
-####------------------------------
-
 # Set round date
 round_date = 'round_20241124'
+
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
 
 # Set root directory
 drive = 'C:'
@@ -39,7 +39,7 @@ ordination_input = path(input_folder, '00_Subregion_Performance.xlsx')
 ordination_output = path(output_folder, 'Table3_Ordination_Clustering.xlsx')
 
 #### FORMAT ORDINATION RESULTS
-####------------------------------
+####____________________________________________________
 
 # Format ordination results
 ordination_data = read_xlsx(ordination_input, sheet = 'summary') %>%

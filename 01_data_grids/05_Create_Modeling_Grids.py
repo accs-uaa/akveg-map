@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Create modeling grids
 # Author: Timm Nawrocki
-# Last Updated: 2024-09-18
+# Last Updated: 2025-12-16
 # Usage: Must be executed in a Python 3.12+ installation.
 # Description: "Create modeling grids" creates individual raster versions of the 50 x 50 km grids for use as modeling domains in prediction.
 # ---------------------------------------------------------------------------
@@ -15,6 +15,9 @@ from rasterio import features
 import time
 from akutils import *
 
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
+
 # Set root directory
 drive = 'D:/'
 root_folder = 'ACCS_Work/Projects/VegetationEcology/AKVEG_Map/Data'
@@ -25,6 +28,9 @@ output_folder = os.path.join(drive, root_folder, 'Data_Input/grid_050')
 
 # Define input files
 grid_input = 'AlaskaYukon_050_Tiles_3338'
+
+#### PROCESS MODELING GRIDS
+####____________________________________________________
 
 # Read grid feature class
 grid_feature = gpd.read_file(source_geodatabase, layer=grid_input)
