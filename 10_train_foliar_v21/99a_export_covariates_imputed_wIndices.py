@@ -10,8 +10,7 @@
 # of the validation script (01d) and the final training script (02d).
 #
 # Example usage from the command line:
-# python3 scripts/99a_export_covariates_imputed_wIndices.py 
-# --group betshr --round_date 20250930_emb_topo_lgbm --predictors emb topo
+# python3 scripts/99a_export_covariates_imputed_wIndices.py --group betshr --round_date 20250930_emb_topo_lgbm --predictors emb topo
 # ---------------------------------------------------------------------------
 
 # Import packages

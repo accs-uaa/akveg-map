@@ -24,6 +24,67 @@ conda install -c conda-forge numpy openpyxl pandas gdal geopandas rasterio sciki
 python3 -m pip install git+https://github.com/accs-uaa/akutils
 ```
 
+
+```bash {lgbm_gpu lgbm with gpu support}
+conda deactivate
+conda remove -n lgbm_gpu --all -y
+
+conda create -n lgbm_gpu -y \
+  -c rapidsai -c nvidia -c conda-forge -c defaults \
+  python=3.11 \
+  "lightgbm>=4.4.0" \
+  "cuda-version=12.2" \
+  numpy \
+  pandas \
+  scikit-learn \
+  optuna \
+  joblib \
+  matplotlib \
+  cmake \
+  libopenblas \
+  ocl-icd-system \
+  cudf \
+  cupy
+
+conda activate lgbm_gpu
+
+python3 -m pip install git+https://github.com/accs-uaa/akutils
+
+```
+
+
+# # Core dependencies
+# conda install -y -c conda-forge numpy pandas scikit-learn optuna joblib \
+#                        matplotlib cmake libopenblas ocl-icd-system
+#                        
+# conda install -y -c conda-forge lightgbm
+# 
+# conda remove --yes lightgbm
+# conda install --yes -c conda-forge lightgbm cudatoolkit=12.1
+# 
+# conda install -c rapidsai -c nvidia -c conda-forge cudf cupy
+
+```
+
+##1a. akveg-tf for tensorflow tests
+conda create -n akveg-tf -c conda-forge
+conda activate akveg-tf
+
+#Install the necessary packages for geospatial processing, TensorFlow, and its dependencies. Using the conda-forge channel is recommended for compatibility, especially for GPU support with CUDA.
+
+conda install -c nvidia -c conda-forge cuda tensorflow numpy openpyxl pandas gdal geopandas rasterio scikit-learn imbalanced-learn joblib earthengine-api geemap pyarrow fastparquet
+
+Finally, install the "akutils" helper functions using pip.
+
+python3 -m pip install git+https://github.com/accs-uaa/akutils
+python3 -m pip install keras-tuner -q
+
+#If upgrade needed later
+python3 -m pip install --upgrade --force-reinstall git+https://github.com/accs-uaa/akutils
+
+#Not needed with nvidia cuda
+#export XLA_FLAGS=--xla_gpu_cuda_data_dir=$CONDA_PREFIX/
+
 ### Download files to the virtual machine:
 
 Create the data directories referenced in the script. The example below includes directories to validate and train models.
