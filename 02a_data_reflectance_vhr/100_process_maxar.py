@@ -4,8 +4,9 @@
 # python 100_process_maxar.py \
 #    --input "/data/gis/raster_base/Alaska/AKVegMap/EVWHS/navy_north_slope/unzipped/050300601010_01" \
 #    --output "/data/gis/raster_base/Alaska/AKVegMap/EVWHS/navy_north_slope/processed_output" \
-#    --dem "/data/gis/gis_base/DEM/ifsar/alaska_ifsar_dsm_20200925.tif"
-#    --keep-temp
+#    --dem "/data/gis/gis_base/DEM/ifsar/alaska_ifsar_dsm_20200925.tif" \
+#    --keep-temp \
+#    --epsg 3338
 
 import os
 import glob
@@ -77,7 +78,7 @@ def calculate_earth_sun_distance(year, month, day):
     logging.info(f"Calculated Earth-Sun distance for {year}-{month}-{day} (DOY {doy}): {distance_au:.5f} AU")
     return distance_au
 
-def parse_wv3_metadata(xml_path):
+def parse_wv3_metadata(xml_path, band_keys=None):
     """
     Parses a WorldView-3 XML metadata file to extract calibration parameters
     required by OTB's OpticalCalibration application. This version uses a
@@ -107,7 +108,16 @@ def parse_wv3_metadata(xml_path):
     solar_dist_text = get_value('earthSunDist', xml_content)
     acq_time_text = get_value('firstLineTime', xml_content)
     sat_id_text = get_value('satId', xml_content)
-    catalog_id_text = get_value('productCatalogId', xml_content) or get_value('catalogId', xml_content)
+    catalog_id_text = get_value('CATID', xml_content)
+    
+    # Extract reference coordinates for UTM zone calculation
+    ul_lon = get_value('ULLON', xml_content)
+    ul_lat = get_value('ULLAT', xml_content)
+    if ul_lon and ul_lat:
+        ref_lon = float(ul_lon)
+        ref_lat = float(ul_lat)
+    else:
+        ref_lon, ref_lat = None, None
     
     # Check for absolutely essential tags
     if any(val is None for val in [sun_elev_text, acq_time_text]):
@@ -128,7 +138,8 @@ def parse_wv3_metadata(xml_path):
         solar_distance = float(solar_dist_text)
 
     # Define the expected band order for WorldView-3
-    band_keys = ['BAND_C', 'BAND_B', 'BAND_G', 'BAND_Y', 'BAND_R', 'BAND_RE', 'BAND_N', 'BAND_N2']
+    if band_keys is None:
+        band_keys = ['BAND_C', 'BAND_B', 'BAND_G', 'BAND_Y', 'BAND_R', 'BAND_RE', 'BAND_N', 'BAND_N2']
     
     gains_and_biases = []
     solar_irradiances = []
@@ -160,6 +171,7 @@ def parse_wv3_metadata(xml_path):
             # Standard WV-3 top-of-atmosphere solar irradiance values (W/m^2/μm)
             # Source: DigitalGlobe Radiometric Use of WorldView-3 Imagery
             wv3_solar_irradiance = {
+                'BAND_P': 1580.8140,
                 'BAND_C': 1758.2229,
                 'BAND_B': 1971.8116,
                 'BAND_G': 1856.4104,
@@ -188,8 +200,48 @@ def parse_wv3_metadata(xml_path):
         "solar_irradiances": solar_irradiances,
         "acq_time": acq_time_text,
         "sensor": sat_id_text,
-        "catalog_id": catalog_id_text
+        "catalog_id": catalog_id_text,
+        "ref_lon": ref_lon,
+        "ref_lat": ref_lat
     }
+
+def get_reference_coords(meta_path):
+    """
+    Parses metadata (XML or IMD) to find Upper Left Longitude/Latitude.
+    Returns (lon, lat) or (None, None).
+    """
+    if not meta_path or not os.path.exists(meta_path):
+        return None, None
+    
+    try:
+        with open(meta_path, 'r', encoding='utf-8-sig', errors='ignore') as f:
+            content = f.read()
+        
+        def find_val(patterns):
+            for pat in patterns:
+                m = re.search(pat, content, re.IGNORECASE | re.DOTALL)
+                if m: return float(m.group(1))
+            return None
+
+        # Longitude patterns
+        lon = find_val([
+            r'<(?:\w+:)?(?:ULLON|UpperLeftLongitude)[^>]*>(.*?)</(?:\w+:)?(?:ULLON|UpperLeftLongitude)>', # XML
+            r'(?:ULLon|upperLeftLongitude)\s*=\s*([\d\.\-]+)' # IMD
+        ])
+        
+        # Latitude patterns
+        lat = find_val([
+            r'<(?:\w+:)?(?:ULLAT|UpperLeftLatitude)[^>]*>(.*?)</(?:\w+:)?(?:ULLAT|UpperLeftLatitude)>', # XML
+            r'(?:ULLat|upperLeftLatitude)\s*=\s*([\d\.\-]+)' # IMD
+        ])
+        
+        if lon is not None and lat is not None:
+            return lon, lat
+            
+    except Exception as e:
+        logging.warning(f"Failed to parse coords from {meta_path}: {e}")
+        
+    return None, None
 
 def get_average_gsd(meta_path):
     """
@@ -205,7 +257,7 @@ def get_average_gsd(meta_path):
         
         # Helper to find float value by regex
         def find_val(pattern):
-            m = re.search(pattern, content, re.IGNORECASE)
+            m = re.search(pattern, content, re.IGNORECASE | re.DOTALL)
             return float(m.group(1)) if m else None
 
         # Try XML tags (e.g., <MEANROWGSD>0.31</MEANROWGSD> or <ROWGSD>0.31</ROWGSD>)
@@ -216,8 +268,8 @@ def get_average_gsd(meta_path):
             return (row_gsd + col_gsd) / 2.0
             
         # Try IMD keys (e.g., meanProductGSD = 0.31 or meanRowGSD = 0.31)
-        row_gsd = find_val(r'(?:mean)?RowGSD\s*=\s*([\d\.]+)')
-        col_gsd = find_val(r'(?:mean)?ColGSD\s*=\s*([\d\.]+)')
+        row_gsd = find_val(r'(?:mean)?RowGSD\s*=\s*([\d\.]+(?:e[+-]?\d+)?)')
+        col_gsd = find_val(r'(?:mean)?ColGSD\s*=\s*([\d\.]+(?:e[+-]?\d+)?)')
         
         if row_gsd and col_gsd:
             return (row_gsd + col_gsd) / 2.0
@@ -251,7 +303,7 @@ def run_omnimask(image_path, output_dir, prefix):
     except FileNotFoundError:
         logging.error("Conda command not found. Ensure conda is in your PATH.")
 
-def process_bundle(input_dir, dem_path, output_dir, ram, enable_masking, keep_temp, threads):
+def process_bundle(input_dir, dem_path, output_dir, ram, enable_masking, keep_temp, threads, target_epsg=None):
     """Orchestrates the processing of a Maxar bundle."""
     import pyotb
 
@@ -331,6 +383,7 @@ def process_bundle(input_dir, dem_path, output_dir, ram, enable_masking, keep_te
             continue
 
         temp_calib_file = None
+        temp_pan_calib_file = None
         temp_ortho_file = None
 
         try:
@@ -374,6 +427,7 @@ def process_bundle(input_dir, dem_path, output_dir, ram, enable_masking, keep_te
 
             output_file = os.path.join(bundle_output_dir, f"{prefix}_TOA_10k.tif")
             temp_calib_file = os.path.join(bundle_output_dir, f"{prefix}_temp_calib.tif")
+            temp_pan_calib_file = os.path.join(bundle_output_dir, f"{prefix}_temp_pan_calib.tif")
             logging.info(f"Processing Bundle: {prefix} -> {os.path.basename(bundle_output_dir)}")
 
             # --- Copy Metadata Files & Write Info ---
@@ -423,6 +477,32 @@ def process_bundle(input_dir, dem_path, output_dir, ram, enable_masking, keep_te
                 json.dump(info_data, f, indent=4)
 
             if DO_TOA:
+                # --- 1a. Calibrate PAN to TOA ---
+                logging.info("Step 1a: Calibrating PAN image to TOA reflectance...")
+                pan_calib_params = parse_wv3_metadata(pan_meta_file, band_keys=['BAND_P'])
+                
+                pan_sun_elev_rad = math.radians(pan_calib_params["sun_elevation"])
+                pan_d2 = pan_calib_params["solar_distance"] ** 2
+                pan_gain = pan_calib_params["gains"][0]
+                pan_esun = pan_calib_params["solar_irradiances"][0]
+                
+                pan_refl_factor = (math.pi * pan_d2 * pan_gain) / (pan_esun * math.sin(pan_sun_elev_rad))
+                
+                pan_calib_app = pyotb.BandMathX({
+                    "il": [pan_image_file],
+                    "exp": f"im1 * {pan_refl_factor}",
+                    "ram": ram
+                })
+                pan_calib_app.write(temp_pan_calib_file, pixel_type="float")
+                
+                if keep_temp:
+                    logging.info(f"Building pyramids and stats for temp pan calib: {os.path.basename(temp_pan_calib_file)}")
+                    subprocess.run(["gdaladdo", "-r", "nearest", temp_pan_calib_file, "4", "8", "16", "32"], check=False)
+                    subprocess.run(["gdalinfo", "-approx_stats", temp_pan_calib_file], check=False, stdout=subprocess.DEVNULL)
+                
+                input_pan_for_fusion = temp_pan_calib_file
+
+                # --- 1b. Calibrate MUL to TOA ---
                 logging.info("Step 1b: Manually calculating TOA reflectance with BandMathX...")
                 # TOA Reflectance formula: (pi * L * d^2) / (ESUN * sin(sun_elev))
                 # where L (radiance) = DN * gain.
@@ -451,15 +531,23 @@ def process_bundle(input_dir, dem_path, output_dir, ram, enable_masking, keep_te
                 # If keeping temp, generate stats/ovrs immediately so they are available for inspection
                 if keep_temp:
                     logging.info(f"Building pyramids and stats for temp calib: {os.path.basename(temp_calib_file)}")
-                    subprocess.run(["gdaladdo", "-r", "average", temp_calib_file, "2", "4", "8", "16"], check=False)
-                    subprocess.run(["gdalinfo", "-stats", temp_calib_file], check=False, stdout=subprocess.DEVNULL)
+                    subprocess.run(["gdaladdo", "-r", "nearest", temp_calib_file, "4", "8", "16", "32"], check=False)
+                    subprocess.run(["gdalinfo", "-approx_stats", temp_calib_file], check=False, stdout=subprocess.DEVNULL)
 
                 input_ms_for_ortho = temp_calib_file
             else:
                 input_ms_for_ortho = mul_image_file
+                input_pan_for_fusion = pan_image_file
 
             # Determine target GSD from PAN metadata
             pan_gsd = get_average_gsd(pan_meta_file)
+            
+            if not pan_gsd and pan_meta_file and pan_meta_file.upper().endswith(".XML"):
+                imd_files = glob.glob(os.path.join(os.path.dirname(pan_meta_file), "*.IMD"))
+                if imd_files:
+                    logging.info(f"GSD not found in XML, trying IMD: {imd_files[0]}")
+                    pan_gsd = get_average_gsd(imd_files[0])
+
             if not pan_gsd:
                 logging.warning(f"Could not determine GSD from {pan_meta_file}. Defaulting to 0.5m.")
                 pan_gsd = 0.5
@@ -468,26 +556,59 @@ def process_bundle(input_dir, dem_path, output_dir, ram, enable_masking, keep_te
             # 2. PANSHARPENING (Sensor Geometry)
             logging.info("Step 2: Pansharpening (Sensor Geometry)...")
             pxs = pyotb.BundleToPerfectSensor({
-                "inp": pan_image_file,
+                "inp": input_pan_for_fusion,
                 "inxs": input_ms_for_ortho,
                 "elev.dem": dem_path,
                 "elev.geoid": GEOID_PATH,
+                "elev.default": 0,
                 "method": "bayes",
                 "ram": ram
             })
 
-            # 3. ORTHORECTIFICATION
-            logging.info("Step 3: Orthorectifying...")
-            ortho = pyotb.OrthoRectification({
+            # Prepare OrthoRectification parameters
+            ortho_params = {
                 "io.in": pxs,
                 "elev.dem": dem_path,
                 "elev.geoid": GEOID_PATH,
-                "map": "utm",
+                "elev.default": 0,
                 "interpolator": "bco",
                 "outputs.spacingx": pan_gsd,
                 "outputs.spacingy": -pan_gsd,
-                "ram": ram
-            })
+                "outputs.default": 0,
+                "opt.ram": ram
+            }
+            
+            if target_epsg:
+                logging.info(f"Step 3: Orthorectifying to EPSG:{target_epsg}...")
+                ortho_params["map"] = "epsg"
+                ortho_params["map.epsg.code"] = target_epsg
+            else:
+                # Calculate UTM parameters
+                ref_lon = calib_params.get("ref_lon")
+                ref_lat = calib_params.get("ref_lat")
+                
+                if ref_lon is None or ref_lat is None:
+                    logging.info("Coords not found in MUL XML, checking PAN metadata...")
+                    ref_lon, ref_lat = get_reference_coords(pan_meta_file)
+                    
+                    if ref_lon is None and pan_meta_file and pan_meta_file.upper().endswith(".XML"):
+                        imd_files = glob.glob(os.path.join(os.path.dirname(pan_meta_file), "*.IMD"))
+                        if imd_files:
+                            logging.info(f"Coords not found in XML, trying IMD: {imd_files[0]}")
+                            ref_lon, ref_lat = get_reference_coords(imd_files[0])
+
+                if ref_lon is None or ref_lat is None:
+                    raise ValueError(f"Could not determine reference coordinates for {prefix}. Cannot calculate UTM zone.")
+
+                utm_zone = int((ref_lon + 180) / 6) + 1
+                is_north = (ref_lat >= 0)
+                
+                logging.info(f"Step 3: Orthorectifying to UTM Zone {utm_zone}...")
+                ortho_params["map"] = "utm"
+                ortho_params["map.utm.zone"] = utm_zone
+                ortho_params["map.utm.northhem"] = is_north
+            
+            ortho = pyotb.OrthoRectification(ortho_params)
 
             # 4. SCALE THE RESULT (if calibration was done)
             if DO_TOA:
@@ -517,14 +638,15 @@ def process_bundle(input_dir, dem_path, output_dir, ram, enable_masking, keep_te
             # If keeping temp, generate stats/ovrs immediately
             if keep_temp:
                 logging.info(f"Building pyramids and stats for temp ortho: {os.path.basename(temp_ortho_file)}")
-                subprocess.run(["gdaladdo", "-r", "average", temp_ortho_file, "2", "4", "8", "16"], check=False)
-                subprocess.run(["gdalinfo", "-stats", temp_ortho_file], check=False, stdout=subprocess.DEVNULL)
+                subprocess.run(["gdaladdo", "-r", "nearest", temp_ortho_file, "4", "8", "16", "32"], check=False)
+                subprocess.run(["gdalinfo", "-approx_stats", temp_ortho_file], check=False, stdout=subprocess.DEVNULL)
 
             # 6. CONVERT TO COG
             logging.info("Step 5: Converting to Cloud-Optimized GeoTIFF (with average overviews)...")
             cmd = [
                 "gdal_translate", temp_ortho_file, output_file,
                 "-stats", # Force recalculation of statistics for the final COG
+                "-a_nodata", "0",
                 "-of", "COG",
                 "-co", "COMPRESS=DEFLATE",
                 "-co", "PREDICTOR=2",
@@ -536,7 +658,11 @@ def process_bundle(input_dir, dem_path, output_dir, ram, enable_masking, keep_te
             subprocess.run(cmd, check=True)
             logging.info(f"Wrote COG: {output_file}")
 
-            # 5. RUN OMNIMASK POST-PROCESS
+            # Calculate stats for final COG
+            logging.info("Calculating statistics for final COG...")
+            subprocess.run(["gdalinfo", "-stats", output_file], check=False, stdout=subprocess.DEVNULL)
+
+            # 7. RUN OMNIMASK POST-PROCESS
             if enable_masking:
                 run_omnimask(output_file, bundle_output_dir, prefix)
 
@@ -545,7 +671,7 @@ def process_bundle(input_dir, dem_path, output_dir, ram, enable_masking, keep_te
         finally:
             # 6. CLEAN UP temporary files
             if not keep_temp:
-                temp_files = [f for f in [temp_calib_file, temp_ortho_file] if f and os.path.exists(f)]
+                temp_files = [f for f in [temp_calib_file, temp_pan_calib_file, temp_ortho_file] if f and os.path.exists(f)]
                 for f in temp_files:
                     os.remove(f)
                     logging.info(f"Cleaned up: {f}")
@@ -565,6 +691,7 @@ def main():
     parser.add_argument("--threads", type=int, default=THREADS, help=f"Number of OTB threads to use (default: {THREADS}).")
     parser.add_argument("--enable-masking", action="store_true", help="Enable cloud/shadow masking with Omnimask.")
     parser.add_argument("--keep-temp", action="store_true", help="Keep temporary files after processing (default: delete).")
+    parser.add_argument("--epsg", type=int, help="Target EPSG code (e.g. 3338) to override automatic UTM zone calculation.")
     
     args = parser.parse_args()
 
@@ -576,7 +703,7 @@ def main():
     os.environ["OTB_MAX_NUMBER_OF_THREADS"] = str(args.threads)
     os.environ["ITK_GLOBAL_DEFAULT_NUMBER_OF_THREADS"] = str(args.threads)
 
-    process_bundle(args.input, args.dem, args.output, args.ram, args.enable_masking, args.keep_temp, args.threads)
+    process_bundle(args.input, args.dem, args.output, args.ram, args.enable_masking, args.keep_temp, args.threads, args.epsg)
 
 if __name__ == "__main__":
     main()
