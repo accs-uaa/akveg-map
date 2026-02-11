@@ -27,11 +27,12 @@ knitr::opts_chunk$set(echo = TRUE)
 gisArchive <- path('/data/archives/GIS_Archive')
 gis <- path('/data/gis')
 # outDir <- path(gis, 'gis_projects/2021/21-347_NASA_SmallSat/physiography_working')
-workingDir <- path(gis, 'gis_projects/2024/24-261_AKVEG_Riparian_BLM/AKVEG_Flooplains_20260129_working.gdb')
-outDir <- path(gis, 'gis_projects/2024/24-261_AKVEG_Riparian_BLM/AKVEG_Flooplains_20260130.gdb')
 ```
 
 ```{r vector phys}
+workingDir <- path(gis, 'gis_projects/2024/24-261_AKVEG_Riparian_BLM/AKVEG_Flooplains_20260129_working.gdb')
+outDir <- path(gis, 'gis_projects/2024/24-261_AKVEG_Riparian_BLM/AKVEG_Flooplains_20260130.gdb')
+
 # Northen Alaska Landscapes (Jorgenson)
 # From Q:\GIS_Archive\2018\18-381_ANWR_Land_Cover_w\original_source\subsections_20181023\NoAK_Landscapes_2018-10-23_Working_Copy.gdb\NoAK_Landscapes_2018
 noak_subsec_vect <- read_sf(path(workingDir), 
@@ -107,6 +108,9 @@ write_excel_csv(vector_phys, path(path_dir(outDir), 'vector_phys_export_20260130
 ```
 
 ```{r reclass vect}
+workingDir <- path(gis, 'gis_projects/2024/24-261_AKVEG_Riparian_BLM/AKVEG_Flooplains_20260129_working.gdb')
+outDir <- path(gis, 'gis_projects/2024/24-261_AKVEG_Riparian_BLM/AKVEG_Flooplains_20260130.gdb')
+
 ref_physiography_lookup <- read_xlsx(path(path_dir(outDir), 'vector_phys_export_20260130.xlsx'), sheet='physiography_lookup')
 ref_physiography <- read_xlsx(path(path_dir(outDir), 'vector_phys_export_20260130.xlsx'), sheet='ref_phys')
 
@@ -224,9 +228,18 @@ mapview(noak_floodplains) + mapview(noak_trainingArea)
 write_sf(noak_floodplains, path(outDir), layer='NoAK_Floodplains_3338')
 write_sf(noak_trainingArea, path(outDir), layer='NoAK_TrainingArea_3338')
 
-phys_vect <- bind_rows(
-) %>%
-  left_join(ref_physiography)
-write_sf(phys_vect, path(outDir, 'shapefiles_norm', 'phys_vect_v20260130.shp'))
+# phys_vect <- bind_rows(
+# ) %>%
+#   left_join(ref_physiography)
+# write_sf(phys_vect, path(outDir, 'shapefiles_norm', 'phys_vect_v20260130.shp'))
+
+```
+
+```{r Jorgenson Floodplains 20260211}
+# File at W:\gis_projects\2024\24-261_AKVEG_Riparian_BLM\jorgenson\Floodplains AK_Ecological_Landscapes_20260210\Floodplains AK_Ecological_Landscapes_20260210.mdb
+# Floodplains only, not 'trainingArea' or 'non floodplains' explicitly
+# Manually merged AK250 coastline with mapped area from Jorgenson 2018 layer (prior version)
+
+# Saved to path(gis, 'gis_projects/2024/24-261_AKVEG_Riparian_BLM/AKVEG_Flooplains_20260211.gdb')
 
 ```

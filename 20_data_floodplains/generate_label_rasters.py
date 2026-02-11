@@ -15,13 +15,15 @@ print("--- Script Starting ---")
 # Path to your File Geodatabase (Linux format)
 # GDB_PATH = "/data/gis/gis_projects/2024/24-261_AKVEG_Riparian_BLM/AKVEG_Floodplains_20251215.gdb"
 # GDB_PATH = "/data/gis/gis_projects/2024/24-261_AKVEG_Riparian_BLM/AKVEG_Floodplains_20260114.gdb"
-GDB_PATH = "/data/gis/gis_projects/2024/24-261_AKVEG_Riparian_BLM/AKVEG_Flooplains_20260130.gdb"
+# GDB_PATH = "/data/gis/gis_projects/2024/24-261_AKVEG_Riparian_BLM/AKVEG_Floodplains_20260130.gdb"
+GDB_PATH = "/data/gis/gis_projects/2024/24-261_AKVEG_Riparian_BLM/AKVEG_Floodplains_20260211.gdb"
 
 # Reference raster for pixel alignment (The Sentinel-2 Mosaic)
 REFERENCE_RASTER = "/data/gis/raster_base/Alaska/AKVegMap/deliverable/20250528_mentasta_lake_24-241/adnr_fireexposure_ph1_v1.0/surficial_features/MentastaLake_FloodedVeg_Pct_10m_3338.tif"
 
 # Output location for the rasterized labels
-OUTPUT_DIR = "/data/gis/gis_projects/2024/24-261_AKVEG_Riparian_BLM/label_rasters/v20260130"
+# OUTPUT_DIR = "/data/gis/gis_projects/2024/24-261_AKVEG_Riparian_BLM/label_rasters/v20260130"
+OUTPUT_DIR = "/data/gis/gis_projects/2024/24-261_AKVEG_Riparian_BLM/label_rasters/v20260211b"
 
 # --- VALIDATION CHECKS ---
 if not os.path.exists(GDB_PATH):

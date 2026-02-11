@@ -9,11 +9,13 @@ import time
 # ==============================================================================
 
 # 1. Local path to your folder containing the .tif files
-LOCAL_DIR = "/data/gis/gis_projects/2024/24-261_AKVEG_Riparian_BLM/label_rasters/v20260130"
+# LOCAL_DIR = "/data/gis/gis_projects/2024/24-261_AKVEG_Riparian_BLM/label_rasters/v20260130"
+LOCAL_DIR = "/data/gis/gis_projects/2024/24-261_AKVEG_Riparian_BLM/label_rasters/v20260211"
 
 # 2. Your Google Cloud Storage Bucket (must exist)
 # Format: gs://your-bucket-name/optional-subfolder
-GCS_BUCKET = "gs://akveg-data/surficial_features/floodplain_label_rasters/v20260130"
+# GCS_BUCKET = "gs://akveg-data/surficial_features/floodplain_label_rasters/v20260130"
+GCS_BUCKET = "gs://akveg-data/surficial_features/floodplain_label_rasters/v20260211"
 
 # 3. Target GEE Asset ID for the Collection
 # Format: projects/your-project/assets/collection_name
