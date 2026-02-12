@@ -1,3 +1,6 @@
+# run from akveg_riparian conda env
+# conda activate akveg_riparian
+
 import os
 import sys
 import fiona

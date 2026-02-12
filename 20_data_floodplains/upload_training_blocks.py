@@ -1,4 +1,6 @@
 # upload_training_blocks.py
+# run from ee conda env
+# conda activate ee
 import os
 import subprocess
 import glob
@@ -10,17 +12,17 @@ import time
 
 # 1. Local path to your folder containing the .tif files
 # LOCAL_DIR = "/data/gis/gis_projects/2024/24-261_AKVEG_Riparian_BLM/label_rasters/v20260130"
-LOCAL_DIR = "/data/gis/gis_projects/2024/24-261_AKVEG_Riparian_BLM/label_rasters/v20260211"
+LOCAL_DIR = "/data/gis/gis_projects/2024/24-261_AKVEG_Riparian_BLM/label_rasters/v20260211b"
 
 # 2. Your Google Cloud Storage Bucket (must exist)
 # Format: gs://your-bucket-name/optional-subfolder
 # GCS_BUCKET = "gs://akveg-data/surficial_features/floodplain_label_rasters/v20260130"
-GCS_BUCKET = "gs://akveg-data/surficial_features/floodplain_label_rasters/v20260211"
+GCS_BUCKET = "gs://akveg-data/surficial_features/floodplain_label_rasters/v20260211b"
 
 # 3. Target GEE Asset ID for the Collection
 # Format: projects/your-project/assets/collection_name
 # OR: users/your_username/collection_name
-GEE_COLLECTION = "projects/akveg-map/assets/surficial_features/floodplain_label_rasters/v202601"
+GEE_COLLECTION = "projects/akveg-map/assets/surficial_features/floodplain_label_rasters/v20260211b"
 
 # 4. Path to the 'earthengine' CLI tool if not in system PATH
 # Usually just 'earthengine' works if installed via pip
