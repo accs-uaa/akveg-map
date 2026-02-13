@@ -2,14 +2,14 @@
 # ---------------------------------------------------------------------------
 # Validate random forest abundance model
 # Author: Timm Nawrocki
-# Last Updated: 2024-11-24
+# Last Updated: 2026-02-12
 # Usage: Must be executed in an Anaconda Python 3.12+ installation.
 # Description: "Validate random forest abundance model" validates a random forest classifier and regressor. The model validation accounts for spatial autocorrelation by grouping in 100 km blocks.
 # ---------------------------------------------------------------------------
 
 # Define model targets
-group = 'rhoshr'
-round_date = 'round_20241204_rf'
+group = 'alnus'
+round_date = 'round_20260212'
 presence_threshold = 3
 
 # Import packages
@@ -58,6 +58,7 @@ mae_output = os.path.join(output_folder, f'{group}_mae.txt')
 
 # Define variable sets
 validation = ['valid']
+alpha_earth = [f'A{i:02d}' for i in range(64)]
 predictor_all = ['summer', 'january', 'precip',
                  'coast', 'stream', 'river', 'wetness',
                  'elevation', 'exposure', 'heatload', 'position',
@@ -79,7 +80,8 @@ predictor_all = ['summer', 'january', 'precip',
                  's2_4_nbr', 's2_4_ngrdi', 's2_4_ndmi', 's2_4_ndsi', 's2_4_ndvi', 's2_4_ndwi',
                  's2_5_blue', 's2_5_green', 's2_5_red', 's2_5_redge1', 's2_5_redge2',
                  's2_5_redge3', 's2_5_nir', 's2_5_redge4', 's2_5_swir1', 's2_5_swir2',
-                 's2_5_nbr', 's2_5_ngrdi', 's2_5_ndmi', 's2_5_ndsi', 's2_5_ndvi', 's2_5_ndwi']
+                 's2_5_nbr', 's2_5_ngrdi', 's2_5_ndmi', 's2_5_ndsi', 's2_5_ndvi', 's2_5_ndwi',
+                 'dw_bare_pct', 'dw_flooded_pct', 'dw_snow_pct', 'dw_water_pct'] + alpha_earth
 obs_pres = ['presence']
 obs_cover = ['cvr_pct']
 retain_variables = ['st_vst'] + validation
@@ -136,7 +138,6 @@ inner_cv_splits = StratifiedGroupKFold(n_splits=10)
 print('Loading input data...')
 iteration_start = time.time()
 covariate_data = pd.read_csv(covariate_input)
-covariate_data = foliar_cover_predictors(covariate_data, predictor_all)
 species_data = pd.read_csv(species_input)[['st_vst', 'cvr_pct', 'presence', 'valid']]
 
 # Create an inner join of species and covariate data
