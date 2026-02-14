@@ -45,7 +45,7 @@ absence_bettre_input = os.path.join(project_folder,
                                     'WesternAlaska_Absences_bettre_3338.shp')
 domain_input = os.path.join(project_folder,
                             'Data/Data_Input/region_data',
-                            'AlaskaYukon_MapDomain_v2.0_3338.shp')
+                            'AlaskaYukon_ProjectDomain_v2.0_3338.shp')
 region_input = os.path.join(project_folder,
                             'Data/Data_Input/region_data',
                             'AlaskaYukon_Regions_v2.0_3338.shp')
@@ -96,8 +96,7 @@ soilhorizons_output = os.path.join(output_folder, '14_soil_horizons.csv')
 ####------------------------------
 
 # Read and format absences
-absence_data = gpd.read_file(absence_input).reset_index()
-absence_data['index'] = absence_data['index'] + 1
+absence_data = gpd.read_file(absence_input)
 absence_data = absence_data.to_crs(crs='EPSG:4269')
 absence_data['longitude_dd'] = absence_data.geometry.x
 absence_data['latitude_dd'] = absence_data.geometry.y
@@ -107,8 +106,7 @@ absence_data['scope_bryophyte'] = 'absence'
 absence_data['scope_lichen'] = 'absence'
 
 # Read and format betula tree absences
-absence_bettre_data = gpd.read_file(absence_bettre_input).reset_index()
-absence_bettre_data['index'] = absence_bettre_data['index'] + 1
+absence_bettre_data = gpd.read_file(absence_bettre_input)
 absence_bettre_data = absence_bettre_data.to_crs(crs='EPSG:4269')
 absence_bettre_data['longitude_dd'] = absence_bettre_data.geometry.x
 absence_bettre_data['latitude_dd'] = absence_bettre_data.geometry.y
@@ -118,8 +116,7 @@ absence_bettre_data['scope_bryophyte'] = 'bettre'
 absence_bettre_data['scope_lichen'] = 'bettre'
 
 # Read and format picea absences
-absence_picea_data = gpd.read_file(absence_picea_input).reset_index()
-absence_picea_data['index'] = absence_picea_data['index'] + 1
+absence_picea_data = gpd.read_file(absence_picea_input)
 absence_picea_data = absence_picea_data.to_crs(crs='EPSG:4269')
 absence_picea_data['longitude_dd'] = absence_picea_data.geometry.x
 absence_picea_data['latitude_dd'] = absence_picea_data.geometry.y
@@ -130,6 +127,8 @@ absence_picea_data['scope_lichen'] = 'picea'
 
 # Merge absence data
 absence_merged = pd.concat([absence_data, absence_bettre_data, absence_picea_data], axis=0)
+absence_merged = absence_merged.reset_index().drop(columns=['index']).reset_index().copy()
+absence_merged['index'] = absence_merged['index'] + 1
 
 # Create site codes
 absence_merged['site_code'] = 'ABS2026_0000' + absence_merged['index'].astype(str)
@@ -155,13 +154,13 @@ absence_merged['site_visit_code'] = absence_merged['site_code'] + '_' + version_
 absence_merged['project_code'] = 'akveg_absences'
 absence_merged['cover_method'] = 'image interpretation'
 absence_merged['perspective'] = 'aerial'
-absence_merged['plot_dimensions_m'] = '10 m radius'
+absence_merged['plot_dimensions_m'] = '10 radius'
 absence_merged['data_tier'] = 'map development & verification'
 absence_merged['structural_class'] = 'not assessed'
 absence_merged['homogeneous'] = True
 
 # Remove extra columns
-absence_merged = absence_merged.drop(columns=['index'])
+absence_merged = absence_merged.drop(columns=['index']).copy()
 
 #### QUERY AND PROCESS AKVEG SITE VISITS
 ####------------------------------
@@ -276,7 +275,7 @@ site_visit_data['plot_radius_m'] = np.where(site_visit_data['plot_dimensions_m']
     ['8 radius', '15×15', '15×18', '15×30', '15×100']),
     7, site_visit_data['plot_radius_m'])
 site_visit_data['plot_radius_m'] = np.where(site_visit_data['plot_dimensions_m'].isin(
-    ['10 radius', '10 m radius', '11.6 radius', '18×18', '20×20', '20×40', '20×80', '20×100']),
+    ['10 radius', '11.6 radius', '18×18', '20×20', '20×40', '20×80', '20×100']),
     8, site_visit_data['plot_radius_m'])
 site_visit_data['plot_radius_m'] = np.where(site_visit_data['plot_dimensions_m'].isin(
     ['12.5 radius', '25×100', '25×25']),
@@ -310,7 +309,7 @@ site_visit_data = site_visit_data[[
     'observe_date', 'observe_year', 'perspective', 'cover_method',
     'scope_vascular', 'scope_bryophyte', 'scope_lichen',
     'structural_class', 'homogeneous', 'plot_dimensions_m', 'plot_radius_m',
-    'fire_year', 'esa_type', 'coast', 'valid',
+    'biome', 'region', 'fire_year', 'esa_type', 'coast', 'valid',
     'latitude_dd', 'longitude_dd', 'cent_x', 'cent_y'
 ]]
 
@@ -371,11 +370,20 @@ abiotic_site_visits = abiotic_data['site_visit_code']
 site_visit_check = pd.concat([vegetation_site_visits, abiotic_site_visits], axis=0).to_frame()
 site_visit_check = site_visit_check['site_visit_code'].unique()
 
-# Check that all site visits have corresponding data in either vegetation or abiotic cover
+# Check that all site visits in the site visit data have corresponding data in either vegetation or abiotic cover
 missing_cover_sites = site_visit_data[~site_visit_data['site_visit_code'].isin(site_visit_check)]
 missing_cover_sites = missing_cover_sites[missing_cover_sites['project_code'] != 'akveg_absences']
 if len(missing_cover_sites) > 0:
     quit()
+
+# Check that all site visits in vegetation or abiotic cover have corresponding data in the site visit table
+veg_sites = pd.concat([vegetation_site_visits, abiotic_site_visits], axis=0).to_frame()
+missing_site_visits = veg_sites[~veg_sites['site_visit_code'].isin(site_visit_data['site_visit_code'].unique())]
+missing_site_visits = missing_site_visits['site_visit_code'].unique()
+
+# Troubleshoot missing sites
+site_visit_full = query_to_dataframe(database_connection, site_visit_query)
+missing_site_visits = site_visit_full[site_visit_full['site_visit_code'].isin(missing_site_visits)]
 
 #### QUERY OTHER AKVEG DATA
 ####------------------------------

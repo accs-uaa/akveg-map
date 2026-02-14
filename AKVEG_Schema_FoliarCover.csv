@@ -23,14 +23,18 @@ TRUE,TRUE,diagnostic species set,1. needleleaf tree,neetre,needleleaf trees,Taxu
 TRUE,TRUE,diagnostic species set,1. needleleaf tree,neetre,needleleaf trees,Taxus brevifolia
 TRUE,TRUE,diagnostic species set,1. needleleaf tree,neetre,needleleaf trees,Thuja
 TRUE,TRUE,diagnostic species set,1. needleleaf tree,neetre,needleleaf trees,Thuja plicata
+TRUE,TRUE,diagnostic species set,1. needleleaf tree,neetre,needleleaf trees,tree needleleaf
 TRUE,TRUE,diagnostic species set,1. needleleaf tree,neetre,needleleaf trees,Tsuga
 TRUE,TRUE,diagnostic species set,1. needleleaf tree,neetre,needleleaf trees,Tsuga heterophylla
 TRUE,TRUE,diagnostic species set,1. needleleaf tree,neetre,needleleaf trees,Tsuga mertensiana
-TRUE,TRUE,diagnostic species set,1. needleleaf tree,neetre,needleleaf trees,tree needleleaf
 TRUE,TRUE,diagnostic species set,1. needleleaf tree,picgla,Picea glauca - ×lutzii,Picea ×lutzii
 TRUE,TRUE,diagnostic species set,1. needleleaf tree,picgla,Picea glauca - ×lutzii,Picea glauca
 TRUE,TRUE,diagnostic species set,1. needleleaf tree,picmar,Picea mariana,Picea mariana
 TRUE,TRUE,diagnostic species set,1. needleleaf tree,picsit,Picea sitchensis,Picea sitchensis
+TRUE,TRUE,diagnostic species set,1. needleleaf tree,pinus,Pinus trees,Pinus
+TRUE,TRUE,diagnostic species set,1. needleleaf tree,pinus,Pinus trees,Pinus contorta
+TRUE,TRUE,diagnostic species set,1. needleleaf tree,pinus,Pinus trees,Pinus contorta var. contorta
+TRUE,TRUE,diagnostic species set,1. needleleaf tree,pinus,Pinus trees,Pinus contorta var. latifolia
 TRUE,TRUE,diagnostic species set,1. needleleaf tree,tsuhet,Tsuga heterophylla,Tsuga heterophylla
 TRUE,TRUE,diagnostic species set,1. needleleaf tree,tsumer,Tsuga mertensiana,Tsuga mertensiana
 TRUE,TRUE,diagnostic species set,2. broadleaf tree,bettre,Betula trees,Betula kenaica
@@ -92,6 +96,12 @@ TRUE,TRUE,diagnostic species set,3. shrub,ndsalix,non-dwarf Salix shrubs,Salix r
 TRUE,TRUE,diagnostic species set,3. shrub,ndsalix,non-dwarf Salix shrubs,Salix scouleriana
 TRUE,TRUE,diagnostic species set,3. shrub,ndsalix,non-dwarf Salix shrubs,Salix setchelliana
 TRUE,TRUE,diagnostic species set,3. shrub,ndsalix,non-dwarf Salix shrubs,Salix sitchensis
+TRUE,TRUE,diagnostic species set,3. shrub,rhoshr,Rhododendron shrubs,Rhododendron
+TRUE,TRUE,diagnostic species set,3. shrub,rhoshr,Rhododendron shrubs,Rhododendron groenlandicum
+TRUE,TRUE,diagnostic species set,3. shrub,rhoshr,Rhododendron shrubs,Rhododendron lapponicum
+TRUE,TRUE,diagnostic species set,3. shrub,rhoshr,Rhododendron shrubs,Rhododendron lapponicum ssp. alpinum
+TRUE,TRUE,diagnostic species set,3. shrub,rhoshr,Rhododendron shrubs,Rhododendron tomentosum
+TRUE,TRUE,diagnostic species set,3. shrub,rhoshr,Rhododendron shrubs,Rhododendron tomentosum ssp. decumbens
 TRUE,TRUE,diagnostic species set,3. shrub,rubspe,Rubus spectabilis,Rubus spectabilis
 TRUE,TRUE,diagnostic species set,3. shrub,vaculi,Vaccinium uliginosum,Vaccinium uliginosum
 TRUE,TRUE,diagnostic species set,4. dwarf shrub,dryas,Dryas shrubs,Dryas
@@ -138,12 +148,6 @@ TRUE,TRUE,diagnostic species set,4. dwarf shrub,nerishr,needleleaf ericaceous sh
 TRUE,TRUE,diagnostic species set,4. dwarf shrub,nerishr,needleleaf ericaceous shrubs,Phyllodoce caerulea
 TRUE,TRUE,diagnostic species set,4. dwarf shrub,nerishr,needleleaf ericaceous shrubs,Phyllodoce empetriformis
 TRUE,TRUE,diagnostic species set,4. dwarf shrub,nerishr,needleleaf ericaceous shrubs,Phyllodoce glanduliflora
-TRUE,TRUE,diagnostic species set,4. dwarf shrub,rhoshr,Rhododendron shrubs,Rhododendron
-TRUE,TRUE,diagnostic species set,4. dwarf shrub,rhoshr,Rhododendron shrubs,Rhododendron groenlandicum
-TRUE,TRUE,diagnostic species set,4. dwarf shrub,rhoshr,Rhododendron shrubs,Rhododendron lapponicum
-TRUE,TRUE,diagnostic species set,4. dwarf shrub,rhoshr,Rhododendron shrubs,Rhododendron lapponicum ssp. alpinum
-TRUE,TRUE,diagnostic species set,4. dwarf shrub,rhoshr,Rhododendron shrubs,Rhododendron tomentosum
-TRUE,TRUE,diagnostic species set,4. dwarf shrub,rhoshr,Rhododendron shrubs,Rhododendron tomentosum ssp. decumbens
 FALSE,TRUE,diagnostic species set,4. dwarf shrub,vacvit,Vaccinium vitis-idaea,Vaccinium vitis-idaea
 TRUE,TRUE,diagnostic species set,5. graminoid,erivag,Eriophorum vaginatum,Eriophorum vaginatum
 FALSE,TRUE,functional group,5. graminoid,gramin,graminoid,graminoid
@@ -226,7 +230,7 @@ TRUE,TRUE,diagnostic species set,5. graminoid,wetsed,wetland sedges,Eriophorum s
 TRUE,TRUE,diagnostic species set,5. graminoid,wetsed,wetland sedges,Eriophorum scheuchzeri ssp. scheuchzeri
 TRUE,TRUE,diagnostic species set,5. graminoid,wetsed,wetland sedges,Eriophorum triste
 TRUE,TRUE,diagnostic species set,5. graminoid,wetsed,wetland sedges,Eriophorum viridicarinatum
-FALSE,TRUE,functional group,6. forb,gramin,forb,forb
+FALSE,TRUE,functional group,6. forb,forb,forb,forb
 FALSE,TRUE,diagnostic species set,7. bryophytes,bromos,brown moss,Aulacomnium acuminatum
 FALSE,TRUE,diagnostic species set,7. bryophytes,bromos,brown moss,Aulacomnium palustre
 FALSE,TRUE,diagnostic species set,7. bryophytes,bromos,brown moss,Calliergon
@@ -470,9 +474,5 @@ FALSE,TRUE,diagnostic species set,7. bryophytes,sphagn,Sphagnum,Sphagnum tundrae
 FALSE,TRUE,diagnostic species set,7. bryophytes,sphagn,Sphagnum,Sphagnum warnstorfii
 FALSE,TRUE,diagnostic species set,7. bryophytes,sphagn,Sphagnum,Sphagnum wilfii
 FALSE,TRUE,functional group,8. lichen,lichen,lichen,lichen
-TRUE,TRUE,diagnostic species set,1. needleleaf tree,pinus,Pinus trees,Pinus
-TRUE,TRUE,diagnostic species set,1. needleleaf tree,pinus,Pinus trees,Pinus contorta
-TRUE,TRUE,diagnostic species set,1. needleleaf tree,pinus,Pinus trees,Pinus contorta var. contorta
-TRUE,TRUE,diagnostic species set,1. needleleaf tree,pinus,Pinus trees,Pinus contorta var. latifolia
 TRUE,TRUE,abiotic,9. abiotic,bare,bare ground,n/a
 TRUE,TRUE,none,9. abiotic,perwat,percentage growing season surface water,n/a

@@ -27,22 +27,68 @@ root_folder = 'ACCS_Work'
 repository_folder = os.path.join(drive, root_folder, 'Repositories/foliar-cover')
 project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_Map')
 input_folder = os.path.join(project_folder, 'Data/Data_Input/database_archive', f'version_{version_date}')
-output_folder = os.path.join(project_folder, 'Data/Data_Output/exclude_data', f'version_{version_date}')
+output_folder = os.path.join(project_folder, 'Data/Data_Input/species_data', f'version_{version_date}')
 
 # Define input files
 schema_input = os.path.join(repository_folder, 'AKVEG_Schema_FoliarCover.csv')
+taxonomy_input = os.path.join(input_folder, '00_taxonomy.csv')
 site_visit_input = os.path.join(input_folder, '03_site_visit.csv')
 vegetation_input = os.path.join(input_folder, '05_vegetation_cover.csv')
 
-# Define output files
-
 # Read input data
 schema_data = pd.read_csv(schema_input)
+taxonomy_data = pd.read_csv(taxonomy_input)
 site_visit_data = pd.read_csv(site_visit_input)
 vegetation_data = pd.read_csv(vegetation_input)
 
 # Remove dead vegetation
 vegetation_data = vegetation_data[vegetation_data['dead_status'] == False]
+
+# Join taxon habit to vegetation cover
+taxon_habit = taxonomy_data[['taxon_name', 'taxon_habit']]
+vegetation_data = pd.merge(left=vegetation_data,
+                           right=taxon_habit,
+                           left_on='name_accepted',
+                           right_on='taxon_name',
+                           how='left').drop(columns=['taxon_name'])
+
+# Exclude site visits sampled before 2000
+site_visit_data = site_visit_data[site_visit_data['observe_year'] >= 2000]
+
+# Exclude site visits that burned after observation
+site_visit_data = site_visit_data[site_visit_data['observe_year'] > site_visit_data['fire_year']]
+
+# Exclude site visits where the centroid overlaps persistent water
+site_visit_data = site_visit_data[
+    ((site_visit_data['esa_type'] != 80) & (site_visit_data['project_code'] != 'akveg_absences'))
+    | (site_visit_data['project_code'] == 'akveg_absences')]
+
+# Exclude site visits in Kenai Fjords that extend beyond the coastline
+site_visit_data = site_visit_data[
+    (site_visit_data['project_code'] != 'nps_kenai_2004')
+    | ((site_visit_data['project_code'] == 'nps_kenai_2004') & (site_visit_data['coast'] >= 50))]
+
+# Exclude site visits where the plot radius is below 4 m
+site_visit_data = site_visit_data[site_visit_data['plot_radius_m'] >= 4]
+
+# Exclude earlier revisits to the most recent site visit
+site_counts = site_visit_data['site_code'].value_counts()
+site_visit_data['total_visits'] = site_visit_data['site_code'].map(site_counts)
+site_visit_data['observe_datetime'] = pd.to_datetime(site_visit_data['observe_date'], format='%Y-%m-%d')
+site_visit_data = site_visit_data.sort_values(by='observe_datetime')
+site_visit_data = site_visit_data.drop_duplicates(subset=['site_code'], keep='last')
+site_visit_data = site_visit_data.drop(columns=['observe_datetime', 'total_visits']).copy()
+
+# Exclude vegetation data for site visits that were excluded
+vegetation_data = vegetation_data[vegetation_data['site_visit_code'].isin(
+    site_visit_data['site_visit_code'].unique()
+)]
+
+# Split observed absences from observed presences
+explicit_absences = vegetation_data[vegetation_data['cover_percent'] == -999].copy()
+explicit_absences['cover_percent'] = 0
+vegetation_data = vegetation_data[vegetation_data['cover_percent'] >= 0].copy()
+
 
 #### IDENTIFY EXCLUSION SITES
 ####____________________________________________________
@@ -56,19 +102,6 @@ def exclusion_sites(vegetation_data, exclude_taxon):
     exclude_site_visits = filtered_data['site_visit_code'].unique()
     return exclude_site_visits
 
-# Create exclusion sites for plots below threshold size
-exclude_plot_size = site_visit_data[
-    site_visit_data['plot_radius_m'] <= 3]['site_visit_code'].unique()
-
-# Exclude burned sites
-exclude_burned = site_visit_data[
-    site_visit_data['fire_year'] >= site_visit_data['observe_year']]['site_visit_code'].unique()
-
-# Create exclusion sites where centroid overlaps water
-exclude_water = site_visit_data[
-    ((site_visit_data['esa_type'] == 80) & (site_visit_data['project_code'] != 'akveg_absences'))
-    | ((site_visit_data['coast'] < 50) & (site_visit_data['project_code'] == 'nps_kenai_2004'))
-]['site_visit_code'].unique()
 
 # Exclude sites with tree observations
 exclude_brotre = exclusion_sites(vegetation_data, 'tree broadleaf')
@@ -106,35 +139,201 @@ exclude_moss = exclusion_sites(vegetation_data, 'moss')
 #### PARSE TRAINING DATA
 ####____________________________________________________
 
-# Join taxon habit to vegetation cover
+# Define lifeform list for taxonomic scopes
+vascular_list = ['1. needleleaf tree', '2. broadleaf tree', '3. shrub',
+                 '4. dwarf shrub', '5. graminoid', '6. forb']
+bryophyte_list = ['7. bryophytes']
+lichen_list = ['8. lichen']
 
-
-# Split observed absences from observed presences
-explicit_absences = vegetation_data[vegetation_data[cover_percent] == -999]
-vegetation_data = vegetation_data[vegetation_data[cover_percent] >= 0]
 
 # Define a function to parse training data
-def parse_training_data(target, schema_data, vegetation_data, site_visit_data,
-                        explicit_absences, exclude_plot_size, exclude_burned, exclude_water):
+def parse_training_data(target,
+                        schema_data=schema_data,
+                        vegetation_data=vegetation_data,
+                        site_visit_data=site_visit_data,
+                        explicit_absences=explicit_absences,
+                        exclusion_list=[]):
     # Retrieve parameters from schema
     parameter_data = schema_data[schema_data['target_abbr'] == target]
+    constituents_list = parameter_data['constituents'].unique()
+    lifeform = parameter_data['lifeform'].unique()[0]
+    target_name = parameter_data['target'].unique()[0]
 
-    # If functional group, sum taxon habit cover values
+    # Compile data for target
+    if parameter_data['type'].unique()[0] == 'functional group':
+        target_data = vegetation_data[vegetation_data['taxon_habit'].isin(constituents_list)].copy()
+    elif parameter_data['type'].unique()[0] == 'diagnostic species set':
+        target_data = vegetation_data[vegetation_data['name_accepted'].isin(constituents_list)].copy()
+    else:
+        quit()
 
-    # If diagnostic species set, sum taxa cover values
+    # Update names and columns
+    target_data['name_accepted'] = target_name
+    target_data['code_accepted'] = target
+    target_data = target_data.drop(columns=['taxon_habit'])
 
-    # If vascular plant
-        # If top absence is true
-            # Interpret absences
-        # If top absence is false
-            # Interpret absences
+    # Identify site visits with target data presences
+    target_site_visits = target_data['site_visit_code'].unique()
 
-    # If bryophyte (top absence is always false)
-        # Interpret absences
+    # Identify set of potential absence points
+    potential_absences = site_visit_data[~site_visit_data['site_visit_code'].isin(target_site_visits)]
 
-    # If lichen (top absence is always false)
-        # Interpret absences
+    # Identify lifeform scope
+    if lifeform in vascular_list:
+        lifeform_scope = 'scope_vascular'
+    elif lifeform in bryophyte_list:
+        lifeform_scope = 'scope_bryophyte'
+    elif lifeform in lichen_list:
+        lifeform_scope = 'scope_lichen'
+    else:
+        quit()
 
-    # Add explicit absences
+    # Identify base absences
+    absence_data = potential_absences[potential_absences[lifeform_scope].isin(
+        ['exhaustive', 'non-trace species', 'absence']
+    )]
 
-    # Remove exclusion sites
+    # If top absences is true, identify top absences
+    if parameter_data['top_absence'].unique()[0] == True:
+        absence_top = potential_absences[potential_absences[lifeform_scope] == 'top canopy']
+        absence_data = pd.concat([absence_data, absence_top], axis=0)
+
+    # Add additional generated absences for bettre and picea
+    if target == 'bettre':
+        absence_generated = potential_absences[potential_absences[lifeform_scope] == 'bettre']
+        absence_data = pd.concat([absence_data, absence_generated], axis=0)
+    if target in ['picgla', 'picmar']:
+        absence_generated = potential_absences[potential_absences[lifeform_scope] == 'picea']
+        absence_data = pd.concat([absence_data, absence_generated], axis=0)
+
+    # Format absence data to match target data fields
+    absence_site_visits = absence_data['site_visit_code'].unique()
+    absence_data = pd.DataFrame({'site_visit_code': absence_site_visits,
+                                 'code_accepted': target,
+                                 'name_accepted': target_name,
+                                 'dead_status': False,
+                                 'cover_type': 'absolute foliar cover',
+                                 'cover_percent': 0})
+
+    # Identify explicit absences
+    absence_explicit = explicit_absences[explicit_absences['name_accepted'].isin(constituents_list)]
+    absence_explicit = absence_explicit[~absence_explicit['site_visit_code'].isin(target_site_visits)]
+
+    # Merge explicit absences with inferred absences
+    if len(absence_explicit) > 0:
+        absence_explicit['name_accepted'] = target_name
+        absence_explicit['code_accepted'] = target
+        absence_explicit = absence_explicit.drop(columns=['taxon_habit'])
+        absence_data = pd.concat([absence_data, absence_explicit], axis=0)
+
+    # Combine presence and absence data
+    training_data = pd.concat([target_data, absence_data], axis=0)
+    training_data = (training_data.groupby(['site_visit_code', 'name_accepted'])['cover_percent']
+                     .sum()
+                     .to_frame()
+                     .reset_index())
+    training_data['code_accepted'] = target
+
+    # Exclude site visits from exclusion list
+    if len(exclusion_list) > 0:
+        for exclusion_sites in exclusion_list:
+            training_data = training_data[~training_data['site_visit_code'].isin(exclusion_sites)]
+
+    # Format fields for export
+    site_visit_join = site_visit_data[['site_visit_code', 'project_code', 'valid', 'biome', 'region',
+                                       'observe_year', 'fire_year', 'esa_type', 'cent_x', 'cent_y']]
+    training_data = pd.merge(left=training_data,
+                             right=site_visit_join,
+                             on='site_visit_code',
+                             how='left')
+    training_data = training_data.rename(columns={'code_accepted': 'group_abbr',
+                                                  'name_accepted': 'group_name'})
+    training_data['presence'] = np.where(training_data['cover_percent'] >= 3, 1, 0)
+    training_data['cover_percent'] = np.where(training_data['cover_percent'] >= 100,
+                                              100, training_data['cover_percent'])
+
+    # Export training data to csv
+    training_output = os.path.join(output_folder, f'cover_{target}_3338.csv')
+    training_data.to_csv(training_output, header=True, index=False, sep=',', encoding='utf-8')
+
+    return training_data
+
+# Parse needleleaf tree training data
+training_calnoo = parse_training_data(target='calnoo',
+                                      exclusion_list=[exclude_nedtre])
+training_larlar = parse_training_data(target='larlar',
+                                      exclusion_list=[exclude_nedtre])
+training_neetre = parse_training_data(target='neetre')
+training_picgla = parse_training_data(target='picgla',
+                                      exclusion_list=[exclude_nedtre, exclude_picea])
+training_picmar = parse_training_data(target='picmar',
+                                      exclusion_list=[exclude_nedtre, exclude_picea])
+training_picsit = parse_training_data(target='picsit',
+                                      exclusion_list=[exclude_nedtre, exclude_picea])
+training_tsuhet = parse_training_data(target='tsuhet',
+                                      exclusion_list=[exclude_nedtre, exclude_tsuga])
+training_tsumer = parse_training_data(target='tsumer',
+                                      exclusion_list=[exclude_nedtre, exclude_tsuga])
+
+# Parse broadleaf tree training data
+training_bettre = parse_training_data(target='bettre',
+                                      exclusion_list=[exclude_brotre, exclude_betula])
+training_brotre = parse_training_data(target='brotre')
+training_poptre = parse_training_data(target='poptre',
+                                      exclusion_list=[exclude_brotre, exclude_populus])
+training_populbt = parse_training_data(target='populbt',
+                                       exclusion_list=[exclude_brotre, exclude_populus])
+
+# Parse shrub training data
+training_alnus = parse_training_data(target='alnus',
+                                     exclusion_list=[exclude_shrub, exclude_decshr])
+training_bderishr = parse_training_data(target='bderishr',
+                                        exclusion_list=[exclude_shrub, exclude_decshr, exclude_vaccinium])
+training_betshr = parse_training_data(target='betshr',
+                                      exclusion_list=[exclude_shrub, exclude_decshr, exclude_betula])
+training_ndsalix = parse_training_data(target='ndsalix',
+                                       exclusion_list=[exclude_shrub, exclude_decshr])
+training_rhoshr = parse_training_data(target='rhoshr',
+                                      exclusion_list=[exclude_shrub, exclude_evrshr])
+training_rubspe = parse_training_data(target='rubspe',
+                                      exclusion_list=[exclude_shrub, exclude_decshr, exclude_rubus])
+training_vaculi = parse_training_data(target='vaculi',
+                                      exclusion_list=[exclude_shrub, exclude_decshr, exclude_vaccinium])
+
+# Parse dwarf shrub training data
+training_dryas = parse_training_data(target='dryas',
+                                     exclusion_list=[exclude_dwashr])
+training_dsalix = parse_training_data(target='dsalix',
+                                      exclusion_list=[exclude_dwashr, exclude_decshr, exclude_salix])
+training_empnig = parse_training_data(target='empnig',
+                                      exclusion_list=[exclude_dwashr, exclude_evrshr])
+training_nerishr = parse_training_data(target='nerishr',
+                                       exclusion_list=[exclude_dwashr, exclude_evrshr])
+training_vacvit = parse_training_data(target='vacvit',
+                                      exclusion_list=[exclude_dwashr, exclude_evrshr, exclude_vaccinium])
+
+# Parse graminoid training data
+training_erivag = parse_training_data(target='erivag',
+                                      exclusion_list=[exclude_gramin, exclude_erioph])
+training_gramin = parse_training_data(target='gramin')
+training_halgra = parse_training_data(target='halgra',
+                                      exclusion_list=[exclude_gramin, exclude_grass, exclude_carex])
+training_mwcalama = parse_training_data(target='mwcalama',
+                                        exclusion_list=[exclude_gramin, exclude_grass, exclude_calama])
+training_wetsed = parse_training_data(target='wetsed',
+                                      exclusion_list=[exclude_gramin, exclude_erioph, exclude_carex])
+
+# Parse forb training data
+training_forb = parse_training_data(target='forb')
+
+# Parse bryophyte training data
+training_bromos = parse_training_data(target='bromos',
+                                      exclusion_list=[exclude_moss])
+training_bryoph = parse_training_data(target='bryoph')
+training_feather = parse_training_data(target='feather',
+                                       exclusion_list=[exclude_moss])
+training_sphagn = parse_training_data(target='sphagn',
+                                      exclusion_list=[exclude_moss])
+
+# Parse lichen training data
+training_lichen = parse_training_data(target='lichen')
