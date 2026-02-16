@@ -2,14 +2,14 @@
 # ---------------------------------------------------------------------------
 # Validate random forest abundance model
 # Author: Timm Nawrocki
-# Last Updated: 2026-02-12
+# Last Updated: 2026-02-13
 # Usage: Must be executed in an Anaconda Python 3.12+ installation.
 # Description: "Validate random forest abundance model" validates a random forest classifier and regressor. The model validation accounts for spatial autocorrelation by grouping in 100 km blocks.
 # ---------------------------------------------------------------------------
 
 # Define model targets
-group = 'alnus'
-round_date = 'round_20260212'
+group = 'alpine'
+version_date = '20260212'
 presence_threshold = 3
 
 # Import packages
@@ -36,14 +36,17 @@ drive = 'C:/'
 root_folder = 'ACCS_Work/Projects/VegetationEcology/AKVEG_Map/Data'
 
 # Define folder structure
-extract_folder = os.path.join(drive, root_folder, 'Data_Input/extract_data')
-species_folder = os.path.join(drive, root_folder, 'Data_Input/species_data')
-output_folder = os.path.join(drive, root_folder, 'Data_Output/model_results', round_date, group)
+extract_folder = os.path.join(drive, root_folder,
+                              f'Data_Input/site_data/version_{version_date}')
+species_folder = os.path.join(drive, root_folder,
+                              f'Data_Input/species_data/version_{version_date}')
+output_folder = os.path.join(drive, root_folder,
+                             f'Data_Output/model_results/version_{version_date}/{group}')
 if os.path.exists(output_folder) == 0:
     os.mkdir(output_folder)
 
 # Define input files
-covariate_input = os.path.join(extract_folder, 'AKVEG_Sites_Covariates_3338.csv')
+covariate_input = os.path.join(extract_folder, 'AKVEG_Site_Visits_Covariates_3338.csv')
 species_input = os.path.join(species_folder, f'cover_{group}_3338.csv')
 
 # Define output files
@@ -59,7 +62,7 @@ mae_output = os.path.join(output_folder, f'{group}_mae.txt')
 # Define variable sets
 validation = ['valid']
 alpha_earth = [f'A{i:02d}' for i in range(64)]
-predictor_all = ['summer', 'january', 'precip',
+predictor_all = (['summer', 'january', 'precip',
                  'coast', 'stream', 'river', 'wetness',
                  'elevation', 'exposure', 'heatload', 'position',
                  'aspect', 'relief', 'roughness', 'slope',
@@ -80,11 +83,12 @@ predictor_all = ['summer', 'january', 'precip',
                  's2_4_nbr', 's2_4_ngrdi', 's2_4_ndmi', 's2_4_ndsi', 's2_4_ndvi', 's2_4_ndwi',
                  's2_5_blue', 's2_5_green', 's2_5_red', 's2_5_redge1', 's2_5_redge2',
                  's2_5_redge3', 's2_5_nir', 's2_5_redge4', 's2_5_swir1', 's2_5_swir2',
-                 's2_5_nbr', 's2_5_ngrdi', 's2_5_ndmi', 's2_5_ndsi', 's2_5_ndvi', 's2_5_ndwi',
-                 'dw_bare_pct', 'dw_flooded_pct', 'dw_snow_pct', 'dw_water_pct'] + alpha_earth
+                 's2_5_nbr', 's2_5_ngrdi', 's2_5_ndmi', 's2_5_ndsi', 's2_5_ndvi', 's2_5_ndwi']
+                 + alpha_earth
+                 )
 obs_pres = ['presence']
-obs_cover = ['cvr_pct']
-retain_variables = ['st_vst'] + validation
+obs_cover = ['cover_percent']
+retain_variables = ['site_visit_code'] + validation
 all_variables = retain_variables + predictor_all + obs_pres + obs_cover
 outer_split = ['outer_split_n']
 inner_split = ['inner_split_n']
@@ -97,7 +101,7 @@ inner_columns = all_variables + pred_abs + pred_pres + inner_split
 outer_columns = all_variables + pred_abs + pred_pres + pred_cover + pred_bin + outer_split
 
 # Create a standardized parameter set for a random forest classifier
-classifier_params = {'n_estimators': 500,
+classifier_params = {'n_estimators': 10,
                      'criterion': 'gini',
                      'max_depth': None,
                      'min_samples_split': 2,
@@ -114,7 +118,7 @@ classifier_params = {'n_estimators': 500,
                      'random_state': 314}
 
 # Create a standardized parameter set for a random forest classifier
-regressor_params = {'n_estimators': 500,
+regressor_params = {'n_estimators': 10,
                     'criterion': 'poisson',
                     'max_depth': None,
                     'min_samples_split': 2,
@@ -137,11 +141,27 @@ inner_cv_splits = StratifiedGroupKFold(n_splits=10)
 # Read input data to data frames
 print('Loading input data...')
 iteration_start = time.time()
-covariate_data = pd.read_csv(covariate_input)
-species_data = pd.read_csv(species_input)[['st_vst', 'cvr_pct', 'presence', 'valid']]
+covariate_data = pd.read_csv(covariate_input).rename(
+    columns={'st_vst': 'site_visit_code',
+             'prjct_cd': 'project_code',
+             'st_code': 'site_code',
+             'obs_date': 'observe_date',
+             'obs_year': 'observe_year',
+             'perspect': 'perspective',
+             'cvr_mthd': 'cover_method',
+             'scp_vasc': 'scope_vascular',
+             'scp_bryo': 'scope_bryophyte',
+             'scp_lich': 'scope_lichen',
+             'strc_class': 'structural_class',
+             'hmgneous': 'homogeneous',
+             'plt_dim_m': 'plot_dimensions_m',
+             'plt_rad_m': 'plot_radius_m',
+             'lat_dd': 'latitude_dd',
+             'long_dd': 'longitude_dd'})
+species_data = pd.read_csv(species_input)[['site_visit_code', 'cover_percent', 'presence']]
 
 # Create an inner join of species and covariate data
-input_data = species_data.merge(covariate_data, how='inner', on='st_vst')
+input_data = species_data.merge(covariate_data, how='inner', on='site_visit_code')
 
 # Create empty lists to store threshold and performance metrics
 auc_list = []

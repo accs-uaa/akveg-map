@@ -34,7 +34,7 @@ asset_path = f'projects/{ee_project}/assets'
 
 
 # Define feature collections
-buffer_feature = ee.FeatureCollection(f'{asset_path}/sites/AKVEG_Sites_Buffered_3338')
+buffer_feature = ee.FeatureCollection(f'{asset_path}/sites/AKVEG_Site_Visits_Buffered_3338')
 area_feature = ee.FeatureCollection(f'{asset_path}/regions/AlaskaYukon_MapDomain_3338_v20230330')
 
 #### PREPARE STATIC ENVIRONMENTAL COVARIATES
@@ -235,7 +235,7 @@ task = ee.batch.Export.table.toCloudStorage(
   collection=buffer_means,
   description='akveg-covariates',
   bucket=storage_bucket,
-  fileNamePrefix=f'{storage_prefix}/AKVEG_Sites_Covariates_3338',
+  fileNamePrefix=f'{storage_prefix}/AKVEG_Site_Visits_Covariates_3338',
   fileFormat='CSV',
   maxVertices=100000
 )

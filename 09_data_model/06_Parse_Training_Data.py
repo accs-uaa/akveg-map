@@ -136,6 +136,22 @@ exclude_leymus = exclusion_sites(vegetation_data, 'Leymus')
 exclude_bryoph = exclusion_sites(vegetation_data, 'bryophyte')
 exclude_moss = exclusion_sites(vegetation_data, 'moss')
 
+# Exclude specific observations
+exclude_picgla = ['WRST_T31_07_20040721', 'KENA20170425_20170725', 'KENA20170377_20170725',
+                  'KENA20170891_20170817', 'KENA20171155_20170901', 'KENA20171335_20170722',
+                  'KENA20170916_20170712', 'KENA20170902_20170731', 'KENA20171144_20170804',
+                  'KENA20171016_20170810', 'KENA20170896_20170901', 'KENA20171116_20170817',
+                  'KENA20171112_20170817', 'KENA20171131_20170721', 'KENA20171130_20170721',
+                  'KENA20171105_20170721', 'KENA20171277_20170721', 'KENA20170257_20170731',
+                  'KENA20170241_20170731', 'KENA20171266_20170730', 'KENA20171265_20170730',
+                  'KENA20170172_20170731', 'KENA20170132_20170731', 'KENA20171232_20170731',
+                  'KENA20171229_20170731', 'KENA20171254_20170730', 'HAIN20000064_20000710',
+                  'HAIN20000058_20000711', 'HAIN20000036_20000709', 'HAIN20000038_20000709',
+                  'HAIN20000029_20000708', 'HAIN20000018_20000708', 'HAIN20000016_20000708',
+                  'HAIN20000037_20000710', 'HAIN20000030_20000710', 'HAIN20000026_20000710',
+                  'HAIN20000026_20000710', 'HAIN20000009_20000710', 'HAIN20000010_20000710',
+                  'HAIN20000006_20000710', 'HAIN20000092_20000710', '12TD06901_20120923']
+
 #### PARSE TRAINING DATA
 ####____________________________________________________
 
@@ -189,9 +205,14 @@ def parse_training_data(target,
         quit()
 
     # Identify base absences
-    absence_data = potential_absences[potential_absences[lifeform_scope].isin(
-        ['exhaustive', 'non-trace species', 'absence']
-    )]
+    if lifeform in vascular_list:
+        absence_data = potential_absences[potential_absences[lifeform_scope].isin(
+            ['exhaustive', 'non-trace species', 'absence']
+        )]
+    else:
+        absence_data = potential_absences[potential_absences[lifeform_scope].isin(
+            ['exhaustive', 'non-trace species', 'common species', 'absence']
+        )]
 
     # If top absences is true, identify top absences
     if parameter_data['top_absence'].unique()[0] == True:
@@ -248,9 +269,14 @@ def parse_training_data(target,
                              how='left')
     training_data = training_data.rename(columns={'code_accepted': 'group_abbr',
                                                   'name_accepted': 'group_name'})
-    training_data['presence'] = np.where(training_data['cover_percent'] >= 3, 1, 0)
     training_data['cover_percent'] = np.where(training_data['cover_percent'] >= 100,
                                               100, training_data['cover_percent'])
+
+    # Parse presence-absence
+    if parameter_data['abundance'].unique()[0] == False:
+        training_data['presence'] = np.where(training_data['cover_percent'] >= 1, 1, 0)
+    else:
+        training_data['presence'] = np.where(training_data['cover_percent'] >= 3, 1, 0)
 
     # Export training data to csv
     training_output = os.path.join(output_folder, f'cover_{target}_3338.csv')
@@ -259,17 +285,13 @@ def parse_training_data(target,
     return training_data
 
 # Parse needleleaf tree training data
-training_calnoo = parse_training_data(target='calnoo',
-                                      exclusion_list=[exclude_nedtre])
-training_larlar = parse_training_data(target='larlar',
-                                      exclusion_list=[exclude_nedtre])
 training_neetre = parse_training_data(target='neetre')
 training_picgla = parse_training_data(target='picgla',
-                                      exclusion_list=[exclude_nedtre, exclude_picea])
+                                      exclusion_list=[exclude_nedtre, exclude_picea, exclude_picgla])
 training_picmar = parse_training_data(target='picmar',
                                       exclusion_list=[exclude_nedtre, exclude_picea])
 training_picsit = parse_training_data(target='picsit',
-                                      exclusion_list=[exclude_nedtre, exclude_picea])
+                                      exclusion_list=[exclude_nedtre, exclude_picea, exclude_picgla])
 training_tsuhet = parse_training_data(target='tsuhet',
                                       exclusion_list=[exclude_nedtre, exclude_tsuga])
 training_tsumer = parse_training_data(target='tsumer',
@@ -322,18 +344,20 @@ training_mwcalama = parse_training_data(target='mwcalama',
                                         exclusion_list=[exclude_gramin, exclude_grass, exclude_calama])
 training_wetsed = parse_training_data(target='wetsed',
                                       exclusion_list=[exclude_gramin, exclude_erioph, exclude_carex])
+training_wetgram = parse_training_data(target='wetgram',
+                                       exclusion_list=[exclude_gramin])
 
 # Parse forb training data
 training_forb = parse_training_data(target='forb')
+training_wetforb = parse_training_data(target='wetforb',
+                                       exclusion_list=[exclude_forb])
+training_beach = parse_training_data(target='beach')
+training_alpine = parse_training_data(target='alpine')
 
 # Parse bryophyte training data
-training_bromos = parse_training_data(target='bromos',
-                                      exclusion_list=[exclude_moss])
-training_bryoph = parse_training_data(target='bryoph')
-training_feather = parse_training_data(target='feather',
-                                       exclusion_list=[exclude_moss])
-training_sphagn = parse_training_data(target='sphagn',
-                                      exclusion_list=[exclude_moss])
+training_bromos = parse_training_data(target='bromos', exclusion_list=[exclude_moss])
+training_feather = parse_training_data(target='feather', exclusion_list=[exclude_moss])
+training_sphagn = parse_training_data(target='sphagn', exclusion_list=[exclude_moss])
 
 # Parse lichen training data
 training_lichen = parse_training_data(target='lichen')

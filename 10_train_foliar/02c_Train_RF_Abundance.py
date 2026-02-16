@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Train Random Forest abundance model
 # Author: Timm Nawrocki
-# Last Updated: 2024-01-03
+# Last Updated: 2026-02-13
 # Usage: Must be executed in an Anaconda Python 3.12+ installation.
 # Description: "Train Random Forest abundance model" trains and saves a Random Forest classifier and regressor for use in prediction.
 # ---------------------------------------------------------------------------

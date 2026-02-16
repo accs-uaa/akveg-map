@@ -329,8 +329,7 @@ export_point_data = site_visit_data.rename(columns={'site_visit_code': 'st_vst',
                                                     'plot_dimensions_m': 'plt_dim_m',
                                                     'plot_radius_m': 'plt_rad_m',
                                                     'latitude_dd': 'lat_dd',
-                                                    'longitude_dd': 'long_dd',
-                                                    'elevation_m': 'elev_m'
+                                                    'longitude_dd': 'long_dd'
                                                     }).copy()
 
 # Create geometries for the export points
