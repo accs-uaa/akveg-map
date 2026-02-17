@@ -1,4 +1,5 @@
 # soil_processor.py
+# Version: 1.1.2
 import os
 import re
 import subprocess
@@ -19,10 +20,7 @@ GCS_OUTPUT_PATH = "gs://akveg-data/aksdb_products_v20260214/rf11_taxa_cog_mosaic
 GDAL_IMAGE = "ghcr.io/osgeo/gdal:ubuntu-small-3.9.0"
 
 # Soil orders to exclude. 
-# Examples:
-#   EXCLUDE_SOILS = ["Histosols"]              <- Excludes one
-#   EXCLUDE_SOILS = ["Histosols", "Andisols"]  <- Excludes multiple
-#   EXCLUDE_SOILS = []                         <- Processes ALL taxa
+# Histosols is excluded as it was already completed in the stress test.
 EXCLUDE_SOILS = ["Histosols"]
 
 def run_command(cmd):
@@ -43,6 +41,9 @@ def create_batch_job_config(soil_order, input_uris):
     output_gcs = f"{GCS_OUTPUT_PATH}{filename}".replace("gs://", "/vsigs/")
     
     # GDAL command: Build Virtual Raster -> Translate to u8 COG
+    # -vrtnodata 255: Maps empty areas and 64-bit NoData to 255.
+    # -ot Byte: Converts to 8-bit.
+    # -a_nodata 255: Tags output so GIS software recognizes 255 as transparency.
     container_command = (
         f"gdalbuildvrt -vrtnodata 255 /tmp/mosaic.vrt {gdal_inputs} && "
         f"gdal_translate /tmp/mosaic.vrt {output_gcs} "
@@ -72,7 +73,7 @@ def create_batch_job_config(soil_order, input_uris):
             "instances": [{
                 "policy": {
                     "machineType": "e2-standard-4",
-                    "provisioningModel": "SPOT",
+                    "provisioningModel": "STANDARD", # Standard VMs to avoid preemption resets
                     "bootDisk": {
                         "sizeGb": "100"
                     }
@@ -126,8 +127,9 @@ def submit_to_batch():
     timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M")
 
     for soil, uris in soil_groups.items():
-        job_id = f"mosaic-{soil.lower()}-{timestamp}"
-        print(f"-> Submitting job for {soil} ({len(uris)} tiles)...")
+        # Tag job ID with 'std' to signify Standard provisioning
+        job_id = f"mosaic-std-{soil.lower()}-{timestamp}"
+        print(f"-> Submitting STANDARD job for {soil} ({len(uris)} tiles)...")
         
         config = create_batch_job_config(soil, uris)
         config_filename = f"config_{soil}.json"
@@ -145,7 +147,7 @@ def submit_to_batch():
         run_command(submit_cmd)
         os.remove(config_filename)
 
-    print("\nStatewide submission complete.")
+    print("\nStatewide STANDARD submission complete.")
 
 if __name__ == "__main__":
     submit_to_batch()
