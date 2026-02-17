@@ -1,4 +1,4 @@
-# test_soil_tile_processor.py
+# soil_processor.py
 import os
 import re
 import subprocess
@@ -11,21 +11,38 @@ from collections import defaultdict
 PROJECT_ID = "akveg-map" 
 REGION = "us-central1"
 
+# GCS paths for input tiles and output mosaics
 GCS_INPUT_PATH = "gs://akveg-data/aksdb_products_v20260214/rf11_taxa/"
 GCS_OUTPUT_PATH = "gs://akveg-data/aksdb_products_v20260214/rf11_taxa_cog_mosaics/"
+
+# GDAL container image
 GDAL_IMAGE = "ghcr.io/osgeo/gdal:ubuntu-small-3.9.0"
 
+# Soil orders to exclude. 
+# Examples:
+#   EXCLUDE_SOILS = ["Histosols"]              <- Excludes one
+#   EXCLUDE_SOILS = ["Histosols", "Andisols"]  <- Excludes multiple
+#   EXCLUDE_SOILS = []                         <- Processes ALL taxa
+EXCLUDE_SOILS = ["Histosols"]
+
 def run_command(cmd):
+    """Utility to run shell commands"""
     try:
         subprocess.run(cmd, shell=True, check=True)
     except subprocess.CalledProcessError as e:
         print(f"Error executing command: {e}")
 
 def create_batch_job_config(soil_order, input_uris):
+    """
+    Generates the JSON config for a Google Cloud Batch job.
+    """
     gdal_inputs = " ".join([uri.replace("gs://", "/vsigs/") for uri in input_uris])
-    # Labeling this as STRESS_TEST to differentiate from the small V14 test
-    output_gcs = f"{GCS_OUTPUT_PATH}STRESS_TEST_{soil_order}_statewide_u8_cog.tif".replace("gs://", "/vsigs/")
     
+    # Output name pattern: {SoilOrder}_Probability_Alaska_rf11.tif
+    filename = f"{soil_order}_Probability_Alaska_rf11.tif"
+    output_gcs = f"{GCS_OUTPUT_PATH}{filename}".replace("gs://", "/vsigs/")
+    
+    # GDAL command: Build Virtual Raster -> Translate to u8 COG
     container_command = (
         f"gdalbuildvrt -vrtnodata 255 /tmp/mosaic.vrt {gdal_inputs} && "
         f"gdal_translate /tmp/mosaic.vrt {output_gcs} "
@@ -44,52 +61,91 @@ def create_batch_job_config(soil_order, input_uris):
                         "options": "--privileged"
                     }
                 }],
-                "computeResource": { 
-                    "cpuMilli": "4000",   # Upgraded to 4 vCPUs for faster compression
-                    "memoryMib": "16384"  # Upgraded to 16GB RAM for 1,110 tile management
+                "computeResource": {
+                    "cpuMilli": "4000",
+                    "memoryMib": "16384"
                 },
-                "maxRunDuration": "28800s" # 8 hours
+                "maxRunDuration": "86400s" # 24 hours
             }
         }],
         "allocationPolicy": {
             "instances": [{
-                "policy": { 
-                    "machineType": "e2-standard-4", 
+                "policy": {
+                    "machineType": "e2-standard-4",
                     "provisioningModel": "SPOT",
                     "bootDisk": {
-                        "sizeGb": "100" # Fixed: placed inside bootDisk object
+                        "sizeGb": "100"
                     }
                 }
             }]
         },
-        "logsPolicy": { "destination": "CLOUD_LOGGING" }
+        "logsPolicy": {
+            "destination": "CLOUD_LOGGING"
+        }
     }
     return job_config
 
-def submit_stress_test():
-    # Targeting ALL Histosols tiles (~1,110 files) for a full statewide stress test
-    test_glob = "*_Histosols.tif"
-    print(f"Scanning GCS for FULL STRESS TEST (Histosols): {GCS_INPUT_PATH}{test_glob}")
+def submit_to_batch():
+    """
+    Main workflow:
+    1. Scan GCS for all .tif files.
+    2. Group by Soil Order.
+    3. Filter out excluded soil orders.
+    4. Submit jobs for the remaining taxa.
+    """
+    print(f"Scanning GCS for all tiles: {GCS_INPUT_PATH}*.tif")
     
     try:
-        result = subprocess.check_output(f"gsutil ls {GCS_INPUT_PATH}{test_glob}", shell=True).decode()
+        result = subprocess.check_output(f"gsutil ls {GCS_INPUT_PATH}*.tif", shell=True).decode()
         all_files = [f for f in result.strip().split('\n') if f]
     except Exception as e:
-        print(f"No files found for stress test pattern: {e}")
+        print(f"No files found in input path: {e}")
         return
 
-    soil_order = "Histosols"
-    job_id = f"stress-test-histosols-{datetime.datetime.now().strftime('%Y%m%d-%H%M')}"
-    
-    print(f"-> Submitting FULL STRESS TEST for {soil_order} ({len(all_files)} tiles)...")
-    config = create_batch_job_config(soil_order, all_files)
-    
-    config_filename = f"config_stress_{soil_order}.json"
-    with open(config_filename, "w") as f:
-        json.dump(config, f)
+    pattern = re.compile(r"([^/]+)_([A-Za-z]+)\.tif$")
+    soil_groups = defaultdict(list)
+
+    # Normalize excluded list to lowercase for robust comparison
+    excluded_lower = [s.lower() for s in EXCLUDE_SOILS]
+
+    for file_uri in all_files:
+        match = pattern.search(file_uri)
+        if match:
+            soil_order = match.group(2)
+            # Check if this soil order is in our exclusion list
+            if soil_order.lower() in excluded_lower:
+                continue
+            soil_groups[soil_order].append(file_uri)
+
+    if not soil_groups:
+        print("No remaining soil types found to process.")
+        return
+
+    print(f"Found {len(soil_groups)} soil types to process. Submitting jobs...")
+
+    timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M")
+
+    for soil, uris in soil_groups.items():
+        job_id = f"mosaic-{soil.lower()}-{timestamp}"
+        print(f"-> Submitting job for {soil} ({len(uris)} tiles)...")
         
-    run_command(f"gcloud batch jobs submit {job_id} --location {REGION} --config {config_filename} --project {PROJECT_ID}")
-    os.remove(config_filename)
+        config = create_batch_job_config(soil, uris)
+        config_filename = f"config_{soil}.json"
+        
+        with open(config_filename, "w") as f:
+            json.dump(config, f)
+
+        submit_cmd = (
+            f"gcloud batch jobs submit {job_id} "
+            f"--location {REGION} "
+            f"--config {config_filename} "
+            f"--project {PROJECT_ID}"
+        )
+        
+        run_command(submit_cmd)
+        os.remove(config_filename)
+
+    print("\nStatewide submission complete.")
 
 if __name__ == "__main__":
-    submit_stress_test()
+    submit_to_batch()
