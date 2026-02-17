@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Select random absence sites
 # Author: Timm Nawrocki
-# Last Updated: 2024-07-29
+# Last Updated: 2026-02-12
 # Usage: Must be executed in an ArcGIS Pro Python 3.9+ installation.
 # Description: "Select random absence sites" randomly selects a sample of absence sites from polygons with a population field. This script also combines an optional set of manually derived absence sites.
 # ---------------------------------------------------------------------------
@@ -13,16 +13,23 @@ import time
 from akutils import *
 import arcpy
 
+# Set version date
+version_date = '20260212'
+
+#### SET UP DIRECTORIES, FILES, AND FIELDS
+####____________________________________________________
+
 # Set root directory
-drive = 'D:/'
+drive = 'C:/'
 root_folder = 'ACCS_Work'
 
 # Define folder structure
-project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_Map/Data')
+project_folder = os.path.join(drive, root_folder, 'Projects/VegetationEcology/AKVEG_Map')
+output_folder = os.path.join(project_folder, f'Data/Data_Input/absence_data/version_{version_date}')
 
 # Define geodatabases
-project_geodatabase = os.path.join(project_folder, 'AKVEG_Map.gdb')
-work_geodatabase = os.path.join(project_folder, 'AKVEG_Workspace.gdb')
+project_geodatabase = os.path.join(project_folder, 'Data/AKVEG_Map.gdb')
+work_geodatabase = os.path.join(project_folder, 'Data/AKVEG_Workspace.gdb')
 
 # Define input datasets
 area_input = os.path.join(project_geodatabase, 'AlaskaYukon_AbsenceAreas_3338')
@@ -32,7 +39,7 @@ manual_input = os.path.join(work_geodatabase, 'AlaskaYukon_Absences_Manual_3338'
 temporary_sites = os.path.join(work_geodatabase, 'AlaskaYukon_Absences_Random_3338')
 
 # Define output datasets
-absence_output = os.path.join(project_geodatabase, 'AlaskaYukon_Absences_3338')
+absence_output = os.path.join(output_folder, 'AlaskaYukon_Absences_3338.shp')
 
 # Set overwrite option
 arcpy.env.overwriteOutput = True
@@ -42,6 +49,9 @@ arcpy.env.parallelProcessingFactor = "75%"
 
 # Set environment workspace
 arcpy.env.workspace = work_geodatabase
+
+#### COMPILE ABSENCE DATA
+####____________________________________________________
 
 # Select random sample if it does not already exist
 if arcpy.Exists(temporary_sites) == 0:
