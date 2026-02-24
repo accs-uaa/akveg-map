@@ -1,0 +1,4 @@
+COG-backed image collections were partly or fully broken after migration. 
+
+Regenerated s2 collection, using new script 02_data_reflectance/s2_seasonal_reflectance_composite_compilation.py
+
