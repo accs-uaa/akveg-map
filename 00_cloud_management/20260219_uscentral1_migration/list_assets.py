@@ -43,7 +43,7 @@ def get_cog_uri(asset_id):
             if sources:
                 uris = sources[0].get('uris', [])
                 if uris:
-                    return uris[0].split('#')[0]
+                    return uris[0]
     except Exception as e:
         logging.debug(f"Error inspecting {asset_id}: {e}")
     return None
@@ -128,12 +128,25 @@ def validate_gcs_uri(uri, storage_client):
     if not uri or not uri.startswith("gs://"):
         return False
     try:
+        generation = None
+        if '#' in uri:
+            uri, gen_str = uri.split('#', 1)
+            try:
+                generation = int(gen_str)
+            except ValueError:
+                pass
+
         parts = uri[5:].split("/", 1)
         bucket_name = parts[0]
         blob_name = parts[1]
         bucket = storage_client.bucket(bucket_name)
-        blob = bucket.blob(blob_name)
-        return blob.exists()
+        
+        if generation:
+            blob = bucket.get_blob(blob_name, generation=generation)
+            return blob is not None
+        else:
+            blob = bucket.blob(blob_name)
+            return blob.exists()
     except Exception as e:
         logging.warning(f"Validation error for {uri}: {e}")
         return False

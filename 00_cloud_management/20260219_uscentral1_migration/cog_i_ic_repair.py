@@ -3,6 +3,7 @@ import logging
 import time
 import subprocess
 import argparse
+import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Configure logging to see the progress in the console
@@ -229,6 +230,7 @@ if __name__ == "__main__":
     parser.add_argument("--limit", type=int, help="Limit the number of successful repairs.")
     parser.add_argument("--images", action="store_true", help="Process standalone Images.")
     parser.add_argument("--collections", action="store_true", help="Process ImageCollections.")
+    parser.add_argument("--target", help="Specific Asset ID (Image or ImageCollection) to repair.")
     args = parser.parse_args()
 
     # Initialize the Earth Engine Python API
@@ -244,6 +246,21 @@ if __name__ == "__main__":
     # ==========================================
     
     context = RepairContext(limit=args.limit)
+
+    if args.target:
+        logging.info(f"Targeting specific asset: {args.target}")
+        try:
+            info = ee.data.getAsset(args.target)
+            asset_type = info.get('type')
+            if asset_type == 'IMAGE':
+                repair_single_asset(args.target)
+            elif asset_type == 'IMAGE_COLLECTION':
+                repair_image_collection(args.target, context=context)
+            else:
+                logging.error(f"Asset {args.target} is {asset_type}, not IMAGE or IMAGE_COLLECTION.")
+        except Exception as e:
+            logging.error(f"Failed to access target {args.target}: {e}")
+        sys.exit(0)
 
     # Determine what to run (default to both if neither specified)
     run_images = args.images
