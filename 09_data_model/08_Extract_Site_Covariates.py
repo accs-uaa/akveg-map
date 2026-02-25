@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
 # Extract data to sites
-# Author: Timm Nawrocki, Alaska Center for Conservation Science
+# Author: Timm Nawrocki, Matt Macander
 # Last Updated: 2026-02-25
 # Usage: Must be executed in a Python 3.12+ installation with authentication to Google Earth Engine.
 # Description: "Extract data to sites" reduces covariate image assets to buffered points on Google Earth Engine.
@@ -9,7 +9,6 @@
 
 # Import packages
 import ee
-from google.auth.transport.requests import AuthorizedSession
 
 #### SET UP ENVIRONMENT
 ####____________________________________________________
@@ -24,16 +23,11 @@ print('Requesting information from server...')
 ee.Authenticate()
 ee.Initialize(project=ee_project)
 
-# Specify the cloud project you want associated with Earth Engine requests.
-session = AuthorizedSession(
-  ee.data.get_persistent_credentials().with_quota_project(ee_project)
-)
-
 # Define asset path
 asset_path = f'projects/{ee_project}/assets'
 
 # Define feature collections
-point_feature = ee.FeatureCollection(f'{asset_path}/sites/akveg_site_visits_3338')
+buffer_feature = ee.FeatureCollection(f'{asset_path}/sites/akveg_site_visit_buffers')
 area_feature = ee.FeatureCollection(f'{asset_path}/regions/AlaskaYukon_MapDomain_3338_v20230330')
 
 #### PREPARE STATIC ENVIRONMENTAL COVARIATES
@@ -219,10 +213,6 @@ covariate_image = covariate_image \
     .addBands(dynamic_world) \
     .addBands(embeddings)
 
-# Buffer the point feature based on the 'plot_radius_m' column
-print('Buffering points...')
-buffer_feature = point_feature.map(lambda f: f.buffer(f.getNumber('plot_radius_m')))
-
 # Add reducer output to the Features in the collection.
 print('Creating GEE task...')
 buffer_means = covariate_image.reduceRegions(
@@ -239,8 +229,7 @@ task = ee.batch.Export.table.toCloudStorage(
   description='akveg-covariates',
   bucket=storage_bucket,
   fileNamePrefix=f'{storage_prefix}/akveg_site_visits_covariates_3338',
-  fileFormat='CSV',
-  maxVertices=100000
+  fileFormat='CSV'
 )
 task.start()
 print('GEE task sent to server.')
