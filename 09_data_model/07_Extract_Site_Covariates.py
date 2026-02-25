@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # Extract data to sites
 # Author: Timm Nawrocki, Alaska Center for Conservation Science
-# Last Updated: 2026-02-12
+# Last Updated: 2026-02-25
 # Usage: Must be executed in a Python 3.12+ installation with authentication to Google Earth Engine.
 # Description: "Extract data to sites" reduces covariate image assets to buffered points on Google Earth Engine.
 # ---------------------------------------------------------------------------
@@ -17,7 +17,7 @@ from google.auth.transport.requests import AuthorizedSession
 # Define paths
 ee_project = 'akveg-map'
 storage_bucket = 'akveg-data'
-storage_prefix = 'extract'
+storage_prefix = 'site_data'
 
 # Authenticate with Earth Engine
 print('Requesting information from server...')
@@ -32,9 +32,8 @@ session = AuthorizedSession(
 # Define asset path
 asset_path = f'projects/{ee_project}/assets'
 
-
 # Define feature collections
-buffer_feature = ee.FeatureCollection(f'{asset_path}/sites/AKVEG_Site_Visits_Buffered_3338')
+point_feature = ee.FeatureCollection(f'{asset_path}/sites/akveg_site_visits_3338')
 area_feature = ee.FeatureCollection(f'{asset_path}/regions/AlaskaYukon_MapDomain_3338_v20230330')
 
 #### PREPARE STATIC ENVIRONMENTAL COVARIATES
@@ -220,6 +219,10 @@ covariate_image = covariate_image \
     .addBands(dynamic_world) \
     .addBands(embeddings)
 
+# Buffer the point feature based on the 'plot_radius_m' column
+print('Buffering points...')
+buffer_feature = point_feature.map(lambda f: f.buffer(f.getNumber('plot_radius_m')))
+
 # Add reducer output to the Features in the collection.
 print('Creating GEE task...')
 buffer_means = covariate_image.reduceRegions(
@@ -235,7 +238,7 @@ task = ee.batch.Export.table.toCloudStorage(
   collection=buffer_means,
   description='akveg-covariates',
   bucket=storage_bucket,
-  fileNamePrefix=f'{storage_prefix}/AKVEG_Site_Visits_Covariates_3338',
+  fileNamePrefix=f'{storage_prefix}/akveg_site_visits_covariates_3338',
   fileFormat='CSV',
   maxVertices=100000
 )
