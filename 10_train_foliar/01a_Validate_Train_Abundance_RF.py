@@ -2,13 +2,13 @@
 # ---------------------------------------------------------------------------
 # Train and validate random forest abundance model
 # Author: Timm Nawrocki, Matt Macander
-# Last Updated: 2026-02-25
+# Last Updated: 2026-02-26
 # Usage: Must be executed in a Python 3.12+ installation.
 # Description: "Train and validate random forest abundance model" trains, exports, and validates a random forest classifier and regressor. The model validation accounts for spatial autocorrelation by grouping in 100 km blocks.
 # ---------------------------------------------------------------------------
 
 # Define model targets
-group = 'halgra'
+group = 'wetsed'
 version_date = '20260212'
 presence_threshold = 3
 predictor_names = ['clim', 'topo', 's1', 's2', 'emb']
@@ -110,7 +110,7 @@ inner_columns = all_variables + pred_abs + pred_pres + inner_split
 outer_columns = all_variables + pred_abs + pred_pres + pred_cover + pred_bin + outer_split
 
 # Create a standardized parameter set for a random forest classifier
-classifier_params = {'n_estimators': 10,
+classifier_params = {'n_estimators': 500,
                      'criterion': 'gini',
                      'max_depth': None,
                      'min_samples_split': 2,
@@ -127,7 +127,7 @@ classifier_params = {'n_estimators': 10,
                      'random_state': 314}
 
 # Create a standardized parameter set for a random forest classifier
-regressor_params = {'n_estimators': 10,
+regressor_params = {'n_estimators': 500,
                     'criterion': 'poisson',
                     'max_depth': None,
                     'min_samples_split': 2,

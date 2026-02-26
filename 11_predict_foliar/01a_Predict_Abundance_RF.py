@@ -8,7 +8,7 @@
 # ---------------------------------------------------------------------------
 
 # Define model targets
-group = 'beach'
+group = 'halgra'
 version_date = '20260212'
 presence_threshold = 3
 
@@ -257,11 +257,10 @@ foliar_raw = covariate_image.classify(regressor)
 # Round the prediction to the nearest integer
 foliar_rounded = foliar_raw.round()
 
-# Set foliar cover to 0 where probability is less than 0.4
+# Set foliar cover to 0 based on thresholds
 foliar_image = foliar_rounded.where(probability_image.lt(classifier_threshold), 0) \
                          .where(foliar_rounded.lt(presence_threshold), 0) \
                          .rename(f'{group}_cover')
-
 print(f'Masked Foliar Image calculated for {group}.')
 
 #### EXPORT TO CLOUD STORAGE

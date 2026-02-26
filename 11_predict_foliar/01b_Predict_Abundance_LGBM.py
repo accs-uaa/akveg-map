@@ -23,6 +23,19 @@ ee_project = 'akveg-map'
 storage_bucket = 'akveg-data'
 storage_prefix = 'foliar_cover_v2p1'
 
+# Define inputs
+drive = 'C:/'
+root_folder = 'ACCS_Work/Projects/VegetationEcology/AKVEG_Map/Data'
+threshold_input = os.path.join(drive, root_folder,
+                               f'Data_Output/model_results/version_{version_date}/{group}',
+                               f'{group}_threshold_final.txt')
+
+# Read threshold
+threshold_reader = open(threshold_input, "r")
+classifier_threshold = float(threshold_reader.readlines()[0])
+threshold_reader.close()
+print(f'Classifier threshold is: {classifier_threshold}')
+
 # Authenticate with Earth Engine
 print('Requesting information from server...')
 ee.Authenticate()
@@ -32,7 +45,6 @@ ee.Initialize(project=ee_project)
 asset_path = f'projects/{ee_project}/assets'
 
 # Define models
-classifier = ee.Classifier.load(f'{asset_path}/models/foliar_cover/{group}_classifier')
 test_area = ee.Image(f'{asset_path}/navy_arctic/IcyCape_CIR_0p5m_3338')
 
 # Define covariate paths
@@ -253,11 +265,10 @@ foliar_raw = regressor_average.multiply(regressor_tree_n)
 # Round the prediction to the nearest integer
 foliar_rounded = foliar_raw.round()
 
-# Set foliar cover to 0 where probability is less than 0.014
-foliar_image = foliar_rounded.where(probability_image.lt(0.014), 0) \
+# Set foliar cover to 0 based on thresholds
+foliar_image = foliar_rounded.where(probability_image.lt(classifier_threshold), 0) \
                          .where(foliar_rounded.lt(presence_threshold), 0) \
                          .rename(f'{group}_cover')
-
 print(f'Masked Foliar Image calculated for {group}.')
 
 #### EXPORT TO CLOUD STORAGE
