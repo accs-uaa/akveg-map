@@ -13,6 +13,7 @@ presence_threshold = 3
 
 # Import packages
 import ee
+import time
 
 #### SET UP ENVIRONMENT
 ####____________________________________________________
@@ -30,8 +31,9 @@ ee.Initialize(project=ee_project)
 # Define asset path
 asset_path = f'projects/{ee_project}/assets'
 
-# Define feature collections
-buffer_feature = ee.FeatureCollection(f'{asset_path}/sites/akveg_site_visit_buffers')
+# Define models
+classifier = ee.Classifier.load(f'{asset_path}/models/foliar_cover/{group}_classifier')
+test_area = ee.Image(f'{asset_path}/navy_arctic/IcyCape_CIR_0p5m_3338')
 
 # Define covariate paths
 covariate_path_v2 = f'{asset_path}/covariates_v20240711/'
@@ -210,3 +212,53 @@ dynamic_world = ee.ImageCollection(dw_path) \
 embeddings = ee.ImageCollection(alphaearth_path) \
     .filterDate('2023-01-01', '2023-12-31') \
     .mosaic()
+
+#### TRAIN AND EXPORT FOLIAR COVER MAP
+####____________________________________________________
+
+# Create image collection
+covariate_image = covariate_image \
+    .addBands(s1_final) \
+    .addBands(s2_final) \
+    .addBands(embeddings)
+
+probability_image = covariate_image.classify(classifier)
+
+# Define export parameters
+export_task = ee.batch.Export.image.toCloudStorage(
+    image=probability_image,
+    description=f'IcyCape_{group}',
+    bucket='akveg-data',
+    fileNamePrefix=f'{storage_prefix}/IcyCape_{group}_10m_3338.tif',
+    region=test_area.geometry(),
+    scale=10,
+    crs='EPSG:3338',
+    maxPixels=1e13,
+    formatOptions={
+        'cloudOptimized': True
+    }
+)
+
+export_task.start()
+print("Export task started.")
+
+# Loop to poll the task status until it finishes or fails
+while True:
+    task_status = export_task.status()
+    state = task_status['state']
+
+    if state in ['READY', 'RUNNING']:
+        print(f"[{time.strftime('%X')}] Task is {state}. Waiting 30 seconds...")
+        time.sleep(30)
+    elif state == 'FAILED':
+        print("\n" + "=" * 40)
+        print("🚨 TASK FAILED!")
+        print(f"Error Message: {task_status.get('error_message', 'No error message returned from GEE.')}")
+        print("=" * 40 + "\n")
+        break
+    elif state == 'COMPLETED':
+        print("\n✅ Task completed successfully!")
+        break
+    else:
+        print(f"\nTask ended with an unexpected state: {state}")
+        break
