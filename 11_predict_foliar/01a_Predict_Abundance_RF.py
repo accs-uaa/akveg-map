@@ -1,19 +1,20 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Predict abundance for LGBM model
+# Predict abundance for Random Forest model
 # Author: Timm Nawrocki, Matt Macander
-# Last Updated: 2026-02-25
+# Last Updated: 2026-02-26
 # Usage: Must be executed in a Python 3.12+ installation with authentication to Google Earth Engine.
-# Description: "Predict abundance for LGBM model" prepares covariates and initiates a prediction task in Google Earth Engine for classifier and regressor assets trained through LightGBM.
+# Description: "Predict abundance for Random Forest model" prepares covariates and initiates a prediction task in Google Earth Engine for classifier and regressor assets trained through Random Forest (scikit-learn).
 # ---------------------------------------------------------------------------
 
 # Define model targets
-group = 'halgra'
+group = 'beach'
 version_date = '20260212'
 presence_threshold = 3
 
 # Import packages
 import ee
+import os
 
 #### SET UP ENVIRONMENT
 ####____________________________________________________
@@ -23,6 +24,19 @@ ee_project = 'akveg-map'
 storage_bucket = 'akveg-data'
 storage_prefix = 'foliar_cover_v2p1'
 
+# Define inputs
+drive = 'C:/'
+root_folder = 'ACCS_Work/Projects/VegetationEcology/AKVEG_Map/Data'
+threshold_input = os.path.join(drive, root_folder,
+                               f'Data_Output/model_results/version_{version_date}/{group}',
+                               f'{group}_threshold_final.txt')
+
+# Read threshold
+threshold_reader = open(threshold_input, "r")
+classifier_threshold = float(threshold_reader.readlines()[0])
+threshold_reader.close()
+print(f'Classifier threshold is: {classifier_threshold}')
+
 # Authenticate with Earth Engine
 print('Requesting information from server...')
 ee.Authenticate()
@@ -31,8 +45,7 @@ ee.Initialize(project=ee_project)
 # Define asset path
 asset_path = f'projects/{ee_project}/assets'
 
-# Define models
-classifier = ee.Classifier.load(f'{asset_path}/models/foliar_cover/{group}_classifier')
+# Define area of interest
 test_area = ee.Image(f'{asset_path}/navy_arctic/IcyCape_CIR_0p5m_3338')
 
 # Define covariate paths
@@ -237,24 +250,15 @@ regressor_strings = regressor_table.sort('tree_index').aggregate_array('tree') \
 classifier = ee.Classifier.decisionTreeEnsemble(classifier_strings).setOutputMode('REGRESSION')
 regressor = ee.Classifier.decisionTreeEnsemble(regressor_strings).setOutputMode('REGRESSION')
 
-# Predict the outputs (using covariate_image from the previous block)
-classifier_average = covariate_image.classify(classifier)
-regressor_average = covariate_image.classify(regressor)
-
-# Convert the classifier to sigmoid probabilities
-classifier_tree_n = classifier_strings.length()
-sum_log_odds = classifier_average.multiply(classifier_tree_n)
-probability_image = ee.Image(1).divide(ee.Image(1).add(sum_log_odds.multiply(-1).exp())).rename(group)
-
-# Convert the regressor to foliar cover
-regressor_tree_n = regressor_strings.length()
-foliar_raw = regressor_average.multiply(regressor_tree_n)
+# Predict the outputs
+probability_image = covariate_image.classify(classifier).rename(group)
+foliar_raw = covariate_image.classify(regressor)
 
 # Round the prediction to the nearest integer
 foliar_rounded = foliar_raw.round()
 
-# Set foliar cover to 0 where probability is less than 0.014
-foliar_image = foliar_rounded.where(probability_image.lt(0.014), 0) \
+# Set foliar cover to 0 where probability is less than 0.4
+foliar_image = foliar_rounded.where(probability_image.lt(classifier_threshold), 0) \
                          .where(foliar_rounded.lt(presence_threshold), 0) \
                          .rename(f'{group}_cover')
 

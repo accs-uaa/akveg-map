@@ -12,8 +12,8 @@ group = 'halgra'
 version_date = '20260212'
 presence_threshold = 3
 predictor_names = ['clim', 'topo', 's1', 's2', 'emb']
-init_points = 30
-n_iter = 70
+init_points = 2
+n_iter = 2
 
 # Import packages
 import numpy as np

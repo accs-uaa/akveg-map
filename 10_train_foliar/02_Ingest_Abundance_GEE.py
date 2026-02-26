@@ -14,7 +14,7 @@ version_date = '20260212'
 # Import packages
 import ee
 import os
-import time
+from akutils import parse_treestring_text
 
 #### SET UP ENVIRONMENT
 ####____________________________________________________
