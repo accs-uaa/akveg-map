@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# Extract data to sites
+# Predict abundance for LGBM model
 # Author: Timm Nawrocki, Matt Macander
 # Last Updated: 2026-02-25
 # Usage: Must be executed in a Python 3.12+ installation with authentication to Google Earth Engine.
-# Description: "Extract data to sites" reduces covariate image assets to buffered points on Google Earth Engine.
+# Description: "Predict abundance for LGBM model" prepares covariates and initiates a prediction task for a classifier and regressor asset on Google Earth Engine.
 # ---------------------------------------------------------------------------
+
+# Define model targets
+group = 'halgra'
+presence_threshold = 3
 
 # Import packages
 import ee
@@ -16,7 +20,7 @@ import ee
 # Define paths
 ee_project = 'akveg-map'
 storage_bucket = 'akveg-data'
-storage_prefix = 'site_data'
+storage_prefix = 'foliar_cover_v2p1'
 
 # Authenticate with Earth Engine
 print('Requesting information from server...')
@@ -206,36 +210,3 @@ dynamic_world = ee.ImageCollection(dw_path) \
 embeddings = ee.ImageCollection(alphaearth_path) \
     .filterDate('2023-01-01', '2023-12-31') \
     .mosaic()
-
-#### PROCESS DATA EXTRACTION
-####____________________________________________________
-
-# Create image collection
-covariate_image = covariate_image \
-    .addBands(s1_final) \
-    .addBands(s2_final) \
-    .addBands(dynamic_world) \
-    .addBands(embeddings)
-
-# Add reducer output to the Features in the collection.
-print('Creating GEE task...')
-buffer_means = covariate_image.reduceRegions(
-    collection=buffer_feature,
-    reducer=ee.Reducer.mean(),
-    crs='EPSG:3338',
-    crsTransform=[10, 0, 5, 0, -10, 5],
-    tileScale=16
-)
-buffer_means = buffer_means.map(lambda f: f.setGeometry(None))
-
-# Export results to cloud storage.
-task = ee.batch.Export.table.toCloudStorage(
-  collection=buffer_means,
-  description='akveg-covariates',
-  bucket=storage_bucket,
-  fileNamePrefix=f'{storage_prefix}/akveg_site_visit_covariates',
-  fileFormat='CSV'
-)
-task.start()
-print('GEE task sent to server.')
-print('----------')
