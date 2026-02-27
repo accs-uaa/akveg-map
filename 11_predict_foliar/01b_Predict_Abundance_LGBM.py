@@ -8,12 +8,13 @@
 # ---------------------------------------------------------------------------
 
 # Define model targets
-group = 'halgra'
+group = 'wetsed'
 version_date = '20260212'
 presence_threshold = 3
 
 # Import packages
 import ee
+import os
 
 #### SET UP ENVIRONMENT
 ####____________________________________________________
@@ -44,8 +45,9 @@ ee.Initialize(project=ee_project)
 # Define asset path
 asset_path = f'projects/{ee_project}/assets'
 
-# Define models
-test_area = ee.Image(f'{asset_path}/navy_arctic/IcyCape_CIR_0p5m_3338')
+# Define export areas
+grid_path = 'projects/akveg-map/assets/regions/AlaskaYukon_050_Tiles_3338'
+export_grid = ee.FeatureCollection(grid_path)
 
 # Define covariate paths
 covariate_path_v2 = f'{asset_path}/covariates_v20240711/'
@@ -271,28 +273,47 @@ foliar_image = foliar_rounded.where(probability_image.lt(classifier_threshold), 
                          .rename(f'{group}_cover')
 print(f'Masked Foliar Image calculated for {group}.')
 
-#### EXPORT TO CLOUD STORAGE
-####____________________________________________________
-
 # Unmask the empty pixels to -127, then cast to a signed 8-bit integer
 foliar_export = foliar_image.unmask(-127).int8()
 
-# Define export parameters and start the task
-export_task = ee.batch.Export.image.toCloudStorage(**{
-    'image': foliar_export,
-    'description': f'IcyCape_{group}',
-    'bucket': storage_bucket,
-    'fileNamePrefix': f'{storage_prefix}/IcyCape_{group}_10m_3338',
-    'region': test_area.geometry(),
-    'scale': 10,
-    'crs': 'EPSG:3338',
-    'maxPixels': 1e13,
-    #'tileScale': 16, UNCOMMENT FOR FULL EXTENT EXPORTS
-    'formatOptions': {
-        'cloudOptimized': True,
-        'noData': -127
-    }
-})
+#### CHUNKED FULL EXPORT TO CLOUD STORAGE
+####____________________________________________________
 
-export_task.start()
-print(f'Export task for {group} successfully started! Check your GEE Task Manager or Cloud Storage.')
+# Get a list of all grid codes to iterate over locally
+print('Fetching grid codes from grid feature collection...')
+grid_codes = export_grid.aggregate_array('grid_code').getInfo()
+print(f'Found {len(grid_codes)} tiles to process.')
+
+# Loop through each grid code to submit a unique task
+for grid_code in grid_codes[236:239]:
+    # Filter the feature collection to the specific grid code
+    tile_feature = ee.Feature(export_grid.filter(ee.Filter.eq('grid_code', grid_code)).first())
+
+    # Buffer the geometry by 50 meters
+    export_geometry = tile_feature.geometry().buffer(50)
+
+    # Define unique names for the task and output file
+    # This dynamically utilizes the group ('halgra') and current grid_code variable
+    task_description = f'{group}_{grid_code}'
+    file_name = f'{storage_prefix}/{group}_{grid_code}_10m_3338'
+
+    # Define export parameters and start the task
+    export_task = ee.batch.Export.image.toCloudStorage(**{
+        'image': foliar_export,
+        'description': task_description,
+        'bucket': storage_bucket,
+        'fileNamePrefix': file_name,
+        'region': export_geometry,
+        'scale': 10,
+        'crs': 'EPSG:3338',
+        'maxPixels': 1e13,
+        'formatOptions': {
+            'cloudOptimized': True,
+            'noData': -127
+        }
+    })
+
+    export_task.start()
+    print(f'Submitted task: {task_description}')
+
+print('All export tasks have been successfully submitted to Earth Engine.')

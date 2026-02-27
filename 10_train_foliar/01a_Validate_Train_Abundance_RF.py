@@ -8,7 +8,7 @@
 # ---------------------------------------------------------------------------
 
 # Define model targets
-group = 'wetsed'
+group = 'wetforb'
 version_date = '20260212'
 presence_threshold = 3
 predictor_names = ['clim', 'topo', 's1', 's2', 'emb']
@@ -110,7 +110,7 @@ inner_columns = all_variables + pred_abs + pred_pres + inner_split
 outer_columns = all_variables + pred_abs + pred_pres + pred_cover + pred_bin + outer_split
 
 # Create a standardized parameter set for a random forest classifier
-classifier_params = {'n_estimators': 500,
+classifier_params = {'n_estimators': 10,
                      'criterion': 'gini',
                      'max_depth': None,
                      'min_samples_split': 2,
@@ -127,7 +127,7 @@ classifier_params = {'n_estimators': 500,
                      'random_state': 314}
 
 # Create a standardized parameter set for a random forest classifier
-regressor_params = {'n_estimators': 500,
+regressor_params = {'n_estimators': 10,
                     'criterion': 'poisson',
                     'max_depth': None,
                     'min_samples_split': 2,
@@ -175,72 +175,63 @@ print('=' * 50)
 
 #### DETERMINE FINAL CLASSIFICATION THRESHOLD
 ####____________________________________________________
-print('Creating inner splits for final threshold determination...')
+print('Calculating optimal classification threshold...')
 start_time = time.time()
 
-# Create empty data frames
-inner_train_final = pd.DataFrame()
-inner_test_final = pd.DataFrame()
+# Create empty data frames to store results
 inner_results_final = pd.DataFrame()
 
-# Create inner cross validation splits from the full dataset
+# Conduct model training in inner cross validation splits
 count = 1
-for train_index, test_index in inner_cv_splits.split(shuffled_data,
-                                                     shuffled_data[obs_pres[0]].astype('int32'),
-                                                     shuffled_data[validation[0]].astype('int32')):
+for train_index, test_index in inner_cv_splits.split(
+        shuffled_data,
+        shuffled_data[obs_pres[0]].astype('int32'),
+        shuffled_data[validation[0]].astype('int32')):
+    # Split the data into train and test partitions
     train = shuffled_data.iloc[train_index].assign(inner_split_n=count)
     test = shuffled_data.iloc[test_index].assign(inner_split_n=count)
-    inner_train_final = pd.concat([inner_train_final, train], ignore_index=True)
-    inner_test_final = pd.concat([inner_test_final, test], ignore_index=True)
-    count += 1
-inner_cv_length = count - 1
-end_timing(start_time)
 
-# Iterate through inner cross validation splits to find threshold
-for inner_cv_i in range(1, inner_cv_length + 1):
-    print(f'\tConducting inner CV for threshold: Iteration {inner_cv_i} of {inner_cv_length}...')
-    train_iter = inner_train_final[inner_train_final[inner_split[0]] == inner_cv_i]
-    test_iter = inner_test_final[inner_test_final[inner_split[0]] == inner_cv_i]
+    # Identify X and y inner train and test splits
+    X_train = train[predictor_all].astype(float)
+    y_class = train[obs_pres[0]].astype('int32')
+    X_test = test[predictor_all].astype(float)
 
-    X_train = train_iter[predictor_all].astype(float)
-    y_train = train_iter[obs_pres[0]].astype('int32')
-    X_test = test_iter[predictor_all].astype(float)
-
+    # Train inner classifier
     inner_classifier = BalancedRandomForestClassifier(**classifier_params)
-    inner_classifier.fit(X_train, y_train)
-    probability = inner_classifier.predict_proba(X_test)
+    inner_classifier.fit(X_train, y_class)
 
-    test_iter = test_iter.assign(pred_abs=probability[:, 0], pred_pres=probability[:, 1])
-    inner_results_final = pd.concat([inner_results_final, test_iter], ignore_index=True)
+    # Predict and store results
+    probability = inner_classifier.predict_proba(X_test)
+    test = test.assign(pred_abs=probability[:, 0], pred_pres=probability[:, 1])
+    inner_results_final = pd.concat([inner_results_final, test], ignore_index=True)
+    count += 1
 
 # Calculate the optimal threshold
-print('Calculating optimal classification threshold...')
 final_threshold, _, _, _, _ = determine_optimal_threshold(
     inner_results_final[pred_pres[0]],
     inner_results_final[obs_pres[0]]
 )
+end_timing(start_time)
 
 #### TRAIN AND EXPORT FINAL MODELS
 ####____________________________________________________
-start_time = time.time()
 print('Training and exporting final models...')
+start_time = time.time()
 
 # Prepare full dataset for training
-X_class_final = shuffled_data[predictor_all].astype(float)
-y_class_final = shuffled_data[obs_pres[0]].astype('int32')
-regress_data_final = shuffled_data[shuffled_data[obs_cover[0]] >= 0]
-X_regress_final = regress_data_final[predictor_all].astype(float)
-y_regress_final = regress_data_final[obs_cover[0]].astype(float)
+X_train = shuffled_data[predictor_all].astype(float)
+y_class = shuffled_data[obs_pres[0]].astype('int32')
+y_regress = shuffled_data[obs_cover[0]].astype(float)
 
 # Train final classifier
 print('\tTraining final classifier...')
 final_classifier = BalancedRandomForestClassifier(**classifier_params)
-final_classifier.fit(X_class_final, y_class_final)
+final_classifier.fit(X_train, y_class)
 
 # Train final regressor
 print('\tTraining final regressor...')
 final_regressor = RandomForestRegressor(**regressor_params)
-final_regressor.fit(X_regress_final, y_regress_final)
+final_regressor.fit(X_train, y_regress)
 
 # Export final models and threshold
 print('\tExporting trained model results...')
@@ -249,32 +240,22 @@ with open(threshold_output, 'w') as file:
     file.write(str(export_threshold))
 joblib.dump(final_classifier, classifier_output)
 joblib.dump(final_regressor, regressor_output)
-end_timing(start_time)
 
-#### CONVERT MODEL RESULTS TO GEE TREE STRING
-####____________________________________________________
-
-print('Generating and exporting GEE tree strings...')
-gee_start_time = time.time()
-
-# Process classifier
-print('\tProcessing classifier...')
+# Process classifier tree strings
 classifier_trees = rf_to_gee_strings(final_classifier, predictor_all, model_type='classifier')
 print(f'\tExporting {len(classifier_trees)} classifier trees to text file...')
 with open(classifier_treestring_output, "w") as text_file:
     text_file.writelines(classifier_trees)
 
-# Process regressor
-print('\tProcessing regressor...')
+# Process regressor tree strings
 regressor_trees = rf_to_gee_strings(final_regressor, predictor_all, model_type='regressor')
 print(f'\tExporting {len(regressor_trees)} regressor trees to text file...')
 with open(regressor_treestring_output, "w") as text_file:
     text_file.writelines(regressor_trees)
 
-end_timing(gee_start_time)
-
-print(f'Final models and threshold exported successfully for "{group}".')
+# Report progress
 print(f'Optimal Threshold: {export_threshold}')
+end_timing(start_time)
 
 # --------------------------------------------------------------------------- #
 # --------------------------------------------------------------------------- #
@@ -290,15 +271,24 @@ print('='*50)
 ####____________________________________________________
 print('Creating outer cross validation splits...')
 start_time = time.time()
+
+# Create empty data frames to store results
 outer_train = pd.DataFrame()
 outer_test = pd.DataFrame()
+outer_results = pd.DataFrame()
+importance_results = pd.DataFrame()
+threshold_list = []
 
+# Create outer cross validation splits
 count = 1
-for train_index, test_index in outer_cv_splits.split(shuffled_data,
-                                                     shuffled_data[obs_pres[0]].astype('int32'),
-                                                     shuffled_data[validation[0]].astype('int32')):
+for train_index, test_index in outer_cv_splits.split(
+        shuffled_data,
+        shuffled_data[obs_pres[0]].astype('int32'),
+        shuffled_data[validation[0]].astype('int32')):
+    # Split the data into train and test partitions
     train = shuffled_data.iloc[train_index].assign(outer_split_n=count)
     test = shuffled_data.iloc[test_index].assign(outer_split_n=count)
+    # Append to data frames
     outer_train = pd.concat([outer_train, train], ignore_index=True)
     outer_test = pd.concat([outer_test, test], ignore_index=True)
     count += 1
@@ -308,9 +298,6 @@ end_timing(start_time)
 
 #### CONDUCT MODEL VALIDATION
 ####____________________________________________________
-outer_results = pd.DataFrame()
-importance_results = pd.DataFrame()
-threshold_list = []
 
 # Iterate through outer cross validation splits
 for outer_cv_i in range(1, outer_cv_length + 1):
@@ -321,67 +308,91 @@ for outer_cv_i in range(1, outer_cv_length + 1):
     outer_train_iter = outer_train[outer_train[outer_split[0]] == outer_cv_i].copy()
     outer_test_iter = outer_test[outer_test[outer_split[0]] == outer_cv_i].copy()
 
-    #### SETUP INNER DATA FOR THRESHOLD DETERMINATION
-    print('\tCreating inner cross validation splits...')
+    # Create empty data frames to store results
     inner_results = pd.DataFrame()
+
+    # Conduct inner cross validation
     count = 1
-    for train_idx, test_idx in inner_cv_splits.split(outer_train_iter, outer_train_iter[obs_pres[0]].astype('int32'), outer_train_iter[validation[0]].astype('int32')):
-        train = outer_train_iter.iloc[train_idx].assign(inner_split_n=count)
-        test = outer_train_iter.iloc[test_idx].assign(inner_split_n=count)
+    for train_index, test_index in inner_cv_splits.split(
+            outer_train_iter,
+            outer_train_iter[obs_pres[0]].astype('int32'),
+            outer_train_iter[validation[0]].astype('int32')):
+        # Split the data into train and test partitions
+        train = outer_train_iter.iloc[train_index].assign(inner_split_n=count)
+        test = outer_train_iter.iloc[test_index].assign(inner_split_n=count)
+
+        # Identify X and y inner train and test splits
+        X_train = train[predictor_all].astype(float)
+        y_class = train[obs_pres[0]].astype('int32')
+        X_test = test[predictor_all].astype(float)
 
         # Train inner classifier
         inner_classifier = BalancedRandomForestClassifier(**classifier_params)
-        inner_classifier.fit(train[predictor_all], train[obs_pres[0]])
+        inner_classifier.fit(X_train, y_class)
 
         # Predict and store results
-        probability = inner_classifier.predict_proba(test[predictor_all])
+        probability = inner_classifier.predict_proba(X_test)
         test = test.assign(pred_abs=probability[:, 0], pred_pres=probability[:, 1])
         inner_results = pd.concat([inner_results, test], ignore_index=True)
         count += 1
 
     # Determine optimal threshold for this outer fold
     print('\tOptimizing classification threshold...')
-    threshold, _, _, _, _ = determine_optimal_threshold(inner_results[pred_pres[0]], inner_results[obs_pres[0]])
+    threshold, _, _, _, _ = determine_optimal_threshold(
+        inner_results[pred_pres[0]],
+        inner_results[obs_pres[0]]
+    )
     threshold_list.append(threshold)
 
-    #### CONDUCT OUTER CROSS VALIDATION
-    # Train outer models
-    print('\tTraining outer models...')
-    X_class_outer = outer_train_iter[predictor_all]
-    y_class_outer = outer_train_iter[obs_pres[0]]
+    # Identify X and y outer train splits
+    X_train = outer_train_iter[predictor_all]
+    y_class = outer_train_iter[obs_pres[0]]
+    y_regress = outer_train_iter[obs_cover[0]]
+    
+    # Train outer classifier
+    print('\tTraining outer classifier...')
     outer_classifier = BalancedRandomForestClassifier(**classifier_params)
-    outer_classifier.fit(X_class_outer, y_class_outer)
-
-    regress_outer = outer_train_iter[outer_train_iter[obs_cover[0]] >= 0]
-    X_regress_outer = regress_outer[predictor_all]
-    y_regress_outer = regress_outer[obs_cover[0]]
+    outer_classifier.fit(X_train, y_class)
+    
+    # Train outer regressor
+    print('\tTraining outer regressor...')
     outer_regressor = RandomForestRegressor(**regressor_params)
-    outer_regressor.fit(X_regress_outer, y_regress_outer)
+    outer_regressor.fit(X_train, y_regress)
 
     # Harvest feature importances
-    class_imp = pd.DataFrame({'covariate': X_class_outer.columns, 'importance': outer_classifier.feature_importances_, 'component': 'classifier'})
-    reg_imp = pd.DataFrame({'covariate': X_regress_outer.columns, 'importance': outer_regressor.feature_importances_, 'component': 'regressor'})
-    importance_data = pd.concat([class_imp, reg_imp], ignore_index=True).assign(outer_cv_i=outer_cv_i)
+    classifier_imp = pd.DataFrame({
+        'covariate': X_train.columns,
+        'importance': outer_classifier.feature_importances_,
+        'component': 'classifier'
+    })
+    regressor_imp = pd.DataFrame({
+        'covariate': X_train.columns,
+        'importance': outer_regressor.feature_importances_,
+        'component': 'regressor'
+    })
+    importance_data = (pd.concat([classifier_imp, regressor_imp], ignore_index=True)
+                       .assign(outer_cv_i=outer_cv_i))
     importance_results = pd.concat([importance_results, importance_data], ignore_index=True)
 
-    # Predict on outer test set
+    # Predict outer test
     print('\tPredicting outer test data...')
-    X_test_outer = outer_test_iter[predictor_all]
-    prob_outer = outer_classifier.predict_proba(X_test_outer)
-    cover_outer = outer_regressor.predict(X_test_outer)
+    X_test = outer_test_iter[predictor_all].astype(float)
+    probability_outer = outer_classifier.predict_proba(X_test)
+    cover_outer = outer_regressor.predict(X_test)
 
+    # Assign predicted values to outer test data frame
     outer_test_iter = outer_test_iter.assign(
-        pred_abs=prob_outer[:, 0],
-        pred_pres=prob_outer[:, 1],
+        pred_abs=probability_outer[:, 0],
+        pred_pres=probability_outer[:, 1],
         pred_cover=cover_outer,
-        pred_bin=(prob_outer[:, 1] >= threshold).astype(int)
+        pred_bin=(probability_outer[:, 1] >= threshold).astype(int)
     )
     outer_results = pd.concat([outer_results, outer_test_iter], ignore_index=True)
     end_timing(iter_start_time)
 
 #### CALCULATE PERFORMANCE AND STORE VALIDATION RESULTS
 ####____________________________________________________
-print('Calculating final performance metrics and storing validation results...')
+print('Calculating performance metrics and storing validation results...')
 start_time = time.time()
 
 # Create a composite prediction
@@ -389,26 +400,29 @@ outer_results[prediction[0]] = np.where(
     (outer_results[pred_bin[0]] == 1) & (outer_results[pred_cover[0]] >= presence_threshold),
     outer_results[pred_cover[0]], 0
 )
-outer_results['distribution'] = ((outer_results[pred_bin[0]] == 1) & (outer_results[pred_cover[0]] >= presence_threshold)).astype(int)
+outer_results['distribution'] = ((outer_results[pred_bin[0]] == 1)
+                                 & (outer_results[pred_cover[0]] >= presence_threshold)).astype(int)
 
 # Clean and restrict results
-valid_results = outer_results[outer_results[obs_cover[0]] >= 0].copy()
-valid_results[prediction[0]] = np.clip(valid_results[prediction[0]], 0, 100)
+outer_results[prediction[0]] = np.clip(outer_results[prediction[0]], 0, 100)
 
 # Partition observed vs predicted for metrics
-y_class_obs_pres = valid_results[obs_pres[0]]
-y_class_pred_dist = valid_results['distribution']
-y_class_pred_prob = valid_results[pred_pres[0]]
-y_regress_obs = valid_results[obs_cover[0]]
-y_regress_pred = valid_results[prediction[0]]
+y_classify_observed = outer_results[obs_pres[0]].astype('int32')
+y_classify_predicted = outer_results['distribution'].astype('int32')
+y_classify_probability = outer_results[pred_pres[0]].astype(float)
+y_regress_observed = outer_results[obs_cover[0]].astype(float)
+y_regress_predicted = outer_results[prediction[0]].astype(float)
 
 # Calculate metrics
-tn, fp, fn, tp = confusion_matrix(y_class_obs_pres, y_class_pred_dist).ravel()
-validation_auc = roc_auc_score(y_class_obs_pres, y_class_pred_prob)
-validation_accuracy = (tp + tn) / (tp + tn + fp + fn)
-r_score = r2_score(y_regress_obs, y_regress_pred)
-mae = mean_absolute_error(y_regress_obs, y_regress_pred)
-rmse = np.sqrt(mean_squared_error(y_regress_obs, y_regress_pred))
+true_negative, false_positive, false_negative, true_positive = confusion_matrix(
+    y_classify_observed, y_classify_predicted
+).ravel()
+validation_auc = roc_auc_score(y_classify_observed, y_classify_probability)
+validation_accuracy = ((true_negative + true_positive) /
+                       (true_negative + false_positive + false_negative + true_positive))
+r_score = r2_score(y_regress_observed, y_regress_predicted)
+mae = mean_absolute_error(y_regress_observed, y_regress_predicted)
+rmse = np.sqrt(mean_squared_error(y_regress_observed, y_regress_predicted))
 
 # Format metrics for export
 export_auc = round(validation_auc, 3)
@@ -419,8 +433,8 @@ export_rmse = round(rmse, 1)
 export_mae = round(mae, 1)
 
 # Store output results
-valid_results.to_csv(results_output, header=True, index=False)
-importance_results.to_csv(importance_output, header=True, index=False)
+outer_results.to_csv(results_output, header=True, index=False, sep=',', encoding='utf-8')
+importance_results.to_csv(importance_output, header=True, index=False, sep=',', encoding='utf-8')
 metric_map = {
     auc_output: export_auc, acc_output: export_accuracy,
     threshold_output_mean: export_threshold_mean, rscore_output: export_rscore,
@@ -430,8 +444,6 @@ for file_path, metric in metric_map.items():
     with open(file_path, 'w') as f:
         f.write(str(metric))
 
-end_timing(start_time)
-
 # Print final validation scores
 print('\n--- Final Validation Metrics ---')
 print(f'AUC: {export_auc}')
@@ -440,4 +452,4 @@ print(f'Mean CV Threshold: {export_threshold_mean}')
 print(f'R-squared: {export_rscore}')
 print(f'RMSE: {export_rmse}')
 print(f'MAE: {export_mae}')
-print('--- Script Finished ---')
+end_timing(start_time)
