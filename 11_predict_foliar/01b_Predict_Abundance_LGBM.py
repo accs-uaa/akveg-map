@@ -279,13 +279,17 @@ foliar_export = foliar_image.unmask(-127).int8()
 #### CHUNKED FULL EXPORT TO CLOUD STORAGE
 ####____________________________________________________
 
-# Get a list of all grid codes to iterate over locally
+# Get a list of all grid codes to iteratively export
 print('Fetching grid codes from grid feature collection...')
 grid_codes = export_grid.aggregate_array('grid_code').getInfo()
 print(f'Found {len(grid_codes)} tiles to process.')
 
+# Filter grid list to a subset of grids (for testing purposes, comment line below for full export)
+target_grids = ['AK050H044V003']
+grid_codes = [code for code in grid_codes if code in target_grids]
+
 # Loop through each grid code to submit a unique task
-for grid_code in grid_codes[236:239]:
+for grid_code in grid_codes:
     # Filter the feature collection to the specific grid code
     tile_feature = ee.Feature(export_grid.filter(ee.Filter.eq('grid_code', grid_code)).first())
 
@@ -293,7 +297,6 @@ for grid_code in grid_codes[236:239]:
     export_geometry = tile_feature.geometry().buffer(50)
 
     # Define unique names for the task and output file
-    # This dynamically utilizes the group ('halgra') and current grid_code variable
     task_description = f'{group}_{grid_code}'
     file_name = f'{storage_prefix}/{group}_{grid_code}_10m_3338'
 
@@ -313,6 +316,7 @@ for grid_code in grid_codes[236:239]:
         }
     })
 
+    # Initiate task
     export_task.start()
     print(f'Submitted task: {task_description}')
 
